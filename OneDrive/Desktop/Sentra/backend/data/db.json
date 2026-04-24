@@ -1,0 +1,560 @@
+{
+  "rooms": [
+    {
+      "id": "R101",
+      "number": "101",
+      "type": "Deluxe King",
+      "status": "Available",
+      "price": 5200,
+      "floor": 1,
+      "view": "City",
+      "cleanliness": "Ready",
+      "features": [
+        "WiFi",
+        "AC",
+        "King Bed",
+        "Mini Bar"
+      ],
+      "lastService": "2026-04-20"
+    },
+    {
+      "id": "R102",
+      "number": "102",
+      "type": "Executive Sea View",
+      "status": "Occupied",
+      "price": 7600,
+      "floor": 1,
+      "view": "Sea",
+      "cleanliness": "Occupied",
+      "features": [
+        "WiFi",
+        "AC",
+        "Sea View",
+        "Work Desk"
+      ],
+      "lastService": "2026-04-18"
+    },
+    {
+      "id": "R201",
+      "number": "201",
+      "type": "Premium Suite",
+      "status": "Cleaning",
+      "price": 12500,
+      "floor": 2,
+      "view": "Pool",
+      "cleanliness": "Cleaning",
+      "features": [
+        "Living Area",
+        "Bathtub",
+        "Smart TV",
+        "Lounge"
+      ],
+      "lastService": "2026-04-10"
+    },
+    {
+      "id": "R202",
+      "number": "202",
+      "type": "Business Twin",
+      "status": "Available",
+      "price": 6100,
+      "floor": 2,
+      "view": "City",
+      "cleanliness": "Ready",
+      "features": [
+        "Twin Beds",
+        "WiFi",
+        "Coffee Kit"
+      ],
+      "lastService": "2026-04-21"
+    },
+    {
+      "id": "R301",
+      "number": "301",
+      "type": "Presidential Suite",
+      "status": "Occupied",
+      "price": 24500,
+      "floor": 3,
+      "view": "Sea",
+      "cleanliness": "Occupied",
+      "features": [
+        "Private Lounge",
+        "Jacuzzi",
+        "Butler Service",
+        "Premium Bar"
+      ],
+      "lastService": "2026-04-12"
+    },
+    {
+      "id": "R302",
+      "number": "302",
+      "type": "Family Suite",
+      "status": "Maintenance",
+      "price": 15800,
+      "floor": 3,
+      "view": "Garden",
+      "cleanliness": "Blocked",
+      "features": [
+        "Two Bedrooms",
+        "Kids Zone",
+        "Kitchenette"
+      ],
+      "lastService": "2026-03-29"
+    },
+    {
+      "id": "R401",
+      "number": "401",
+      "type": "Club Room",
+      "status": "Available",
+      "price": 8900,
+      "floor": 4,
+      "view": "City",
+      "cleanliness": "Ready",
+      "features": [
+        "Club Access",
+        "WiFi",
+        "Smart TV"
+      ],
+      "lastService": "2026-04-22"
+    },
+    {
+      "id": "R402",
+      "number": "402",
+      "type": "Deluxe Queen",
+      "status": "Reserved",
+      "price": 5400,
+      "floor": 4,
+      "view": "Garden",
+      "cleanliness": "Ready",
+      "features": [
+        "WiFi",
+        "AC",
+        "Queen Bed"
+      ],
+      "lastService": "2026-04-19"
+    }
+  ],
+  "customers": [
+    {
+      "id": "C001",
+      "name": "Aarav Sharma",
+      "phone": "9876543210",
+      "email": "aarav@example.com",
+      "vip": true,
+      "loyalty": "Platinum",
+      "visits": 9,
+      "preferences": "Sea view, Jain meals"
+    },
+    {
+      "id": "C002",
+      "name": "Meera Iyer",
+      "phone": "9876501234",
+      "email": "meera@example.com",
+      "vip": false,
+      "loyalty": "Silver",
+      "visits": 2,
+      "preferences": "Late checkout"
+    },
+    {
+      "id": "C003",
+      "name": "Kabir Mehta",
+      "phone": "9845012345",
+      "email": "kabir@example.com",
+      "vip": true,
+      "loyalty": "Gold",
+      "visits": 6,
+      "preferences": "Airport pickup"
+    },
+    {
+      "id": "C004",
+      "name": "Sara Khan",
+      "phone": "9988776655",
+      "email": "sara@example.com",
+      "vip": false,
+      "loyalty": "Classic",
+      "visits": 1,
+      "preferences": "Quiet floor"
+    },
+    {
+      "id": "C005",
+      "name": "Rohan Nair",
+      "phone": "9123456789",
+      "email": "rohan@example.com",
+      "vip": false,
+      "loyalty": "Silver",
+      "visits": 3,
+      "preferences": "Gym access"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "B001",
+      "customerId": "C001",
+      "roomId": "R102",
+      "guest": "Aarav Sharma",
+      "checkIn": "2026-04-24",
+      "checkOut": "2026-04-26",
+      "status": "Checked In",
+      "source": "Website",
+      "amount": 15200
+    },
+    {
+      "id": "B002",
+      "customerId": "C003",
+      "roomId": "R301",
+      "guest": "Kabir Mehta",
+      "checkIn": "2026-04-24",
+      "checkOut": "2026-04-27",
+      "status": "Checked In",
+      "source": "Corporate",
+      "amount": 73500
+    },
+    {
+      "id": "B003",
+      "customerId": "C004",
+      "roomId": "R402",
+      "guest": "Sara Khan",
+      "checkIn": "2026-04-25",
+      "checkOut": "2026-04-26",
+      "status": "Reserved",
+      "source": "OTA",
+      "amount": 5400
+    },
+    {
+      "id": "B004",
+      "customerId": "C005",
+      "roomId": "R202",
+      "guest": "Rohan Nair",
+      "checkIn": "2026-04-26",
+      "checkOut": "2026-04-28",
+      "status": "Confirmed",
+      "source": "Walk-in",
+      "amount": 12200
+    }
+  ],
+  "housekeeping": [
+    {
+      "id": "H001",
+      "roomId": "R201",
+      "task": "Deep cleaning before VIP arrival",
+      "priority": "High",
+      "status": "Pending",
+      "assignedTo": "Anita",
+      "eta": "35 min"
+    },
+    {
+      "id": "H002",
+      "roomId": "R102",
+      "task": "Towel replacement",
+      "priority": "Medium",
+      "status": "Assigned",
+      "assignedTo": "Rahul",
+      "eta": "15 min"
+    },
+    {
+      "id": "H003",
+      "roomId": "R401",
+      "task": "Mini bar refill",
+      "priority": "Low",
+      "status": "Done",
+      "assignedTo": "Neha",
+      "eta": "Done"
+    },
+    {
+      "id": "H004",
+      "roomId": "R302",
+      "task": "AC maintenance follow-up",
+      "priority": "High",
+      "status": "Pending",
+      "assignedTo": "Vikram",
+      "eta": "60 min"
+    }
+  ],
+  "payments": [
+    {
+      "id": "P001",
+      "bookingId": "B001",
+      "guest": "Aarav Sharma",
+      "amount": 15200,
+      "method": "UPI",
+      "status": "Paid",
+      "date": "2026-04-24"
+    },
+    {
+      "id": "P002",
+      "bookingId": "B002",
+      "guest": "Kabir Mehta",
+      "amount": 73500,
+      "method": "Corporate Card",
+      "status": "Paid",
+      "date": "2026-04-24"
+    },
+    {
+      "id": "P003",
+      "bookingId": "B003",
+      "guest": "Sara Khan",
+      "amount": 5400,
+      "method": "Credit Card",
+      "status": "Pending",
+      "date": "2026-04-25"
+    },
+    {
+      "id": "P004",
+      "bookingId": "B004",
+      "guest": "Rohan Nair",
+      "amount": 12200,
+      "method": "Cash",
+      "status": "Partial",
+      "date": "2026-04-26"
+    }
+  ],
+  "feedback": [
+    {
+      "id": "F001",
+      "customer": "Aarav Sharma",
+      "rating": 5,
+      "comment": "Excellent stay and very clean room with fast service"
+    },
+    {
+      "id": "F002",
+      "customer": "Meera Iyer",
+      "rating": 3,
+      "comment": "Service was okay but food delivery was slow"
+    },
+    {
+      "id": "F003",
+      "customer": "Kabir Mehta",
+      "rating": 5,
+      "comment": "Premium experience, staff was polite and quick"
+    },
+    {
+      "id": "F004",
+      "customer": "Sara Khan",
+      "rating": 2,
+      "comment": "Room was noisy and check-in was delayed"
+    },
+    {
+      "id": "F005",
+      "customer": "Rohan Nair",
+      "rating": 4,
+      "comment": "Good facilities and smooth checkout"
+    }
+  ],
+  "foodOrders": [
+    {
+      "id": "FO001",
+      "roomId": "R102",
+      "guest": "Aarav Sharma",
+      "items": [
+        "Paneer Tikka",
+        "Lime Soda"
+      ],
+      "amount": 850,
+      "status": "Preparing",
+      "eta": "18 min"
+    },
+    {
+      "id": "FO002",
+      "roomId": "R301",
+      "guest": "Kabir Mehta",
+      "items": [
+        "Thai Curry",
+        "Sparkling Water",
+        "Brownie"
+      ],
+      "amount": 2100,
+      "status": "Delivered",
+      "eta": "Done"
+    },
+    {
+      "id": "FO003",
+      "roomId": "R402",
+      "guest": "Sara Khan",
+      "items": [
+        "Club Sandwich",
+        "Coffee"
+      ],
+      "amount": 720,
+      "status": "Queued",
+      "eta": "25 min"
+    }
+  ],
+  "services": [
+    {
+      "id": "S001",
+      "name": "Airport Pickup",
+      "price": 1800,
+      "active": true,
+      "bookingsToday": 4
+    },
+    {
+      "id": "S002",
+      "name": "Spa Session",
+      "price": 2500,
+      "active": true,
+      "bookingsToday": 7
+    },
+    {
+      "id": "S003",
+      "name": "Laundry Express",
+      "price": 650,
+      "active": true,
+      "bookingsToday": 11
+    },
+    {
+      "id": "S004",
+      "name": "Private City Tour",
+      "price": 5200,
+      "active": true,
+      "bookingsToday": 2
+    }
+  ],
+  "staff": [
+    {
+      "id": "ST001",
+      "name": "Anita",
+      "role": "Housekeeping",
+      "shift": "Morning",
+      "status": "On Duty"
+    },
+    {
+      "id": "ST002",
+      "name": "Rahul",
+      "role": "Housekeeping",
+      "shift": "Morning",
+      "status": "On Duty"
+    },
+    {
+      "id": "ST003",
+      "name": "Priya",
+      "role": "Reception",
+      "shift": "Evening",
+      "status": "On Duty"
+    },
+    {
+      "id": "ST004",
+      "name": "Vikram",
+      "role": "Maintenance",
+      "shift": "Morning",
+      "status": "On Call"
+    }
+  ],
+  "revenueSeries": [
+    {
+      "day": "Mon",
+      "revenue": 48000,
+      "occupancy": 62
+    },
+    {
+      "day": "Tue",
+      "revenue": 53000,
+      "occupancy": 68
+    },
+    {
+      "day": "Wed",
+      "revenue": 61000,
+      "occupancy": 73
+    },
+    {
+      "day": "Thu",
+      "revenue": 78000,
+      "occupancy": 81
+    },
+    {
+      "day": "Fri",
+      "revenue": 96000,
+      "occupancy": 88
+    },
+    {
+      "day": "Sat",
+      "revenue": 118000,
+      "occupancy": 94
+    },
+    {
+      "day": "Sun",
+      "revenue": 87000,
+      "occupancy": 76
+    }
+  ],
+  "amenities": [
+    {
+      "id": "A001",
+      "icon": "🏊",
+      "name": "Infinity Pool",
+      "description": "Rooftop temperature-controlled pool with cabanas and sunset lounge.",
+      "hours": "6 AM - 10 PM",
+      "location": "Level 12",
+      "price": "Included",
+      "status": "Available"
+    },
+    {
+      "id": "A002",
+      "icon": "💆",
+      "name": "Luxury Spa",
+      "description": "Premium massage, steam, sauna and wellness therapy experiences.",
+      "hours": "9 AM - 9 PM",
+      "location": "Wellness Wing",
+      "price": "From ₹2,500",
+      "status": "Available"
+    },
+    {
+      "id": "A003",
+      "icon": "🍽️",
+      "name": "Fine Dining",
+      "description": "Chef-curated multi-cuisine restaurant with live kitchen and private seating.",
+      "hours": "24 Hours",
+      "location": "Lobby Level",
+      "price": "À la carte",
+      "status": "Available"
+    },
+    {
+      "id": "A004",
+      "icon": "🏋️",
+      "name": "Smart Fitness Studio",
+      "description": "Modern gym with cardio, strength training, trainer support and hydration bar.",
+      "hours": "5 AM - 11 PM",
+      "location": "Level 3",
+      "price": "Included",
+      "status": "Available"
+    },
+    {
+      "id": "A005",
+      "icon": "🚗",
+      "name": "Valet & Airport Pickup",
+      "description": "Premium valet parking, airport transfers and chauffeur-on-demand service.",
+      "hours": "24 Hours",
+      "location": "Entrance",
+      "price": "From ₹1,800",
+      "status": "Available"
+    },
+    {
+      "id": "A006",
+      "icon": "🛎️",
+      "name": "Concierge Desk",
+      "description": "City tours, reservations, VIP requests, event planning and guest assistance.",
+      "hours": "24 Hours",
+      "location": "Lobby",
+      "price": "Included",
+      "status": "Available"
+    },
+    {
+      "id": "A007",
+      "icon": "🧺",
+      "name": "Express Laundry",
+      "description": "Same-day laundry, pressing and dry-cleaning for business and suite guests.",
+      "hours": "7 AM - 9 PM",
+      "location": "Service Desk",
+      "price": "From ₹650",
+      "status": "Available"
+    },
+    {
+      "id": "A008",
+      "icon": "🏢",
+      "name": "Business Lounge",
+      "description": "Quiet premium workspace with meeting pods, coffee bar and high-speed WiFi.",
+      "hours": "7 AM - 11 PM",
+      "location": "Level 8",
+      "price": "Club Access",
+      "status": "Available"
+    }
+  ]
+}
