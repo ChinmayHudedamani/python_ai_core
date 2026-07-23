@@ -1,0 +1,109 @@
+{
+  "clinic_info": {
+    "name": "Apex Dental Centaur & Implant Center",
+    "location": "100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034",
+    "landmark": "Opposite Sony World Signal, Next to Cult.fit",
+    "contact_phone": "+91-9988776655",
+    "whatsapp": "+91-9988776655",
+    "operating_hours": {
+      "monday_to_saturday": "9:00 AM - 8:00 PM",
+      "sunday": "10:00 AM - 2:00 PM (Emergency & Prior Booking Only)"
+    },
+    "amenities": ["Valet Parking Available", "Wheelchair Accessible", "Digital 3D CBCT Scanner"],
+    "payment_options": ["Cash", "UPI", "Credit/Debit Cards", "0% Interest 12-Month EMI", "Star Health Cashless", "HDFC Ergo TPA Insurance"]
+  },
+  "doctors": [
+    {
+      "name": "Dr. Chinmay Hudedamani",
+      "specialty": "Chief Implantologist & Prosthodontist",
+      "experience": "12+ Years",
+      "qualification": "MDS (Prosthodontics & Implantology)"
+    },
+    {
+      "name": "Dr. Ananya Roy",
+      "specialty": "Senior Orthodontist (Invisalign Platinum Provider)",
+      "experience": "10+ Years",
+      "qualification": "MDS (Orthodontics)"
+    }
+  ],
+  "procedures": [
+    {
+      "code": "IMP",
+      "name": "Dental Implants",
+      "aliases": ["implants", "dental implant", "single tooth implant", "full mouth implants"],
+      "price_range_inr": "₹25,000 - ₹55,000 per implant",
+      "emi_starting": "₹2,500/month (12-month 0% EMI)",
+      "warranty": "Lifetime Warranty on Swiss Straumann / Nobel Biocare Implants",
+      "duration": "45 - 60 minutes per session",
+      "description": "Permanent titanium tooth root replacement with computer-guided placement."
+    },
+    {
+      "code": "INVIS",
+      "name": "Invisalign Clear Aligners",
+      "aliases": ["invisalign", "aligners", "clear braces", "invisible braces"],
+      "price_range_inr": "₹85,000 - ₹2,20,000 (Complete Package)",
+      "emi_starting": "₹7,500/month (12-month 0% EMI)",
+      "warranty": "5-Year Guarantee with free tray refinements",
+      "duration": "6 - 18 months treatment duration",
+      "description": "US-FDA approved transparent removable aligners for discreet teeth straightening."
+    },
+    {
+      "code": "RCT",
+      "name": "Root Canal Treatment",
+      "aliases": ["rct", "root canal", "single sitting rct", "toothache treatment"],
+      "price_range_inr": "₹4,500 - ₹9,500 per tooth",
+      "emi_starting": "N/A (Direct payment)",
+      "warranty": "10-Year Crown Warranty included with Zirconia Crowns",
+      "duration": "Single sitting (45 minutes) painless laser-assisted procedure",
+      "description": "Microscopic painless root canal infection removal with bioceramic sealing."
+    },
+    {
+      "code": "SMB",
+      "name": "Smile Makeover / Porcelain Veneers",
+      "aliases": ["smile makeover", "veneers", "porcelain veneers", "laminates"],
+      "price_range_inr": "₹12,000 - ₹25,000 per tooth veneer",
+      "emi_starting": "₹4,000/month",
+      "warranty": "15-Year Fracture Warranty on E-max Porcelain Veneers",
+      "duration": "2 sessions spaced 5 days apart",
+      "description": "Ultra-thin custom porcelain shells for Hollywood smile aesthetic transformation."
+    },
+    {
+      "code": "FMR",
+      "name": "Full Mouth Rehabilitation",
+      "aliases": ["full mouth rehab", "fmr", "all on 4", "all on 6"],
+      "price_range_inr": "₹2,50,000 - ₹6,00,000 (Complete Arch/Both Arches)",
+      "emi_starting": "₹20,000/month",
+      "warranty": "Lifetime Implant Guarantee + 10-Year Prosthetic Warranty",
+      "duration": "Fixed teeth in 3 days using All-On-4 Immediate Loading",
+      "description": "Comprehensive restoration of chewing function and aesthetics for worn or missing teeth."
+    },
+    {
+      "code": "CLEAN-01",
+      "name": "Professional Ultrasonic Cleaning & Polishing",
+      "aliases": ["cleaning", "scaling", "teeth cleaning", "polishing"],
+      "price_range_inr": "₹1,500 - ₹3,000",
+      "emi_starting": "N/A",
+      "warranty": "N/A",
+      "duration": "30 minutes",
+      "description": "Ultrasonic plaque and stain removal with fluoride teeth polishing."
+    }
+  ],
+  "faqs": [
+    {
+      "keywords": ["timing", "hours", "open", "saturday", "sunday", "working hours"],
+      "answer": "Apex Dental is open Monday to Saturday from 9:00 AM to 8:00 PM. Sundays are open from 10:00 AM to 2:00 PM for prior appointments & emergency triage."
+    },
+    {
+      "keywords": ["location", "address", "where", "koramangala", "direction", "landmark"],
+      "answer": "We are located on 100 Feet Road, 4th Block, Koramangala, Bengaluru (Opposite Sony World Signal, Next to Cult.fit). Valet parking is available."
+    },
+    {
+      "keywords": ["insurance", "cashless", "star health", "hdfc", "tpa", "claim"],
+      "answer": "Yes! We support cashless treatment for Star Health Insurance, HDFC Ergo, and major corporate TPAs. Our front desk assists with instant claim processing."
+    },
+    {
+      "keywords": ["emi", "installment", "finance", "0%", "monthly"],
+      "answer": "We offer 0% interest monthly EMI plans over 3, 6, or 12 months for treatments above ₹15,000 via Bajaj Finserv and major credit cards."
+    }
+  ]
+}
