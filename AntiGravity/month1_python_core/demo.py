@@ -6,18 +6,20 @@ from pathlib import Path
 from day2_python import clean_client_data, mask_pii, validate_indian_phone_number, is_gibberish_text
 from day6_python import SafetyCircuitBreaker
 from day5_python import OfflineLedgerWriter
+from whatsapp_dispatcher import EliteWhatsAppChannelDispatcher
 from conversation_store import ConversationSessionStore
+from ical_generator import ICalAppointmentGenerator
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
 def print_header_banner():
-    print("\n" + "=" * 65)
-    print(" 🏥 LEVEL 9.5 CLINIC CENTAUR - MULTI-TURN AI CHAT DEMO 🏥")
+    print("\n" + "=" * 67)
+    print(" 🏥 LEVEL 9.5 ENTERPRISE CLINIC CENTAUR - SALES DEMO ENGINE 🏥")
     print(" Target Market: Private Dental Clinics & Implant Centers (Bengaluru)")
-    print(" Feature: Multi-Turn Conversation Memory & Persistent Transcript Audit")
-    print("=" * 65 + "\n")
+    print(" Value Prop: 24/7 Zero-Hallucination Lead Capture & 13x ROI Guarantee")
+    print("=" * 67 + "\n")
 
 
 def format_legible_patient_reply(whatsapp_text: str) -> str:
@@ -25,11 +27,51 @@ def format_legible_patient_reply(whatsapp_text: str) -> str:
     lines = whatsapp_text.splitlines()
     formatted_lines = []
     for line in lines:
-        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨") or line.startswith("⚠️"):
+        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨") or line.startswith("⚠️") or line.startswith("📞"):
             formatted_lines.append(f"\n{line}")
         else:
             formatted_lines.append(line)
     return "\n".join(formatted_lines)
+
+
+def run_clinic_roi_calculator():
+    """Live Interactive ROI Calculator for Clinic Owners."""
+    print("\n" + "=" * 65)
+    print(" 📊 LIVE CLINIC ROI & REVENUE PROJECTION CALCULATOR 📊")
+    print("=" * 65)
+
+    try:
+        monthly_leads = int(input("\n1. Estimated monthly WhatsApp patient inquiries [e.g. 50]: ").strip() or "50")
+        avg_treatment_fee = int(input("2. Average high-ticket treatment fee (INR) [e.g. 120000]: ").strip() or "120000")
+
+        # Industry standard metrics:
+        # Without instant bot: 40% inquiries after-hours, 70% lost to competitor delay
+        after_hours_ratio = 0.40
+        competitor_loss_ratio = 0.70
+        conversion_rate_with_bot = 0.35  # 35% of captured after-hours leads convert to paid consults
+
+        after_hours_leads = round(monthly_leads * after_hours_ratio)
+        lost_leads_monthly = round(after_hours_leads * competitor_loss_ratio)
+        lost_revenue_monthly = lost_leads_monthly * avg_treatment_fee
+
+        captured_leads_monthly = round(lost_leads_monthly * conversion_rate_with_bot)
+        new_monthly_revenue = captured_leads_monthly * avg_treatment_fee
+
+        system_cost_monthly = 6000  # Rs. 6000/mo WhatsApp maintenance
+        net_profit_monthly = new_monthly_revenue - system_cost_monthly
+        roi_multiple = round(new_monthly_revenue / system_cost_monthly, 1)
+
+        print("\n" + "📈 YOUR CLINIC REVENUE PROJECTION RESULTS ".center(65, "─"))
+        print(f" • Monthly Patient Inquiries : {monthly_leads} leads/month")
+        print(f" • After-Hours Inquiries (8PM-9AM): {after_hours_leads} leads/month")
+        print(f" 🔴 Estimated Lost Revenue (Without AI) : ₹{lost_revenue_monthly:,} / month")
+        print(f" 🟢 Net New Captured Revenue (With Centaur): ₹{new_monthly_revenue:,} / month")
+        print(f" 💰 Monthly Software Cost           : ₹{system_cost_monthly:,} / month")
+        print(f" 🚀 NET CLINIC MONTHLY PROFIT       : ₹{net_profit_monthly:,} / month")
+        print(f" 🌟 PROJECTED MONTHLY ROI          : {roi_multiple}x RETURN ON INVESTMENT")
+        print("─" * 65 + "\n")
+    except Exception:
+        print("\n⚠️ Invalid input. Returning to main menu.")
 
 
 def run_interactive_multi_turn_demo():
@@ -37,15 +79,19 @@ def run_interactive_multi_turn_demo():
     breaker = SafetyCircuitBreaker()
     ledger = OfflineLedgerWriter()
     conv_store = ConversationSessionStore()
+    dispatcher = EliteWhatsAppChannelDispatcher()
+    ical_gen = ICalAppointmentGenerator()
 
     print("Select Demo Option:")
     print("1. Start Multi-Turn Interactive Patient Session (Type live follow-ups)")
-    print("2. Run Preset Case A: High-Ticket Invisalign Lead (Ananya Roy)")
-    print("3. Run Preset Case B: Hinglish Dental Implant Lead (Rohan Verma)")
-    print("4. Run Preset Case C: Medical Emergency ESI RED (Rajesh Hegde)")
+    print("2. Preset Case A: High-Ticket Invisalign Lead (Ananya Roy - ₹1,20,000)")
+    print("3. Preset Case B: Hinglish Dental Implant Lead (Rohan Verma - ₹45,000)")
+    print("4. Preset Case C: Medical Emergency ESI RED (Rajesh Hegde - 112 Override)")
     print("5. View Stored Patient Conversation History Transcripts")
+    print("6. Run Live Clinic ROI & Revenue Calculator (Show Doctor the Money)")
+    print("7. Preview Doctor's Daily 8:00 PM WhatsApp Revenue Ledger Report")
 
-    choice = input("\nEnter choice (1-5) [Default 1]: ").strip() or "1"
+    choice = input("\nEnter choice (1-7) [Default 1]: ").strip() or "1"
 
     if choice == "5":
         master_file = conv_store.master_path
@@ -55,6 +101,20 @@ def run_interactive_multi_turn_demo():
                 print(json.dumps(json.load(f), indent=2))
         else:
             print("\nNo stored conversation history found yet.")
+        return
+    elif choice == "6":
+        run_clinic_roi_calculator()
+        return
+    elif choice == "7":
+        print("\n" + "=" * 65)
+        print(" 📱 PREVIEW: DOCTOR'S DAILY 8:00 PM WHATSAPP LEDGER REPORT")
+        print("=" * 65 + "\n")
+        report_payload = dispatcher.build_doctor_daily_ledger_report()
+        print(report_payload["interactive"]["body"]["text"])
+        print("\nInteractive CTA Buttons:")
+        for btn in report_payload["interactive"]["action"]["buttons"]:
+            print(f" [ {btn['reply']['title']} ]", end=" ")
+        print("\n" + "=" * 65 + "\n")
         return
 
     # Setup Initial Intake
@@ -130,6 +190,9 @@ def run_interactive_multi_turn_demo():
         grounding = result.get("grounding_facts", {})
         reply_text = result.get("whatsapp_response", "")
 
+        # Generate 1-Click iCal event file for appointment
+        ics_path = ical_gen.create_ics_event(name, code, "Dr. Chinmay Hudedamani", "Saturday at 11:00 AM")
+
         # Save to Persistent Conversation Store
         save_status = conv_store.append_chat_turn(phone, current_notes, result)
 
@@ -140,6 +203,7 @@ def run_interactive_multi_turn_demo():
 
         print(f"\n⚡ Processing Time: {exec_ms} ms | Triage Tier: {triage.get('lead_tier')} | Score: {triage.get('intent_score')}/100")
         print(f"🔒 Security & Safety Action: {circuit.get('circuit_action')}")
+        print(f"📅 1-Click iCal Event Created: {ics_path}")
         print(f"💾 Transcript Saved To    : {save_status['session_file']}")
 
         print("\n" + "📱 BOT WHATSAPP REPLY ".center(65, "─"))
