@@ -3,7 +3,7 @@ import sys
 import time
 import datetime
 from pathlib import Path
-from day2_python import clean_client_data, mask_pii
+from day2_python import clean_client_data, mask_pii, validate_indian_phone_number, is_gibberish_text
 from day6_python import SafetyCircuitBreaker
 from day5_python import OfflineLedgerWriter
 from conversation_store import ConversationSessionStore
@@ -25,7 +25,7 @@ def format_legible_patient_reply(whatsapp_text: str) -> str:
     lines = whatsapp_text.splitlines()
     formatted_lines = []
     for line in lines:
-        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨"):
+        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨") or line.startswith("⚠️"):
             formatted_lines.append(f"\n{line}")
         else:
             formatted_lines.append(line)
@@ -76,9 +76,19 @@ def run_interactive_multi_turn_demo():
     else:
         print("\n--- NEW PATIENT REGISTRATION ---")
         name = input("Patient Name [e.g. Ananya Roy]: ").strip() or "Ananya Roy"
-        phone = input("Phone Number [e.g. +91-9988776655]: ").strip() or "+91-9988776655"
+
+        # Enforce 10-Digit Indian Phone Validation
+        while True:
+            raw_phone = input("Phone Number (10-digit Indian Mobile e.g. +91-9988776655): ").strip() or "+91-9988776655"
+            is_valid_phone, phone_msg = validate_indian_phone_number(raw_phone)
+            if is_valid_phone:
+                phone = phone_msg
+                break
+            else:
+                print(f"⚠️ {phone_msg} Please enter a valid 10-digit Indian phone number.")
+
         code = input("Procedure Code [e.g. ALIGNERS / IMPLANTS / RCT]: ").strip() or "ALIGNERS"
-        initial_notes = input(" Inquiry Message: ").strip() or "What is the price of Invisalign clear aligners?"
+        initial_notes = input("Inquiry Message: ").strip() or "What is the price of Invisalign clear aligners?"
 
     current_notes = initial_notes
     turn_counter = 0

@@ -3,7 +3,7 @@
   "masked_phone": "673****10",
   "session_created_utc": "2026-07-24T12:55:29.933344+00:00",
   "status": "ACTIVE_AUTOMATED",
-  "total_turns": 4,
+  "total_turns": 6,
   "turns": [
     {
       "turn_index": 1,
@@ -50,7 +50,27 @@
         "faqs[3]"
       ],
       "circuit_action": "STANDARD_AUTOMATED_REPLY"
+    },
+    {
+      "turn_index": 5,
+      "timestamp_utc": "2026-07-24T13:04:48.766477+00:00",
+      "user_query": "& c:/Users/chinm/AntiGravity/.venv/Scripts/python.exe c:/Users/chinm/AntiGravity/month1_python_core/demo.py",
+      "bot_reply": "Hello Hashi! Thank you for contacting Apex Dental Centaur & Implant Center.\n\n\u2139\ufe0f Specific pricing for your custom treatment plan requires an in-person digital examination and 3D CBCT scan. Our Senior Specialist will evaluate your case in person.\n\n\ud83d\udc68\u200d\u2695\ufe0f **Attending Specialist**: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\n\ud83d\udccd **Location**: 100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034\n\ud83d\udd52 **Hours**: 9:00 AM - 8:00 PM\n\n\ud83d\udcc5 **Real-Time Available Slots**: Saturday, Jul 25 at 11:00 AM, Saturday, Jul 25 at 03:30 PM, Sunday, Jul 26 at 10:00 AM\nReply with your preferred slot to confirm your booking!",
+      "triage_tier": "COLD_ROUTINE",
+      "intent_score": 35,
+      "citations": [],
+      "circuit_action": "STANDARD_AUTOMATED_REPLY"
+    },
+    {
+      "turn_index": 6,
+      "timestamp_utc": "2026-07-24T13:05:14.144290+00:00",
+      "user_query": "& c:/Users/chinm/AntiGravity/.venv/Scripts/python.exe c:/Users/chinm/AntiGravity/month1_python_core/demo.py",
+      "bot_reply": "Hello Hashi! Thank you for contacting Apex Dental Centaur & Implant Center.\n\n\u2139\ufe0f Specific pricing for your custom treatment plan requires an in-person digital examination and 3D CBCT scan. Our Senior Specialist will evaluate your case in person.\n\n\ud83d\udc68\u200d\u2695\ufe0f **Attending Specialist**: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\n\ud83d\udccd **Location**: 100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034\n\ud83d\udd52 **Hours**: 9:00 AM - 8:00 PM\n\n\ud83d\udcc5 **Real-Time Available Slots**: Saturday, Jul 25 at 11:00 AM, Saturday, Jul 25 at 03:30 PM, Sunday, Jul 26 at 10:00 AM\nReply with your preferred slot to confirm your booking!",
+      "triage_tier": "COLD_ROUTINE",
+      "intent_score": 35,
+      "citations": [],
+      "circuit_action": "STANDARD_AUTOMATED_REPLY"
     }
   ],
-  "last_updated_utc": "2026-07-24T12:57:41.420182+00:00"
+  "last_updated_utc": "2026-07-24T13:05:14.144290+00:00"
 }

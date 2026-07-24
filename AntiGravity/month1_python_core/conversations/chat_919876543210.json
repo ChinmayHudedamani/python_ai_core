@@ -3,7 +3,7 @@
   "masked_phone": "+91-987****10",
   "session_created_utc": "2026-07-24T13:03:20.541071+00:00",
   "status": "ACTIVE_AUTOMATED",
-  "total_turns": 1,
+  "total_turns": 2,
   "turns": [
     {
       "turn_index": 1,
@@ -16,7 +16,19 @@
         "legal_disclaimer.no_prescription_allowed"
       ],
       "circuit_action": "STANDARD_AUTOMATED_REPLY"
+    },
+    {
+      "turn_index": 2,
+      "timestamp_utc": "2026-07-24T13:11:10.688149+00:00",
+      "user_query": "ldQW;EKQDL/;l'Wql;kkWJL;GEG",
+      "bot_reply": "\u26a0\ufe0f **Unclear Inquiry Message**:\n\nWe couldn't understand your message. Please specify your dental inquiry or treatment (e.g. Invisalign, Implants, Tooth Pain, Root Canal) so our clinic team can assist you.",
+      "triage_tier": "DISQUALIFIED",
+      "intent_score": 0,
+      "citations": [
+        "security_shield.gibberish_spam_blocked"
+      ],
+      "circuit_action": "STANDARD_AUTOMATED_REPLY"
     }
   ],
-  "last_updated_utc": "2026-07-24T13:03:20.541071+00:00"
+  "last_updated_utc": "2026-07-24T13:11:10.688149+00:00"
 }

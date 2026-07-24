@@ -6,7 +6,7 @@ import difflib
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv
-from day2_python import clean_client_data, mask_pii
+from day2_python import clean_client_data, mask_pii, validate_indian_phone_number, is_gibberish_text
 from day3_python import score_lead_intent
 
 load_dotenv()
@@ -176,7 +176,28 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_fo
     # Step 0: Security Inspection & Prescription Refusal Shield
     security_audit: Dict[str, Any] = inspect_security_threats(raw_notes)
     
-    # 0A: Refuse Prescription Attempts (Legal Protection)
+    # 0A: Refuse Gibberish / Meaningless Keyboard Spam
+    if is_gibberish_text(raw_notes):
+        cleaned_patient = clean_client_data(raw_patient_data)
+        return {
+            "patient": cleaned_patient,
+            "triage": {
+                "lead_tier": "DISQUALIFIED",
+                "reasoning": "SAFETY ALERT: Gibberish / Meaningless keyboard spam detected."
+            },
+            "grounding_facts": {
+                "has_grounded_facts": False,
+                "citations": ["security_shield.gibberish_spam_blocked"]
+            },
+            "whatsapp_response": (
+                "⚠️ **Unclear Inquiry Message**:\n\n"
+                "We couldn't understand your message. Please specify your dental inquiry or treatment "
+                "(e.g. Invisalign, Implants, Tooth Pain, Root Canal) so our clinic team can assist you."
+            ),
+            "zero_hallucination_guarantee": True
+        }
+
+    # 0B: Refuse Prescription Attempts (Legal Protection)
     if "PRESCRIPTION_MEDICATION_ATTEMPT" in security_audit["threat_categories"]:
         cleaned_patient = clean_client_data(raw_patient_data)
         return {

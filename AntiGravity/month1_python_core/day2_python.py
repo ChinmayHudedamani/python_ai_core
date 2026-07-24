@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 HINGLISH_TRANSLATION_MAP: Dict[str, str] = {
     "daant": "tooth", "dant": "tooth", "teeths": "teeth", "dard": "pain",
@@ -17,6 +17,69 @@ HINGLISH_TRANSLATION_MAP: Dict[str, str] = {
 def mask_pii(text: str) -> str:
     """Masks phone numbers and names for secure unencrypted logging."""
     return re.sub(r"(\+\d{2}|\d{3})\d{4,6}(\d{2})", r"\1****\2", text)
+
+
+def validate_indian_phone_number(phone_str: str) -> Tuple[bool, str]:
+    """
+    Strict 10-Digit Indian Mobile Phone Validator.
+    Valid Indian mobile numbers must be 10 digits starting with 6, 7, 8, or 9
+    (optional +91 or leading 0 allowed).
+    """
+    if not isinstance(phone_str, str) or not phone_str.strip():
+        return False, "Phone number cannot be empty."
+
+    digits_only = re.sub(r"\D", "", phone_str)
+
+    # Strip leading country code 91 or leading 0
+    if len(digits_only) == 12 and digits_only.startswith("91"):
+        digits_only = digits_only[2:]
+    elif len(digits_only) == 11 and digits_only.startswith("0"):
+        digits_only = digits_only[1:]
+
+    if len(digits_only) != 10:
+        return False, f"Invalid phone length ({len(digits_only)} digits). Indian mobile numbers must be exactly 10 digits."
+
+    if not re.match(r"^[6-9]\d{9}$", digits_only):
+        return False, "Invalid mobile prefix. Indian mobile numbers must start with 6, 7, 8, or 9."
+
+    return True, f"+91-{digits_only[:5]}-{digits_only[5:]}"
+
+
+def is_gibberish_text(text_str: str) -> bool:
+    """
+    Detects random keyboard mash / meaningless gibberish spam (e.g. 'ldQW;EKQDL/;l\'Wql;kkWJL;GEG').
+    """
+    if not text_str or len(text_str.strip()) < 3:
+        return False
+
+    clean_text = re.sub(r"[^\w\s]", "", text_str).strip()
+    if not clean_text:
+        return True
+
+    words = clean_text.split()
+    total_words = len(words)
+
+    # 1. Check for long unbroken consonant clusters (> 5 consonants in a row)
+    if re.search(r"[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]{6,}", clean_text):
+        return True
+
+    # 2. Check vowel ratio in alphabet characters
+    letters = [c.lower() for c in clean_text if c.isalpha()]
+    if letters:
+        vowels = [c for c in letters if c in "aeiouy"]
+        if len(letters) >= 8 and (len(vowels) / len(letters)) < 0.15:
+            return True
+
+    # 3. Check if words lack vowels
+    nonsense_words = 0
+    for w in words:
+        if len(w) >= 5 and not any(v in w.lower() for v in "aeiouy"):
+            nonsense_words += 1
+
+    if total_words > 0 and (nonsense_words / total_words) >= 0.5:
+        return True
+
+    return False
 
 
 def normalize_hinglish_text(text: str) -> str:
