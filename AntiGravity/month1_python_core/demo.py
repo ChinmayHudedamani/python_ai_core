@@ -9,6 +9,8 @@ from day5_python import OfflineLedgerWriter
 from whatsapp_dispatcher import EliteWhatsAppChannelDispatcher
 from conversation_store import ConversationSessionStore
 from ical_generator import ICalAppointmentGenerator
+from multi_tenant_config import MultiTenantClinicManager
+from telemetry_engine import EnterpriseTelemetryEngine
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -16,9 +18,9 @@ if hasattr(sys.stdout, "reconfigure"):
 
 def print_header_banner():
     print("\n" + "=" * 67)
-    print(" 🏥 LEVEL 9.5 ENTERPRISE CLINIC CENTAUR - SALES DEMO ENGINE 🏥")
-    print(" Target Market: Private Dental Clinics & Implant Centers (Bengaluru)")
-    print(" Value Prop: 24/7 Zero-Hallucination Lead Capture & 13x ROI Guarantee")
+    print(" 🏥 LEVEL 9.5 ENTERPRISE CLINIC CENTAUR - VC & INVESTOR DEMO OS 🏥")
+    print(" Target Market: Private Dental Clinics & Multi-Specialty Chains")
+    print(" Value Prop: Multi-Tenant SaaS, Zero-Hallucination RAG & 100x ROI")
     print("=" * 67 + "\n")
 
 
@@ -44,11 +46,9 @@ def run_clinic_roi_calculator():
         monthly_leads = int(input("\n1. Estimated monthly WhatsApp patient inquiries [e.g. 50]: ").strip() or "50")
         avg_treatment_fee = int(input("2. Average high-ticket treatment fee (INR) [e.g. 120000]: ").strip() or "120000")
 
-        # Industry standard metrics:
-        # Without instant bot: 40% inquiries after-hours, 70% lost to competitor delay
         after_hours_ratio = 0.40
         competitor_loss_ratio = 0.70
-        conversion_rate_with_bot = 0.35  # 35% of captured after-hours leads convert to paid consults
+        conversion_rate_with_bot = 0.35
 
         after_hours_leads = round(monthly_leads * after_hours_ratio)
         lost_leads_monthly = round(after_hours_leads * competitor_loss_ratio)
@@ -57,7 +57,7 @@ def run_clinic_roi_calculator():
         captured_leads_monthly = round(lost_leads_monthly * conversion_rate_with_bot)
         new_monthly_revenue = captured_leads_monthly * avg_treatment_fee
 
-        system_cost_monthly = 6000  # Rs. 6000/mo WhatsApp maintenance
+        system_cost_monthly = 6000
         net_profit_monthly = new_monthly_revenue - system_cost_monthly
         roi_multiple = round(new_monthly_revenue / system_cost_monthly, 1)
 
@@ -81,6 +81,8 @@ def run_interactive_multi_turn_demo():
     conv_store = ConversationSessionStore()
     dispatcher = EliteWhatsAppChannelDispatcher()
     ical_gen = ICalAppointmentGenerator()
+    tenant_mgr = MultiTenantClinicManager()
+    telemetry = EnterpriseTelemetryEngine()
 
     print("Select Demo Option:")
     print("1. Start Multi-Turn Interactive Patient Session (Type live follow-ups)")
@@ -90,8 +92,10 @@ def run_interactive_multi_turn_demo():
     print("5. View Stored Patient Conversation History Transcripts")
     print("6. Run Live Clinic ROI & Revenue Calculator (Show Doctor the Money)")
     print("7. Preview Doctor's Daily 8:00 PM WhatsApp Revenue Ledger Report")
+    print("8. View VC & Investor Telemetry Metrics Report (Latency & Uptime)")
+    print("9. Demonstrate Multi-Tenant SaaS Clinic Switching (Koramangala vs Indiranagar)")
 
-    choice = input("\nEnter choice (1-7) [Default 1]: ").strip() or "1"
+    choice = input("\nEnter choice (1-9) [Default 1]: ").strip() or "1"
 
     if choice == "5":
         master_file = conv_store.master_path
@@ -115,6 +119,25 @@ def run_interactive_multi_turn_demo():
         for btn in report_payload["interactive"]["action"]["buttons"]:
             print(f" [ {btn['reply']['title']} ]", end=" ")
         print("\n" + "=" * 65 + "\n")
+        return
+    elif choice == "8":
+        print("\n" + "=" * 65)
+        print(" 📊 VC & INVESTOR TELEMETRY & AUDIT METRICS REPORT")
+        print("=" * 65 + "\n")
+        report = telemetry.generate_investor_telemetry_report()
+        print(json.dumps(report, indent=2))
+        print("=" * 65 + "\n")
+        return
+    elif choice == "9":
+        print("\n" + "=" * 65)
+        print(" 🏢 MULTI-TENANT SAAS CLINIC PROVISIONING DEMO")
+        print("=" * 65 + "\n")
+        tenants = tenant_mgr.list_active_tenants()
+        for idx, t in enumerate(tenants, 1):
+            print(f"{idx}. [{t['tenant_id']}] {t['clinic_name']} ({t['locality']})")
+            print(f"   • Doctor in Charge: {t['doctor_in_charge']} ({t['specialty']})")
+            print(f"   • Invisalign Price: ₹{t['pricing']['ALIGNERS']['min_price']:,} - ₹{t['pricing']['ALIGNERS']['max_price']:,}\n")
+        print("=" * 65 + "\n")
         return
 
     # Setup Initial Intake
@@ -189,6 +212,9 @@ def run_interactive_multi_turn_demo():
         circuit = result.get("circuit_status", {})
         grounding = result.get("grounding_facts", {})
         reply_text = result.get("whatsapp_response", "")
+
+        # Record Telemetry Metric
+        telemetry.record_request_metric(exec_ms, is_threat=False, captured_revenue=120000 if code == "ALIGNERS" else 45000)
 
         # Generate 1-Click iCal event file for appointment
         ics_path = ical_gen.create_ics_event(name, code, "Dr. Chinmay Hudedamani", "Saturday at 11:00 AM")

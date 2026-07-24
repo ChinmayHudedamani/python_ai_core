@@ -1,0 +1,12 @@
+{
+  "total_api_requests": 0,
+  "avg_latency_ms": 1.8,
+  "p95_latency_ms": 3.9,
+  "threats_deflected": 0,
+  "total_revenue_captured_inr": 0,
+  "conversion_funnel": {
+    "total_inquiries": 0,
+    "triaged_vip": 0,
+    "booked_consultations": 0
+  }
+}

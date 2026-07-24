@@ -1,0 +1,26 @@
+{
+  "tenant_id": "clinic_indiranagar_002",
+  "clinic_name": "Indiranagar Perfect Smile Studio",
+  "city": "Bengaluru",
+  "locality": "100 Feet Road, Indiranagar",
+  "contact_phone": "+91-9876543210",
+  "doctor_in_charge": "Dr. Ananya Roy",
+  "specialty": "Orthodontics & Aesthetic Smile Makeovers",
+  "pricing": {
+    "ALIGNERS": {
+      "min_price": 90000,
+      "max_price": 250000,
+      "emi_monthly": 8000
+    },
+    "IMPLANTS": {
+      "min_price": 40000,
+      "max_price": 105000,
+      "emi_monthly": 5000
+    },
+    "RCT": {
+      "min_price": 7000,
+      "max_price": 20000,
+      "emi_monthly": 0
+    }
+  }
+}
