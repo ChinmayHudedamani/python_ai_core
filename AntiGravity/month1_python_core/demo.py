@@ -10,7 +10,7 @@ from whatsapp_dispatcher import EliteWhatsAppChannelDispatcher
 from conversation_store import ConversationSessionStore
 from ical_generator import ICalAppointmentGenerator
 from appointment_reminder import AppointmentReminderEngine
-from payment_gateway import RazorpayUPIPaymentEngine
+from payment_gateway import ZomatoBlinkitStylePaymentEngine
 from rigorous_bot_stress_test import run_rigorous_bot_breakdown_machine
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -121,7 +121,7 @@ def run_interactive_multi_turn_demo():
     dispatcher = EliteWhatsAppChannelDispatcher()
     ical_gen = ICalAppointmentGenerator()
     reminder_eng = AppointmentReminderEngine()
-    payment_eng = RazorpayUPIPaymentEngine()
+    payment_eng = ZomatoBlinkitStylePaymentEngine()
 
     print("Select Demo Option:")
     print("1. Start Multi-Turn Interactive Patient Session (Type live follow-ups)")
@@ -164,12 +164,21 @@ def run_interactive_multi_turn_demo():
         run_rigorous_bot_breakdown_machine()
         return
     elif choice == "9":
-        print("\n" + "=" * 65)
-        print(" 💳 GENERATE ₹500 CONSULTATION FEE UPI / RAZORPAY PAYMENT LINK")
-        print("=" * 65 + "\n")
-        pay_res = payment_eng.generate_consultation_fee_link("Ananya Roy", "+91-9988776655", 500)
-        print(pay_res["whatsapp_text"])
-        print("\n" + "=" * 65 + "\n")
+        payment_eng = ZomatoBlinkitStylePaymentEngine()
+        print("\n" + "=" * 67)
+        print(" 🛒 ZOMATO & BLINKIT STYLE 1-CLICK WHATSAPP EXPRESS CHECKOUT")
+        print("=" * 67 + "\n")
+        pay_res = payment_eng.generate_zomato_style_checkout_payload("Ananya Roy", "+91-9988776655")
+        print(pay_res["whatsapp_checkout_text"])
+        print("\n1-Click WhatsApp Interactive CTA Buttons:")
+        for btn in pay_res["interactive_buttons"]:
+            print(f" [ {btn['title']} ]", end=" ")
+        print("\n\n" + "─" * 67)
+        print("⚡ SIMULATING REAL-TIME PAYMENT CONFIRMATION WEBHOOK...")
+        time.sleep(1)
+        receipt = payment_eng.generate_instant_payment_receipt(pay_res["transaction_id"], "Ananya Roy", 500)
+        print("\n" + receipt["receipt_text"])
+        print("=" * 67 + "\n")
         return
     elif choice == "10":
         print_feature_matrix_showcase()

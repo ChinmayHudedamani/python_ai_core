@@ -13,7 +13,7 @@ from day4_python import generate_zero_hallucination_response, inspect_security_t
 from day6_python import SafetyCircuitBreaker, is_within_operating_callback_hours
 from day5_python import OfflineLedgerWriter
 from conversation_store import ConversationSessionStore
-from payment_gateway import RazorpayUPIPaymentEngine
+from payment_gateway import ZomatoBlinkitStylePaymentEngine
 from appointment_reminder import AppointmentReminderEngine
 
 
@@ -28,7 +28,7 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         self.breaker = SafetyCircuitBreaker()
         self.ledger = OfflineLedgerWriter()
         self.conv_store = ConversationSessionStore(max_turns=8)
-        self.payment = RazorpayUPIPaymentEngine()
+        self.payment = ZomatoBlinkitStylePaymentEngine()
         self.reminder = AppointmentReminderEngine()
 
     def test_01_prompt_injection_override_attack(self):
@@ -153,11 +153,11 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         print("  ✅ [PASS 9/10] 8 Follow-Up Turn Limit Handoff Circuit Verified.")
 
     def test_10_razorpay_upi_fee_payment_link(self):
-        """Scenario 10: Razorpay UPI Fee Payment Link Generation."""
-        payment_res = self.payment.generate_consultation_fee_link("Ananya Roy", "+91-9988776655", 500)
-        self.assertEqual(payment_res["amount_inr"], 500)
-        self.assertIn("upi://pay?", payment_res["upi_link"])
-        print("  ✅ [PASS 10/10] Razorpay UPI Payment Link Generation Verified.")
+        """Scenario 10: Zomato/Blinkit Style 1-Click Payment Engine."""
+        payment_res = self.payment.generate_zomato_style_checkout_payload("Ananya Roy", "+91-9988776655")
+        self.assertEqual(payment_res["bill_summary"]["payable_fee"], 500)
+        self.assertIn("upi://pay?", payment_res["payment_links"]["gpay"])
+        print("  ✅ [PASS 10/10] Zomato/Blinkit Style 1-Click Payment Engine Verified.")
 
 
 def run_rigorous_bot_breakdown_machine():
