@@ -1,0 +1,44 @@
+{
+  "phone": "+91-9988776655",
+  "masked_phone": "+91-998****55",
+  "session_created_utc": "2026-07-24T12:47:11.839444+00:00",
+  "total_turns": 3,
+  "turns": [
+    {
+      "turn_index": 1,
+      "timestamp_utc": "2026-07-24T12:47:11.839444+00:00",
+      "user_query": "Hi, what is the cost of invislin clear aligners in Bengaluru? Do you have EMI options?",
+      "bot_reply": "Hello Ananya Roy! Thank you for contacting Apex Dental Centaur & Implant Center.\n\n\ud83e\uddb7 **Invisalign Clear Aligners Details**:\n  \u2022 Price Range: \u20b985,000 - \u20b92,20,000 (Complete Package)\n  \u2022 EMI Starting: \u20b97,500/month (12-month 0% EMI)\n  \u2022 Warranty: 5-Year Guarantee with free tray refinements & Vivera retainers\n  \u2022 Description: US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.\n\n\ud83d\udccb **Frequently Asked Info**:\n  \u2022 We offer 0% interest monthly EMI plans over 3, 6, 12, or 18 months for treatments above \u20b915,000 via Bajaj Finserv, Credit Cards, and LiquiLoans.\n\n\ud83d\udc68\u200d\u2695\ufe0f **Attending Specialist**: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\n\ud83d\udccd **Location**: 100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034\n\ud83d\udd52 **Hours**: 9:00 AM - 8:00 PM\n\n\ud83d\udcc5 **Real-Time Available Slots**: Saturday, Jul 25 at 11:00 AM, Saturday, Jul 25 at 03:30 PM, Sunday, Jul 26 at 10:00 AM\n\u2b50 **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot.",
+      "triage_tier": "VIP_HIGH_REVENUE",
+      "intent_score": 100,
+      "citations": [
+        "procedures.INVIS",
+        "faqs[1]"
+      ],
+      "circuit_action": "VIP_15MIN_HITL_DISPATCH_TRIGGERED"
+    },
+    {
+      "turn_index": 2,
+      "timestamp_utc": "2026-07-24T12:47:13.826528+00:00",
+      "user_query": "Do you offer 0% EMI options?",
+      "bot_reply": "Hello Ananya Roy! Thank you for contacting Apex Dental Centaur & Implant Center.\n\n\ud83d\udccb **Frequently Asked Info**:\n  \u2022 We offer 0% interest monthly EMI plans over 3, 6, 12, or 18 months for treatments above \u20b915,000 via Bajaj Finserv, Credit Cards, and LiquiLoans.\n\n\ud83d\udc68\u200d\u2695\ufe0f **Attending Specialist**: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\n\ud83d\udccd **Location**: 100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034\n\ud83d\udd52 **Hours**: 9:00 AM - 8:00 PM\n\n\ud83d\udcc5 **Real-Time Available Slots**: Saturday, Jul 25 at 11:00 AM, Saturday, Jul 25 at 03:30 PM, Sunday, Jul 26 at 10:00 AM\n\u2b50 **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot.",
+      "triage_tier": "VIP_HIGH_REVENUE",
+      "intent_score": 95,
+      "citations": [
+        "faqs[1]"
+      ],
+      "circuit_action": "VIP_15MIN_HITL_DISPATCH_TRIGGERED"
+    },
+    {
+      "turn_index": 3,
+      "timestamp_utc": "2026-07-24T12:47:14.792845+00:00",
+      "user_query": "Which doctor will treat me?",
+      "bot_reply": "Hello Ananya Roy! Thank you for contacting Apex Dental Centaur & Implant Center.\n\n\u2139\ufe0f Specific pricing for your custom treatment plan requires an in-person digital examination and 3D CBCT scan. Our Senior Specialist will evaluate your case in person.\n\n\ud83d\udc68\u200d\u2695\ufe0f **Attending Specialist**: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\n\ud83d\udccd **Location**: 100 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034\n\ud83d\udd52 **Hours**: 9:00 AM - 8:00 PM\n\n\ud83d\udcc5 **Real-Time Available Slots**: Today (Friday, Jul 24) at 05:30 PM (Emergency Pain Relief Window), Today (Friday, Jul 24) at 07:00 PM (Urgent Clinical Slot), Saturday, Jul 25 at 11:00 AM\n\ud83d\udea8 **Emergency Clinical Slot**: Reply YES to lock in today's emergency pain-relief appointment.",
+      "triage_tier": "URGENT_CLINICAL",
+      "intent_score": 80,
+      "citations": [],
+      "circuit_action": "STANDARD_AUTOMATED_REPLY"
+    }
+  ],
+  "last_updated_utc": "2026-07-24T12:47:14.793844+00:00"
+}

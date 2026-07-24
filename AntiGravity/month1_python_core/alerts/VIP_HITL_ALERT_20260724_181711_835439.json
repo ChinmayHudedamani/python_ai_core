@@ -1,0 +1,18 @@
+{
+  "alert_type": "VIP_15MIN_HITL_DISPATCH_TRIGGERED",
+  "severity": "HIGH_PRIORITY_REVENUE",
+  "quiet_hours_active": false,
+  "patient_name": "Ananya Roy",
+  "phone": "+919988776655",
+  "masked_phone": "+91****6655",
+  "procedure_code": "ALIGNERS",
+  "intent_score": 100,
+  "assigned_doctor": "Dr. Chinmay Hudedamani",
+  "target_sla": "Immediate 15-Minute Human Callback Window",
+  "available_slots": [
+    "Saturday, Jul 25 at 11:00 AM",
+    "Saturday, Jul 25 at 03:30 PM",
+    "Sunday, Jul 26 at 10:00 AM"
+  ],
+  "timestamp_utc": "2026-07-24T12:47:11.835439+00:00"
+}

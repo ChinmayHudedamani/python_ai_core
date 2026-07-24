@@ -1,0 +1,18 @@
+{
+  "alert_type": "VIP_15MIN_HITL_DISPATCH_TRIGGERED",
+  "severity": "HIGH_PRIORITY_REVENUE",
+  "quiet_hours_active": false,
+  "patient_name": "Rakya",
+  "phone": "7758493933",
+  "masked_phone": "775****33",
+  "procedure_code": "ALIGNERS",
+  "intent_score": 95,
+  "assigned_doctor": "Dr. Chinmay Hudedamani",
+  "target_sla": "Immediate 15-Minute Human Callback Window",
+  "available_slots": [
+    "Saturday, Jul 25 at 11:00 AM",
+    "Saturday, Jul 25 at 03:30 PM",
+    "Sunday, Jul 26 at 10:00 AM"
+  ],
+  "timestamp_utc": "2026-07-24T12:44:01.809508+00:00"
+}
