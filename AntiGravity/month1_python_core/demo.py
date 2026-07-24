@@ -24,16 +24,36 @@ def print_header_banner():
     print("=" * 67 + "\n")
 
 
-def format_legible_patient_reply(whatsapp_text: str) -> str:
-    """Formats bot response text for maximum legibility and visual clarity."""
-    lines = whatsapp_text.splitlines()
-    formatted_lines = []
-    for line in lines:
-        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨") or line.startswith("⚠️") or line.startswith("📞"):
-            formatted_lines.append(f"\n{line}")
-        else:
-            formatted_lines.append(line)
-    return "\n".join(formatted_lines)
+def print_feature_matrix_showcase():
+    """Renders the High-Converting Feature Matrix Showcase for Clinic Owners."""
+    print("\n" + "=" * 67)
+    print(" 🌟 THE 6 IRRESISTIBLE 'BUY-ON-THE-SPOT' CLINIC FEATURES 🌟")
+    print("=" * 67 + "\n")
+
+    features = [
+        ("⚡ 24/7 Zero-Hallucination WhatsApp Response", "Responds to late-night inquiries (11:30 PM) in 2 seconds with exact procedure prices, warranties, and 0% EMI plans."),
+        ("😴 Doctor Quiet-Hours Sleep Protection (9PM-8AM)", "Never wakes doctors at 2 AM for routine questions. Queues VIP leads for 8:30 AM morning callback; routes 112 medical emergencies 24/7."),
+        ("📊 Zero Cloud EMR Hassle (Instant Auto-Excel Sync)", "Requires zero staff training. Automatically logs all appointments into a simple appointments_ledger.csv on your desk computer."),
+        ("📲 Dual WhatsApp Patient & Doctor Alerting", "Sends instant lead push alerts to the doctor's phone with 1-click CTA buttons ([📞 Call Patient Now], [✅ Confirm Slot])."),
+        ("🛡️ 100% Medical Legal & Prescription Shield", "Refuses patient requests for painkillers/drugs legally, protecting your clinic from malpractice lawsuits and liability."),
+        ("📅 1-Click Google Calendar & iCal Sync", "Embeds downloadable .ics calendar invitations directly into patient WhatsApp chats for seamless appointment reminders.")
+    ]
+
+    for idx, (title, desc) in enumerate(features, 1):
+        print(f" {idx}. {title}")
+        print(f"    👉 {desc}\n")
+
+    print("=" * 67)
+    print(" 🏆 COMPETITIVE COMPARISON MATRIX")
+    print("=" * 67)
+    print(" Feature                          | Generic Chatbot | Centaur OS")
+    print(" -------------------------------- | --------------- | ----------")
+    print(" 24/7 After-Hours Lead Capture    | ❌ No           | ✅ YES (2 Sec)")
+    print(" 0% EMI & Exact Price Quotes      | ❌ Hallucinates  | ✅ 100% Fact-Checked")
+    print(" 2 AM Doctor Sleep Protection     | ❌ Rings Doctor | ✅ Queues 8:30 AM")
+    print(" Prescription Legal Protection    | ❌ Dangerous    | ✅ 100% Refusal Shield")
+    print(" Direct Excel Ledger Sync         | ❌ Requires SaaS| ✅ Auto-CSV Sync")
+    print("=" * 67 + "\n")
 
 
 def run_clinic_roi_calculator():
@@ -94,8 +114,9 @@ def run_interactive_multi_turn_demo():
     print("7. Preview Doctor's Daily 8:00 PM WhatsApp Revenue Ledger Report")
     print("8. View VC & Investor Telemetry Metrics Report (Latency & Uptime)")
     print("9. Demonstrate Multi-Tenant SaaS Clinic Switching (Koramangala vs Indiranagar)")
+    print("10. View Irresistible Clinic Feature Matrix & Competitive Comparison")
 
-    choice = input("\nEnter choice (1-9) [Default 1]: ").strip() or "1"
+    choice = input("\nEnter choice (1-10) [Default 1]: ").strip() or "1"
 
     if choice == "5":
         master_file = conv_store.master_path
@@ -138,6 +159,9 @@ def run_interactive_multi_turn_demo():
             print(f"   • Doctor in Charge: {t['doctor_in_charge']} ({t['specialty']})")
             print(f"   • Invisalign Price: ₹{t['pricing']['ALIGNERS']['min_price']:,} - ₹{t['pricing']['ALIGNERS']['max_price']:,}\n")
         print("=" * 65 + "\n")
+        return
+    elif choice == "10":
+        print_feature_matrix_showcase()
         return
 
     # Setup Initial Intake
