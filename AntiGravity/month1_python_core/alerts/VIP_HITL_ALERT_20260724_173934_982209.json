@@ -1,0 +1,17 @@
+{
+  "alert_type": "VIP_HIGH_REVENUE_HITL_DISPATCH",
+  "severity": "HIGH_PRIORITY_REVENUE",
+  "patient_name": "Ananya Roy",
+  "phone": "+919988776655",
+  "masked_phone": "+91****6655",
+  "procedure_code": "ALIGNERS",
+  "intent_score": 100,
+  "assigned_doctor": "Dr. Ananya Roy",
+  "target_sla": "15-Minute Human Account Executive Callback",
+  "available_slots": [
+    "Saturday, Jul 25 at 11:00 AM",
+    "Saturday, Jul 25 at 03:30 PM",
+    "Sunday, Jul 26 at 10:00 AM"
+  ],
+  "timestamp_utc": "2026-07-24T12:09:34.982209+00:00"
+}
