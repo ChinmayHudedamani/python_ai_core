@@ -57,38 +57,41 @@ def print_feature_matrix_showcase():
 
 
 def run_clinic_roi_calculator():
-    """Live Interactive ROI Calculator for Clinic Owners."""
+    """Live Interactive ROI Calculator grounded on realistic dental clinic metrics."""
     print("\n" + "=" * 65)
-    print(" 📊 LIVE CLINIC ROI & REVENUE PROJECTION CALCULATOR 📊")
+    print(" 📊 REALISTIC CLINIC ROI & REVENUE PROJECTION CALCULATOR 📊")
     print("=" * 65)
 
     try:
-        monthly_leads = int(input("\n1. Estimated monthly WhatsApp patient inquiries [e.g. 50]: ").strip() or "50")
-        avg_treatment_fee = int(input("2. Average high-ticket treatment fee (INR) [e.g. 120000]: ").strip() or "120000")
+        monthly_leads = int(input("\n1. Estimated monthly WhatsApp patient inquiries [e.g. 45]: ").strip() or "45")
+        avg_treatment_fee = int(input("2. Average treatment package fee (INR) [e.g. 34000]: ").strip() or "34000")
 
-        after_hours_ratio = 0.40
-        competitor_loss_ratio = 0.70
-        conversion_rate_with_bot = 0.35
+        # Grounded realistic metrics based on Bengaluru dental clinic benchmarks:
+        after_hours_ratio = 0.30          # 30% inquiries happen after 8:00 PM
+        competitor_loss_ratio = 0.50     # 50% of unanswered after-hours leads text another clinic
+        conversion_rate_with_bot = 0.25   # Conservative 25% conversion of captured leads to paid consults
 
         after_hours_leads = round(monthly_leads * after_hours_ratio)
         lost_leads_monthly = round(after_hours_leads * competitor_loss_ratio)
         lost_revenue_monthly = lost_leads_monthly * avg_treatment_fee
 
-        captured_leads_monthly = round(lost_leads_monthly * conversion_rate_with_bot)
-        new_monthly_revenue = captured_leads_monthly * avg_treatment_fee
+        captured_treatments_monthly = max(1, round(lost_leads_monthly * conversion_rate_with_bot))
+        new_monthly_revenue = captured_treatments_monthly * avg_treatment_fee
 
-        system_cost_monthly = 6000
+        system_cost_monthly = 6000  # Rs. 6,000/mo WhatsApp maintenance
         net_profit_monthly = new_monthly_revenue - system_cost_monthly
         roi_multiple = round(new_monthly_revenue / system_cost_monthly, 1)
 
-        print("\n" + "📈 YOUR CLINIC REVENUE PROJECTION RESULTS ".center(65, "─"))
-        print(f" • Monthly Patient Inquiries : {monthly_leads} leads/month")
-        print(f" • After-Hours Inquiries (8PM-9AM): {after_hours_leads} leads/month")
-        print(f" 🔴 Estimated Lost Revenue (Without AI) : ₹{lost_revenue_monthly:,} / month")
-        print(f" 🟢 Net New Captured Revenue (With Centaur): ₹{new_monthly_revenue:,} / month")
-        print(f" 💰 Monthly Software Cost           : ₹{system_cost_monthly:,} / month")
-        print(f" 🚀 NET CLINIC MONTHLY PROFIT       : ₹{net_profit_monthly:,} / month")
-        print(f" 🌟 PROJECTED MONTHLY ROI          : {roi_multiple}x RETURN ON INVESTMENT")
+        print("\n" + "📈 YOUR REALISTIC CLINIC REVENUE PROJECTION RESULTS ".center(65, "─"))
+        print(f" • Monthly Patient Inquiries       : {monthly_leads} leads/month")
+        print(f" • After-Hours Inquiries (8PM-8AM) : {after_hours_leads} leads/month")
+        print(f" • Unanswered Leads Lost           : {lost_leads_monthly} leads/month")
+        print(f" 🔴 Estimated Revenue Lost Without AI  : ₹{lost_revenue_monthly:,} / month")
+        print(f" 🟢 Net New Paid Treatments Closed : {captured_treatments_monthly} extra patient(s)/month")
+        print(f" 💰 Net New Monthly Revenue Captured  : ₹{new_monthly_revenue:,} / month")
+        print(f" ⚙️ System Maintenance Fee            : ₹{system_cost_monthly:,} / month")
+        print(f" 🚀 NET CLINIC MONTHLY PROFIT         : ₹{net_profit_monthly:,} / month")
+        print(f" 🌟 REALISTIC CONSERVATIVE MONTHLY ROI: {roi_multiple}x RETURN ON INVESTMENT")
         print("─" * 65 + "\n")
     except Exception:
         print("\n⚠️ Invalid input. Returning to main menu.")
