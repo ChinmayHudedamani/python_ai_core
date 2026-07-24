@@ -93,7 +93,7 @@
       "circuit_action": "STANDARD_AUTOMATED_REPLY"
     }
   ],
-  "last_updated_utc": "2026-07-24T12:51:12.114187+00:00",
+  "last_updated_utc": "2026-07-24T13:48:15.528387+00:00",
   "status": "RECEPTIONIST_REQUIRED",
   "flagged_reason": "Exceeded maximum automated turn limit (8 follow-ups)"
 }
