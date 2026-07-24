@@ -92,6 +92,18 @@ def run_interactive_multi_turn_demo():
         print(f"📩 [TURN {turn_counter}] PATIENT MESSAGE: \"{current_notes}\"")
         print("=" * 65)
 
+        # Check Turn Limit Safety Circuit (> 8 turns triggers Receptionist Handoff)
+        exceeded, handoff_data = conv_store.check_turn_limit_exceeded(phone)
+        if exceeded:
+            print("\n🚨 SAFETY CIRCUIT TRIGGERED: MAXIMUM AUTOMATED FOLLOW-UP LIMIT EXCEEDED (>8 TURNS)")
+            print(f"🔒 Session Flagged As    : RECEPTIONIST_REQUIRED")
+            print(f"💾 Conversation Frozen At: {handoff_data['session_file']}")
+            print("\n" + "📱 BOT WHATSAPP HANDOFF REPLY ".center(65, "─"))
+            print(format_legible_patient_reply(handoff_data["whatsapp_response"]))
+            print("─" * 65)
+            print("\n❌ AUTOMATED BOT CONVERSATION HALTED. PATIENT TRANSFERRED TO HUMAN RECEPTIONIST.")
+            break
+
         raw_intake = {
             "name": name,
             "phone": phone,
@@ -110,6 +122,11 @@ def run_interactive_multi_turn_demo():
 
         # Save to Persistent Conversation Store
         save_status = conv_store.append_chat_turn(phone, current_notes, result)
+
+        if save_status.get("status") == "RECEPTIONIST_REQUIRED_LIMIT_EXCEEDED":
+            print("\n🚨 MAXIMUM FOLLOW-UP QUESTION LIMIT REACHED (8 TURNS). HALTING AUTOMATED BOT.")
+            print(format_legible_patient_reply(save_status["whatsapp_response"]))
+            break
 
         print(f"\n⚡ Processing Time: {exec_ms} ms | Triage Tier: {triage.get('lead_tier')} | Score: {triage.get('intent_score')}/100")
         print(f"🔒 Security & Safety Action: {circuit.get('circuit_action')}")
