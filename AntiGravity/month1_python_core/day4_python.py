@@ -38,6 +38,13 @@ PROMPT_INJECTION_CATEGORIES: Dict[str, List[str]] = {
     "DATA_LEAK_ATTEMPT": [
         r"reveal api key", r"show system prompt", r"print instructions", r"export database",
         r"show passwords", r"dump env", r"read file", r"access key"
+    ],
+    "PRESCRIPTION_MEDICATION_ATTEMPT": [
+        r"medicine", r"medicines", r"painkiller", r"painkillers", r"pain killer",
+        r"tablet", r"tablets", r"antibiotic", r"antibiotics", r"prescribe",
+        r"prescription", r"dose", r"dosage", r"pill", r"pills", r"paracetamol",
+        r"ibugesic", r"combiflam", r"amoxicillin", r"what should i take",
+        r"what medicine", r"which medicine"
     ]
 }
 
@@ -49,7 +56,7 @@ def sanitize_user_input(text: str) -> str:
 
 
 def inspect_security_threats(text: str) -> Dict[str, Any]:
-    """Multi-layer Security Shield: Inspects direct overrides, financial fraud, and data leaks."""
+    """Multi-layer Security Shield: Inspects direct overrides, financial fraud, data leaks, and prescription attempts."""
     text_clean: str = sanitize_user_input(text).lower()
     threats_found: List[str] = []
 
@@ -162,12 +169,36 @@ def lookup_clinic_knowledge(query_text: str, procedure_code: str = "") -> Dict[s
     }
 
 
-def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Dict[str, Any]:
+def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_followup: bool = False) -> Dict[str, Any]:
     """Day 4 Core RAG Pipeline: Safety -> Triage -> Grounding -> Response."""
     raw_notes: str = raw_patient_data.get("notes", "")
 
-    # Step 0: Security Inspection
+    # Step 0: Security Inspection & Prescription Refusal Shield
     security_audit: Dict[str, Any] = inspect_security_threats(raw_notes)
+    
+    # 0A: Refuse Prescription Attempts (Legal Protection)
+    if "PRESCRIPTION_MEDICATION_ATTEMPT" in security_audit["threat_categories"]:
+        cleaned_patient = clean_client_data(raw_patient_data)
+        return {
+            "patient": cleaned_patient,
+            "triage": {
+                "lead_tier": "URGENT_CLINICAL",
+                "reasoning": "SAFETY ALERT: Prescription / Medication Request Refused (Legal Disclaimer Triggered)."
+            },
+            "grounding_facts": {
+                "has_grounded_facts": False,
+                "citations": ["legal_disclaimer.no_prescription_allowed"]
+            },
+            "whatsapp_response": (
+                "⚠️ **Medical Disclaimer & Safety Alert**:\n\n"
+                "I am an AI assistant and legally cannot prescribe medications, suggest specific painkillers, or provide dosage advice.\n\n"
+                "For your safety, medication prescriptions require an in-person or telehealth evaluation by a licensed dentist.\n\n"
+                "Our Senior Specialist has been notified and will contact you directly to evaluate your condition and prescribe safe medication if required."
+            ),
+            "zero_hallucination_guarantee": True
+        }
+
+    # 0B: Direct Attack / Prompt Injection Refusal
     if security_audit["is_threat"]:
         return {
             "patient": raw_patient_data,
@@ -238,17 +269,17 @@ Assigned Triage Tier: {lead_tier}
 AUTHORITATIVE CLINIC FACTS:
 {facts_summary}
 
-STRICT ZERO-HALLUCINATION RULES:
+STRICT ZERO-HALLUCINATION & LEGAL RULES:
 1. State ONLY prices, warranties, and details present in AUTHORITATIVE CLINIC FACTS. Never invent numbers.
-2. If pricing for a specific complex procedure is not listed, explicitly state: "Pricing requires an in-person evaluation by Dr. Chinmay Hudedamani."
-3. Mention available consultation slots: {', '.join(available_slots)}.
+2. NEVER prescribe drugs, painkillers, or dosages. If asked about medicine, refuse politely stating AI cannot prescribe drugs legally.
+3. If pricing for a specific complex procedure is not listed, explicitly state: "Pricing requires an in-person evaluation by Dr. Chinmay Hudedamani."
 """
             response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
             whatsapp_reply: str = response.text.strip()
         except Exception:
-            whatsapp_reply = build_heuristic_rag_response(cleaned_patient, kb_facts, lead_tier, available_slots, detected_lang)
+            whatsapp_reply = build_heuristic_rag_response(cleaned_patient, kb_facts, lead_tier, available_slots, detected_lang, is_followup)
     else:
-        whatsapp_reply = build_heuristic_rag_response(cleaned_patient, kb_facts, lead_tier, available_slots, detected_lang)
+        whatsapp_reply = build_heuristic_rag_response(cleaned_patient, kb_facts, lead_tier, available_slots, detected_lang, is_followup)
 
     return {
         "patient": cleaned_patient,
@@ -268,7 +299,7 @@ STRICT ZERO-HALLUCINATION RULES:
     }
 
 
-def build_heuristic_rag_response(cleaned_patient: Dict[str, Any], kb_facts: Dict[str, Any], lead_tier: str, slots: List[str], lang: str) -> str:
+def build_heuristic_rag_response(cleaned_patient: Dict[str, Any], kb_facts: Dict[str, Any], lead_tier: str, slots: List[str], lang: str, is_followup: bool = False) -> str:
     """Multi-Fact Zero-Hallucination Heuristic Fallback Response Builder."""
     name: str = cleaned_patient.get("name", "Patient")
     procs: List[Dict[str, Any]] = kb_facts.get("matched_procedures", [])
@@ -299,24 +330,30 @@ def build_heuristic_rag_response(cleaned_patient: Dict[str, Any], kb_facts: Dict
             "Our Senior Specialist will evaluate your case in person.\n"
         )
 
-    if doctors:
-        d = doctors[0]
-        lines.append(f"👨‍⚕️ **Attending Specialist**: {d['name']} ({d['specialty']} - {d['qualification']})")
+    # Only include full location, hours, and doctor qualification blocks on initial message (Turn 1), not on every follow-up turn!
+    if not is_followup:
+        if doctors:
+            d = doctors[0]
+            lines.append(f"👨‍⚕️ **Attending Specialist**: {d['name']} ({d['specialty']} - {d['qualification']})")
 
-    lines.append(f"📍 **Location**: {clinic.get('location', 'Koramangala, Bengaluru')}")
-    lines.append(f"🕒 **Hours**: {clinic.get('operating_hours', {}).get('monday_to_saturday', '9 AM - 8 PM')}\n")
+        lines.append(f"📍 **Location**: {clinic.get('location', 'Koramangala, Bengaluru')}")
+        lines.append(f"🕒 **Hours**: {clinic.get('operating_hours', {}).get('monday_to_saturday', '9 AM - 8 PM')}\n")
 
-    if slots:
-        lines.append(f"📅 **Real-Time Available Slots**: {', '.join(slots)}")
+        if slots:
+            lines.append(f"📅 **Real-Time Available Slots**: {', '.join(slots)}")
 
-    if lead_tier == "VIP_HIGH_REVENUE":
-        lines.append("⭐ **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot.")
-    elif lead_tier == "URGENT_CLINICAL":
-        lines.append("🚨 **Emergency Clinical Slot**: Reply YES to lock in today's emergency pain-relief appointment.")
+        if lead_tier == "VIP_HIGH_REVENUE":
+            lines.append("⭐ **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot.")
+        elif lead_tier == "URGENT_CLINICAL":
+            lines.append("🚨 **Emergency Clinical Slot**: Reply YES to lock in today's emergency pain-relief appointment.")
+        else:
+            lines.append("Reply with your preferred slot to confirm your booking!")
     else:
-        lines.append("Reply with your preferred slot to confirm your booking!")
+        # Compact follow-up prompt
+        lines.append("💬 Reply '1' to confirm appointment slot, '2' to request a doctor callback, or 'EXIT' to end chat.")
 
     return "\n".join(lines)
+
 
 
 if __name__ == "__main__":

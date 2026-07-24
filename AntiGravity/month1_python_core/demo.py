@@ -78,7 +78,7 @@ def run_interactive_multi_turn_demo():
         name = input("Patient Name [e.g. Ananya Roy]: ").strip() or "Ananya Roy"
         phone = input("Phone Number [e.g. +91-9988776655]: ").strip() or "+91-9988776655"
         code = input("Procedure Code [e.g. ALIGNERS / IMPLANTS / RCT]: ").strip() or "ALIGNERS"
-        initial_notes = input("First Inquiry Message: ").strip() or "What is the price of Invisalign clear aligners?"
+        initial_notes = input(" Inquiry Message: ").strip() or "What is the price of Invisalign clear aligners?"
 
     current_notes = initial_notes
     turn_counter = 0
@@ -112,7 +112,7 @@ def run_interactive_multi_turn_demo():
         }
 
         start_time = time.time()
-        result = breaker.process_intake_safety_circuit(raw_intake)
+        result = breaker.process_intake_safety_circuit(raw_intake, is_followup=(turn_counter > 1))
         exec_ms = round((time.time() - start_time) * 1000, 2)
 
         triage = result.get("triage", {})

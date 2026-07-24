@@ -1,0 +1,22 @@
+{
+  "phone": "+91-9876543210",
+  "masked_phone": "+91-987****10",
+  "session_created_utc": "2026-07-24T13:03:20.541071+00:00",
+  "status": "ACTIVE_AUTOMATED",
+  "total_turns": 1,
+  "turns": [
+    {
+      "turn_index": 1,
+      "timestamp_utc": "2026-07-24T13:03:20.541071+00:00",
+      "user_query": "tell me what medicine to buy to ensure no pain in my mouth for now, should i take any painkillers?",
+      "bot_reply": "\u26a0\ufe0f **Medical Disclaimer & Safety Alert**:\n\nI am an AI assistant and legally cannot prescribe medications, suggest specific painkillers, or provide dosage advice.\n\nFor your safety, medication prescriptions require an in-person or telehealth evaluation by a licensed dentist.\n\nOur Senior Specialist has been notified and will contact you directly to evaluate your condition and prescribe safe medication if required.",
+      "triage_tier": "URGENT_CLINICAL",
+      "intent_score": 0,
+      "citations": [
+        "legal_disclaimer.no_prescription_allowed"
+      ],
+      "circuit_action": "STANDARD_AUTOMATED_REPLY"
+    }
+  ],
+  "last_updated_utc": "2026-07-24T13:03:20.541071+00:00"
+}
