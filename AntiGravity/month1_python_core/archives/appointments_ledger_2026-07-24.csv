@@ -1,0 +1,1 @@
+record_hash,timestamp_utc,patient_name,phone,procedure_code,lead_tier,intent_score,assigned_doctor,booking_slot,language,zero_hallucination_guarantee,whatsapp_response
