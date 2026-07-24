@@ -1,5 +1,5 @@
 {
-  "total_sessions": 4,
+  "total_sessions": 5,
   "sessions": [
     {
       "phone": "+91-9988776655",
@@ -32,6 +32,14 @@
       "session_file": "c:\\Users\\chinm\\AntiGravity\\month1_python_core\\conversations\\chat_8883031233012391203.json",
       "total_turns": 2,
       "last_updated_utc": "2026-07-24T13:07:47.733006+00:00"
+    },
+    {
+      "phone": "+91-9999900000",
+      "masked_phone": "+91-999****00",
+      "status": "RECEPTIONIST_REQUIRED",
+      "session_file": "C:\\Users\\chinm\\AntiGravity\\month1_python_core\\conversations\\chat_919999900000.json",
+      "total_turns": 8,
+      "last_updated_utc": "2026-07-24T13:26:37.890363+00:00"
     }
   ]
 }

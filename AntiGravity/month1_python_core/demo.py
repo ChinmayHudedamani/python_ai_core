@@ -9,8 +9,9 @@ from day5_python import OfflineLedgerWriter
 from whatsapp_dispatcher import EliteWhatsAppChannelDispatcher
 from conversation_store import ConversationSessionStore
 from ical_generator import ICalAppointmentGenerator
-from multi_tenant_config import MultiTenantClinicManager
-from telemetry_engine import EnterpriseTelemetryEngine
+from appointment_reminder import AppointmentReminderEngine
+from payment_gateway import RazorpayUPIPaymentEngine
+from rigorous_bot_stress_test import run_rigorous_bot_breakdown_machine
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -18,16 +19,16 @@ if hasattr(sys.stdout, "reconfigure"):
 
 def print_header_banner():
     print("\n" + "=" * 67)
-    print(" 🏥 LEVEL 9.5 ENTERPRISE CLINIC CENTAUR - VC & INVESTOR DEMO OS 🏥")
-    print(" Target Market: Private Dental Clinics & Multi-Specialty Chains")
-    print(" Value Prop: Multi-Tenant SaaS, Zero-Hallucination RAG & 100x ROI")
+    print(" 🏥 LEVEL 9.5 ENTERPRISE CLINIC CENTAUR - SALES DEMO ENGINE 🏥")
+    print(" Target Market: Private Dental Clinics & Implant Centers (Bengaluru)")
+    print(" Value Prop: 24/7 Zero-Hallucination Lead Capture & 100% Safety Shield")
     print("=" * 67 + "\n")
 
 
 def print_feature_matrix_showcase():
     """Renders the High-Converting Feature Matrix Showcase for Clinic Owners."""
     print("\n" + "=" * 67)
-    print(" 🌟 THE 6 IRRESISTIBLE 'BUY-ON-THE-SPOT' CLINIC FEATURES 🌟")
+    print(" 🌟 THE 8 IRRESISTIBLE 'BUY-ON-THE-SPOT' CLINIC FEATURES 🌟")
     print("=" * 67 + "\n")
 
     features = [
@@ -36,7 +37,9 @@ def print_feature_matrix_showcase():
         ("📊 Zero Cloud EMR Hassle (Instant Auto-Excel Sync)", "Requires zero staff training. Automatically logs all appointments into a simple appointments_ledger.csv on your desk computer."),
         ("📲 Dual WhatsApp Patient & Doctor Alerting", "Sends instant lead push alerts to the doctor's phone with 1-click CTA buttons ([📞 Call Patient Now], [✅ Confirm Slot])."),
         ("🛡️ 100% Medical Legal & Prescription Shield", "Refuses patient requests for painkillers/drugs legally, protecting your clinic from malpractice lawsuits and liability."),
-        ("📅 1-Click Google Calendar & iCal Sync", "Embeds downloadable .ics calendar invitations directly into patient WhatsApp chats for seamless appointment reminders.")
+        ("📅 1-Click Google Calendar & iCal Sync", "Embeds downloadable .ics calendar invitations directly into patient WhatsApp chats for seamless appointment reminders."),
+        ("💳 Instant UPI / Razorpay Payment Links", "Generates ₹500 initial consultation reservation payment links directly inside WhatsApp chat."),
+        ("⏰ Automated 24-Hour WhatsApp Appointment Reminders", "Sends automated pre-appointment reminders to reduce patient no-shows by 80%.")
     ]
 
     for idx, (title, desc) in enumerate(features, 1):
@@ -53,7 +56,21 @@ def print_feature_matrix_showcase():
     print(" 2 AM Doctor Sleep Protection     | ❌ Rings Doctor | ✅ Queues 8:30 AM")
     print(" Prescription Legal Protection    | ❌ Dangerous    | ✅ 100% Refusal Shield")
     print(" Direct Excel Ledger Sync         | ❌ Requires SaaS| ✅ Auto-CSV Sync")
+    print(" Instant UPI Reservation Links    | ❌ No           | ✅ Razorpay / GPay")
+    print(" 8 Follow-Up Handoff Circuit       | ❌ Infinite Loop| ✅ Receptionist Handoff")
     print("=" * 67 + "\n")
+
+
+def format_legible_patient_reply(whatsapp_text: str) -> str:
+    """Formats bot response text for maximum legibility and visual clarity."""
+    lines = whatsapp_text.splitlines()
+    formatted_lines = []
+    for line in lines:
+        if line.startswith("🦷") or line.startswith("📋") or line.startswith("👨‍⚕️") or line.startswith("📍") or line.startswith("🕒") or line.startswith("📅") or line.startswith("⭐") or line.startswith("🚨") or line.startswith("⚠️") or line.startswith("📞") or line.startswith("💳") or line.startswith("⏰"):
+            formatted_lines.append(f"\n{line}")
+        else:
+            formatted_lines.append(line)
+    return "\n".join(formatted_lines)
 
 
 def run_clinic_roi_calculator():
@@ -66,10 +83,9 @@ def run_clinic_roi_calculator():
         monthly_leads = int(input("\n1. Estimated monthly WhatsApp patient inquiries [e.g. 45]: ").strip() or "45")
         avg_treatment_fee = int(input("2. Average treatment package fee (INR) [e.g. 34000]: ").strip() or "34000")
 
-        # Grounded realistic metrics based on Bengaluru dental clinic benchmarks:
-        after_hours_ratio = 0.30          # 30% inquiries happen after 8:00 PM
-        competitor_loss_ratio = 0.50     # 50% of unanswered after-hours leads text another clinic
-        conversion_rate_with_bot = 0.25   # Conservative 25% conversion of captured leads to paid consults
+        after_hours_ratio = 0.30
+        competitor_loss_ratio = 0.50
+        conversion_rate_with_bot = 0.25
 
         after_hours_leads = round(monthly_leads * after_hours_ratio)
         lost_leads_monthly = round(after_hours_leads * competitor_loss_ratio)
@@ -78,7 +94,7 @@ def run_clinic_roi_calculator():
         captured_treatments_monthly = max(1, round(lost_leads_monthly * conversion_rate_with_bot))
         new_monthly_revenue = captured_treatments_monthly * avg_treatment_fee
 
-        system_cost_monthly = 6000  # Rs. 6,000/mo WhatsApp maintenance
+        system_cost_monthly = 6000
         net_profit_monthly = new_monthly_revenue - system_cost_monthly
         roi_multiple = round(new_monthly_revenue / system_cost_monthly, 1)
 
@@ -104,8 +120,8 @@ def run_interactive_multi_turn_demo():
     conv_store = ConversationSessionStore()
     dispatcher = EliteWhatsAppChannelDispatcher()
     ical_gen = ICalAppointmentGenerator()
-    tenant_mgr = MultiTenantClinicManager()
-    telemetry = EnterpriseTelemetryEngine()
+    reminder_eng = AppointmentReminderEngine()
+    payment_eng = RazorpayUPIPaymentEngine()
 
     print("Select Demo Option:")
     print("1. Start Multi-Turn Interactive Patient Session (Type live follow-ups)")
@@ -115,8 +131,8 @@ def run_interactive_multi_turn_demo():
     print("5. View Stored Patient Conversation History Transcripts")
     print("6. Run Live Clinic ROI & Revenue Calculator (Show Doctor the Money)")
     print("7. Preview Doctor's Daily 8:00 PM WhatsApp Revenue Ledger Report")
-    print("8. View VC & Investor Telemetry Metrics Report (Latency & Uptime)")
-    print("9. Demonstrate Multi-Tenant SaaS Clinic Switching (Koramangala vs Indiranagar)")
+    print("8. Run Rigorous Bot Breakdown Machine (10 Adversarial Stress Test Scenarios)")
+    print("9. Generate ₹500 Consultation Fee UPI / Razorpay Payment Link")
     print("10. View Irresistible Clinic Feature Matrix & Competitive Comparison")
 
     choice = input("\nEnter choice (1-10) [Default 1]: ").strip() or "1"
@@ -145,23 +161,15 @@ def run_interactive_multi_turn_demo():
         print("\n" + "=" * 65 + "\n")
         return
     elif choice == "8":
-        print("\n" + "=" * 65)
-        print(" 📊 VC & INVESTOR TELEMETRY & AUDIT METRICS REPORT")
-        print("=" * 65 + "\n")
-        report = telemetry.generate_investor_telemetry_report()
-        print(json.dumps(report, indent=2))
-        print("=" * 65 + "\n")
+        run_rigorous_bot_breakdown_machine()
         return
     elif choice == "9":
         print("\n" + "=" * 65)
-        print(" 🏢 MULTI-TENANT SAAS CLINIC PROVISIONING DEMO")
+        print(" 💳 GENERATE ₹500 CONSULTATION FEE UPI / RAZORPAY PAYMENT LINK")
         print("=" * 65 + "\n")
-        tenants = tenant_mgr.list_active_tenants()
-        for idx, t in enumerate(tenants, 1):
-            print(f"{idx}. [{t['tenant_id']}] {t['clinic_name']} ({t['locality']})")
-            print(f"   • Doctor in Charge: {t['doctor_in_charge']} ({t['specialty']})")
-            print(f"   • Invisalign Price: ₹{t['pricing']['ALIGNERS']['min_price']:,} - ₹{t['pricing']['ALIGNERS']['max_price']:,}\n")
-        print("=" * 65 + "\n")
+        pay_res = payment_eng.generate_consultation_fee_link("Ananya Roy", "+91-9988776655", 500)
+        print(pay_res["whatsapp_text"])
+        print("\n" + "=" * 65 + "\n")
         return
     elif choice == "10":
         print_feature_matrix_showcase()
@@ -239,9 +247,6 @@ def run_interactive_multi_turn_demo():
         circuit = result.get("circuit_status", {})
         grounding = result.get("grounding_facts", {})
         reply_text = result.get("whatsapp_response", "")
-
-        # Record Telemetry Metric
-        telemetry.record_request_metric(exec_ms, is_threat=False, captured_revenue=120000 if code == "ALIGNERS" else 45000)
 
         # Generate 1-Click iCal event file for appointment
         ics_path = ical_gen.create_ics_event(name, code, "Dr. Chinmay Hudedamani", "Saturday at 11:00 AM")
