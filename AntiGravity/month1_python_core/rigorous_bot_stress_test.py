@@ -157,7 +157,22 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         payment_res = self.payment.generate_zomato_style_checkout_payload("Ananya Roy", "+91-9988776655")
         self.assertEqual(payment_res["bill_summary"]["payable_fee"], 500)
         self.assertIn("upi://pay?", payment_res["payment_links"]["gpay"])
-        print("  ✅ [PASS 10/10] Zomato/Blinkit Style 1-Click Payment Engine Verified.")
+        print("  ✅ [PASS 10/11] Zomato/Blinkit Style 1-Click Payment Engine Verified.")
+
+    def test_11_concurrency_double_booking_lockout(self):
+        """Scenario 11: Ephemeral TTL Concurrency Lock & Double-Booking Prevention."""
+        from concurrency_lock import SlotConcurrencyLockManager
+        lock_mgr = SlotConcurrencyLockManager(ttl_seconds=600)
+
+        # Patient A acquires lock
+        acquired_a, info_a = lock_mgr.acquire_ephemeral_slot_hold("dr_chinmay", "Saturday 11:00 AM", "+91-9988776655")
+        self.assertTrue(acquired_a)
+
+        # Patient B attempts same slot -> Collision Lockout!
+        acquired_b, info_b = lock_mgr.acquire_ephemeral_slot_hold("dr_chinmay", "Saturday 11:00 AM", "+91-9111122222")
+        self.assertFalse(acquired_b)
+        self.assertEqual(info_b["status"], "CONCURRENCY_COLLISION_SLOT_HELD")
+        print("  ✅ [PASS 11/11] Concurrency Control & Double-Booking Lockout Verified.")
 
 
 def run_rigorous_bot_breakdown_machine():

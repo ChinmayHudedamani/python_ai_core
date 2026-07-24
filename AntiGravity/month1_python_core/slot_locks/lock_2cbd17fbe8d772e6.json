@@ -1,0 +1,10 @@
+{
+  "slot_key": "2cbd17fbe8d772e6",
+  "doctor_id": "dr_chinmay",
+  "slot_time": "Saturday 11:00 AM",
+  "patient_phone": "+91-9988776655",
+  "status": "TEMPORARY_RESERVED",
+  "acquired_utc": "2026-07-24T13:33:15.764928+00:00",
+  "expires_utc": "2026-07-24T13:43:15.764928+00:00",
+  "expires_timestamp": 1784900595.764928
+}
