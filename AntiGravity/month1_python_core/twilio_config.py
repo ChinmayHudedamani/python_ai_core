@@ -6,8 +6,8 @@ from typing import Dict, Any
 CONFIG_FILE: Path = Path(__file__).parent / "twilio_credentials.json"
 
 DEFAULT_CONFIG: Dict[str, str] = {
-    "account_sid": "AC_TWILIO_DEMO_ACCOUNT_SID_KEY",
-    "auth_token": "TWILIO_DEMO_AUTH_TOKEN_KEY",
+    "account_sid": os.getenv("TWILIO_ACCOUNT_SID", "AC_TWILIO_DEMO_ACCOUNT_SID"),
+    "auth_token": os.getenv("TWILIO_AUTH_TOKEN", "TWILIO_DEMO_AUTH_TOKEN"),
     "sandbox_whatsapp_number": "whatsapp:+14155238886",
     "webhook_port": "5000"
 }

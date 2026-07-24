@@ -70,7 +70,7 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         }
         res = generate_zero_hallucination_response(rx_input)
         self.assertIn("legal_disclaimer.no_prescription_allowed", res["grounding_facts"]["citations"])
-        self.assertIn("Medical Disclaimer & Safety Alert", res["whatsapp_response"])
+        self.assertIn("Medical Disclaimer & Notice", res["whatsapp_response"])
         print("  ✅ [PASS 3/10] Illegal Prescription Request Refused.")
 
     def test_04_invalid_phone_number_validation(self):
@@ -198,7 +198,18 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         res = shield.inspect_input_security(homoglyph_attack)
         self.assertTrue(res["is_threat"])
         self.assertIn("FINANCIAL_FRAUD_EXPLOIT", res["threat_categories"])
-        print("  ✅ [PASS 13/13] Unicode Homoglyph Attack Intercepted.")
+        print("  ✅ [PASS 13/14] Unicode Homoglyph Attack Intercepted.")
+
+    def test_14_unified_core_engine_pipeline(self):
+        """Scenario 14: Unified Core Engine & Config System Verification."""
+        from core_engine import CentaurCoreEngine
+        import time
+        engine = CentaurCoreEngine()
+        fresh_phone = f"+91-987{int(time.time()) % 10000000:07d}"
+        res = engine.process_patient_intake("Hi, what is the cost of Invisalign clear aligners in Koramangala?", "Ananya Roy", fresh_phone)
+        self.assertEqual(res["status"], "PROCESSED_SUCCESSFULLY")
+        self.assertEqual(res["triage"]["lead_tier"], "VIP_HIGH_REVENUE")
+        print("  ✅ [PASS 14/14] Unified Core Engine & System Config Verified.")
 
 
 def run_rigorous_bot_breakdown_machine():

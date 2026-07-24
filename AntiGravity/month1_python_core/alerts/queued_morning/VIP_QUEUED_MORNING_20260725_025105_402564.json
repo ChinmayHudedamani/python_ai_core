@@ -2,10 +2,10 @@
   "alert_type": "VIP_QUEUED_FOR_MORNING_CALLBACK",
   "severity": "HIGH_PRIORITY_REVENUE",
   "quiet_hours_active": true,
-  "patient_name": "Night Lead",
-  "phone": "+919988776655",
-  "masked_phone": "+91****6655",
-  "procedure_code": "ALIGNERS",
+  "patient_name": "Ananya Roy",
+  "phone": "+919876500000",
+  "masked_phone": "+91****0000",
+  "procedure_code": "GENERAL",
   "intent_score": 95,
   "assigned_doctor": "Dr. Chinmay Hudedamani",
   "target_sla": "Queued for Priority 8:00 AM Morning Callback (Quiet Hours Protection)",
@@ -14,5 +14,5 @@
     "Sunday, Jul 26 at 03:30 PM",
     "Monday, Jul 27 at 10:00 AM"
   ],
-  "timestamp_utc": "2026-07-24T23:42:22.987827+00:00"
+  "timestamp_utc": "2026-07-24T21:21:05.402564+00:00"
 }

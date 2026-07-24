@@ -169,7 +169,7 @@ def lookup_clinic_knowledge(query_text: str, procedure_code: str = "") -> Dict[s
     }
 
 
-def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_followup: bool = False) -> Dict[str, Any]:
+def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_followup: bool = False, force_fast_rag: bool = False) -> Dict[str, Any]:
     """Day 4 Core RAG Pipeline: Safety -> Triage -> Grounding -> Response."""
     raw_notes: str = raw_patient_data.get("notes", "")
 
@@ -211,10 +211,11 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_fo
                 "citations": ["legal_disclaimer.no_prescription_allowed"]
             },
             "whatsapp_response": (
-                "⚠️ **Medical Disclaimer & Safety Alert**:\n\n"
-                "I am an AI assistant and legally cannot prescribe medications, suggest specific painkillers, or provide dosage advice.\n\n"
-                "For your safety, medication prescriptions require an in-person or telehealth evaluation by a licensed dentist.\n\n"
-                "Our Senior Specialist has been notified and will contact you directly to evaluate your condition and prescribe safe medication if required."
+                "Medical Disclaimer & Notice:\n\n"
+                "I am an automated assistant and cannot prescribe medications or dosage advice legally.\n"
+                "For your clinical safety, prescription of medication requires an in-person or telehealth evaluation by a licensed dentist.\n\n"
+                "Our senior clinical team has been alerted and will contact you directly.\n"
+                "Emergency Contact Line: +91-9988776655"
             ),
             "zero_hallucination_guarantee": True
         }
@@ -268,7 +269,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any], is_fo
     api_key: Optional[str] = os.environ.get("GEMINI_API_KEY")
 
     # Step 5: Response Generation
-    if api_key and has_facts:
+    if api_key and has_facts and not force_fast_rag:
         try:
             from google import genai
             client = genai.Client(api_key=api_key)
@@ -323,55 +324,76 @@ STRICT ZERO-HALLUCINATION & LEGAL RULES:
 def build_heuristic_rag_response(cleaned_patient: Dict[str, Any], kb_facts: Dict[str, Any], lead_tier: str, slots: List[str], lang: str, is_followup: bool = False) -> str:
     """Multi-Fact Zero-Hallucination Heuristic Fallback Response Builder."""
     name: str = cleaned_patient.get("name", "Patient")
+    notes_lower: str = cleaned_patient.get("notes", "").lower()
+
+    BOOKING_KEYWORDS = ["book", "booking", "slot", "appointment", "confirm", "saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "11 am", "10 am", "4 pm", "5 pm", "schedule", "reserve", "yes", "works", "11:00", "10:00"]
+
+    if any(k in notes_lower for k in BOOKING_KEYWORDS):
+        matched_slot = slots[0] if slots else "Saturday at 11:00 AM"
+        return (
+            f"APPOINTMENT SLOT HOLD CONFIRMATION\n\n"
+            f"Dear {name},\n"
+            f"We have reserved your requested consultation slot:\n\n"
+            f"- Date & Time: {matched_slot}\n"
+            f"- Attending Specialist: Dr. Chinmay Hudedamani (Senior Specialist)\n"
+            f"- Location: Apex Dental Centaur, Koramangala 4th Block, Bengaluru\n\n"
+            f"Payment Breakdown:\n"
+            f"- Specialist Consultation Fee: Rs. 1,000\n"
+            f"- Promotional Discount (SMILE50): -Rs. 500\n"
+            f"- Total Payable Fee: Rs. 500\n\n"
+            f"Instant UPI Payment Links:\n"
+            f"- GPay: upi://pay?pa=apexdental@upi&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM\n"
+            f"- PhonePe: upi://pay?pa=apexdental@ybl&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM\n"
+            f"- Paytm: upi://pay?pa=apexdental@paytm&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM\n\n"
+            f"Note: This slot hold is valid for 10 minutes. Please reply CONFIRMED after completing payment."
+        )
+
     procs: List[Dict[str, Any]] = kb_facts.get("matched_procedures", [])
     faqs: List[Dict[str, Any]] = kb_facts.get("matched_faqs", [])
     doctors: List[Dict[str, Any]] = kb_facts.get("matched_doctors", [])
     clinic: Dict[str, Any] = kb_facts.get("clinic_info", {})
 
-    greeting: str = f"Namaste {name}!" if lang == "hinglish" else f"Hello {name}!"
-    lines: List[str] = [f"{greeting} Thank you for contacting {clinic.get('name', 'Apex Dental Centaur')}.\n"]
+    greeting: str = f"Hello {name},"
+    lines: List[str] = [f"{greeting}\n\nThank you for contacting {clinic.get('name', 'Apex Dental Centaur')}.\n"]
 
     if procs:
         for p in procs:
-            lines.append(f"🦷 **{p['name']} Details**:")
-            lines.append(f"  • Price Range: {p['price_range_inr']}")
-            lines.append(f"  • EMI Starting: {p['emi_starting']}")
-            lines.append(f"  • Warranty: {p['warranty']}")
-            lines.append(f"  • Description: {p['description']}\n")
+            lines.append(f"{p['name']} Information:")
+            lines.append(f"- Price Range: {p['price_range_inr']}")
+            lines.append(f"- EMI Starting From: {p['emi_starting']}")
+            lines.append(f"- Warranty: {p['warranty']}")
+            lines.append(f"- Details: {p['description']}\n")
 
     if faqs:
-        lines.append("📋 **Frequently Asked Info**:")
+        lines.append("Clinical Information:")
         for f in faqs:
-            lines.append(f"  • {f['answer']}")
+            lines.append(f"- {f['answer']}")
         lines.append("")
 
     if not procs and not faqs:
         lines.append(
-            "ℹ️ Specific pricing for your custom treatment plan requires an in-person digital examination and 3D CBCT scan. "
-            "Our Senior Specialist will evaluate your case in person.\n"
+            "Specific procedure pricing requires an in-person clinical examination and 3D intraoral evaluation by Dr. Chinmay Hudedamani.\n"
         )
 
-    # Only include full location, hours, and doctor qualification blocks on initial message (Turn 1), not on every follow-up turn!
     if not is_followup:
         if doctors:
             d = doctors[0]
-            lines.append(f"👨‍⚕️ **Attending Specialist**: {d['name']} ({d['specialty']} - {d['qualification']})")
+            lines.append(f"Attending Specialist: {d['name']} ({d['specialty']} - {d['qualification']})")
 
-        lines.append(f"📍 **Location**: {clinic.get('location', 'Koramangala, Bengaluru')}")
-        lines.append(f"🕒 **Hours**: {clinic.get('operating_hours', {}).get('monday_to_saturday', '9 AM - 8 PM')}\n")
+        lines.append(f"Location: {clinic.get('location', 'Koramangala 4th Block, Bengaluru')}")
+        lines.append(f"Operating Hours: {clinic.get('operating_hours', {}).get('monday_to_saturday', '9:00 AM - 8:00 PM')}\n")
 
         if slots:
-            lines.append(f"📅 **Real-Time Available Slots**: {', '.join(slots)}")
+            lines.append(f"Available Consultation Slots: {', '.join(slots)}")
 
         if lead_tier == "VIP_HIGH_REVENUE":
-            lines.append("⭐ **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot.")
+            lines.append("Priority SLA: Our senior clinical coordinator will contact you within 15 minutes.")
         elif lead_tier == "URGENT_CLINICAL":
-            lines.append("🚨 **Emergency Clinical Slot**: Reply YES to lock in today's emergency pain-relief appointment.")
+            lines.append("Emergency Slot: Reply YES to confirm today's emergency pain-relief appointment.")
         else:
-            lines.append("Reply with your preferred slot to confirm your booking!")
+            lines.append("Please reply with your preferred slot to confirm your booking.")
     else:
-        # Compact follow-up prompt
-        lines.append("💬 Reply '1' to confirm appointment slot, '2' to request a doctor callback, or 'EXIT' to end chat.")
+        lines.append("Reply '1' to confirm slot, '2' for doctor callback, or 'EXIT' to end chat.")
 
     return "\n".join(lines)
 

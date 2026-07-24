@@ -7,28 +7,28 @@
   "turns": [
     {
       "turn_index": 1,
-      "timestamp_utc": "2026-07-24T13:03:20.541071+00:00",
-      "user_query": "tell me what medicine to buy to ensure no pain in my mouth for now, should i take any painkillers?",
-      "bot_reply": "\u26a0\ufe0f **Medical Disclaimer & Safety Alert**:\n\nI am an AI assistant and legally cannot prescribe medications, suggest specific painkillers, or provide dosage advice.\n\nFor your safety, medication prescriptions require an in-person or telehealth evaluation by a licensed dentist.\n\nOur Senior Specialist has been notified and will contact you directly to evaluate your condition and prescribe safe medication if required.",
-      "triage_tier": "URGENT_CLINICAL",
-      "intent_score": 0,
+      "timestamp_utc": "2026-07-26T11:18:32.874343+00:00",
+      "user_query": "What is the cost of clear aligners in Koramangala?",
+      "bot_reply": "Hello Ananya Roy,\n\nThank you for contacting Apex Dental Center.\n\nInvisalign Clear Aligners Information:\n- Price Range: \u20b985,000 - \u20b92,20,000 (Complete Package)\n- EMI Starting From: \u20b97,500/month (12-month 0% EMI)\n- Warranty: 5-Year Guarantee with free tray refinements & Vivera retainers\n- Details: US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.\n\nAttending Specialist: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\nLocation: Koramangala, Bengaluru\nOperating Hours: 9:00 AM - 8:00 PM\n\nAvailable Consultation Slots: Monday, Jul 27 at 11:00 AM, Monday, Jul 27 at 03:30 PM, Tuesday, Jul 28 at 10:00 AM\nPriority SLA: Our senior clinical coordinator will contact you within 15 minutes.",
+      "triage_tier": "VIP_HIGH_REVENUE",
+      "intent_score": 90,
       "citations": [
-        "legal_disclaimer.no_prescription_allowed"
+        "procedures.INVIS"
       ],
-      "circuit_action": "STANDARD_AUTOMATED_REPLY"
+      "circuit_action": "VIP_15MIN_HITL_DISPATCH_TRIGGERED"
     },
     {
       "turn_index": 2,
-      "timestamp_utc": "2026-07-24T13:11:10.688149+00:00",
-      "user_query": "ldQW;EKQDL/;l'Wql;kkWJL;GEG",
-      "bot_reply": "\u26a0\ufe0f **Unclear Inquiry Message**:\n\nWe couldn't understand your message. Please specify your dental inquiry or treatment (e.g. Invisalign, Implants, Tooth Pain, Root Canal) so our clinic team can assist you.",
-      "triage_tier": "DISQUALIFIED",
-      "intent_score": 0,
+      "timestamp_utc": "2026-07-26T11:19:10.961183+00:00",
+      "user_query": "What is the cost of clear aligners in Koramangala?",
+      "bot_reply": "Hello Ananya Roy,\n\nThank you for contacting Apex Dental Center.\n\nInvisalign Clear Aligners Information:\n- Price Range: \u20b985,000 - \u20b92,20,000 (Complete Package)\n- EMI Starting From: \u20b97,500/month (12-month 0% EMI)\n- Warranty: 5-Year Guarantee with free tray refinements & Vivera retainers\n- Details: US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.\n\nAttending Specialist: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))\nLocation: Koramangala, Bengaluru\nOperating Hours: 9:00 AM - 8:00 PM\n\nAvailable Consultation Slots: Monday, Jul 27 at 11:00 AM, Monday, Jul 27 at 03:30 PM, Tuesday, Jul 28 at 10:00 AM\nPriority SLA: Our senior clinical coordinator will contact you within 15 minutes.",
+      "triage_tier": "VIP_HIGH_REVENUE",
+      "intent_score": 90,
       "citations": [
-        "security_shield.gibberish_spam_blocked"
+        "procedures.INVIS"
       ],
-      "circuit_action": "STANDARD_AUTOMATED_REPLY"
+      "circuit_action": "VIP_15MIN_HITL_DISPATCH_TRIGGERED"
     }
   ],
-  "last_updated_utc": "2026-07-24T13:11:10.688149+00:00"
+  "last_updated_utc": "2026-07-26T11:19:10.961183+00:00"
 }

@@ -1,0 +1,12 @@
+*.exe
+*.lnk
+*.ps1
+processed_sids.txt
+month1_python_core/twilio_credentials.json
+month1_python_core/system_config.json
+month1_python_core/.env
+month1_python_core/__pycache__/
+.venv/
+OneDrive/
+Sentra/
+../OneDrive/

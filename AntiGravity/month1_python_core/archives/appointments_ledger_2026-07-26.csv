@@ -1,0 +1,53 @@
+record_hash,timestamp_utc,patient_name,phone,procedure_code,lead_tier,intent_score,assigned_doctor,booking_slot,language,zero_hallucination_guarantee,whatsapp_response
+6782afcf307bbd7b,2026-07-26T11:11:47.694561+00:00,Patient,'+917338350871,GENERAL,WARM_ELECTIVE,45,Dr. Chinmay Hudedamani,"Monday, Jul 27 at 11:00 AM",english,True,"Hello Patient,
+
+Thank you for contacting Apex Dental Center.
+
+Invisalign Clear Aligners Information:
+- Price Range: ₹85,000 - ₹2,20,000 (Complete Package)
+- EMI Starting From: ₹7,500/month (12-month 0% EMI)
+- Warranty: 5-Year Guarantee with free tray refinements & Vivera retainers
+- Details: US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.
+
+Attending Specialist: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))
+Location: Koramangala, Bengaluru
+Operating Hours: 9:00 AM - 8:00 PM
+
+Available Consultation Slots: Monday, Jul 27 at 11:00 AM, Monday, Jul 27 at 03:30 PM, Tuesday, Jul 28 at 10:00 AM
+Please reply with your preferred slot to confirm your booking."
+c4f98039bdc6e05a,2026-07-26T11:18:32.871819+00:00,Ananya Roy,'+919876543210,GENERAL,VIP_HIGH_REVENUE,90,Dr. Chinmay Hudedamani,"Monday, Jul 27 at 11:00 AM",english,True,"Hello Ananya Roy,
+
+Thank you for contacting Apex Dental Center.
+
+Invisalign Clear Aligners Information:
+- Price Range: ₹85,000 - ₹2,20,000 (Complete Package)
+- EMI Starting From: ₹7,500/month (12-month 0% EMI)
+- Warranty: 5-Year Guarantee with free tray refinements & Vivera retainers
+- Details: US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.
+
+Attending Specialist: Dr. Chinmay Hudedamani (Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics - MDS (Prosthodontics & Implantology), Fellow of ICOI (USA))
+Location: Koramangala, Bengaluru
+Operating Hours: 9:00 AM - 8:00 PM
+
+Available Consultation Slots: Monday, Jul 27 at 11:00 AM, Monday, Jul 27 at 03:30 PM, Tuesday, Jul 28 at 10:00 AM
+Priority SLA: Our senior clinical coordinator will contact you within 15 minutes."
+a20ead57936e2080,2026-07-26T11:18:33.988057+00:00,Rohan Sharma,'+919111222333,GENERAL,WARM_ELECTIVE,45,Dr. Chinmay Hudedamani,"Monday, Jul 27 at 11:00 AM",english,True,"APPOINTMENT SLOT HOLD CONFIRMATION
+
+Dear Rohan Sharma,
+We have reserved your requested consultation slot:
+
+- Date & Time: Monday, Jul 27 at 11:00 AM
+- Attending Specialist: Dr. Chinmay Hudedamani (Senior Specialist)
+- Location: Apex Dental Centaur, Koramangala 4th Block, Bengaluru
+
+Payment Breakdown:
+- Specialist Consultation Fee: Rs. 1,000
+- Promotional Discount (SMILE50): -Rs. 500
+- Total Payable Fee: Rs. 500
+
+Instant UPI Payment Links:
+- GPay: upi://pay?pa=apexdental@upi&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM
+- PhonePe: upi://pay?pa=apexdental@ybl&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM
+- Paytm: upi://pay?pa=apexdental@paytm&pn=ApexDental&am=500&tn=SlotHold_Saturday11AM
+
+Note: This slot hold is valid for 10 minutes. Please reply CONFIRMED after completing payment."

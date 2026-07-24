@@ -57,13 +57,45 @@ class ConversationSessionStore:
             "turns": []
         }
 
-    def check_turn_limit_exceeded(self, phone: str) -> Tuple[bool, Dict[str, Any]]:
+    def reset_session(self, phone: str) -> None:
+        """Resets session turn counter and clears RECEPTIONIST_REQUIRED status."""
+        session_file: Path = self.get_session_file_path(phone)
+        session = self.load_patient_session(phone)
+        session["status"] = "ACTIVE_AUTOMATED"
+        session["total_turns"] = 0
+        session["turns"] = []
+        session["last_updated_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        try:
+            with open(session_file, "w", encoding="utf-8") as f:
+                json.dump(session, f, indent=2)
+            self._update_master_index(session)
+        except Exception:
+            pass
+
+    def check_turn_limit_exceeded(self, phone: str, user_message: str = "") -> Tuple[bool, Dict[str, Any]]:
         """
         Evaluates whether patient session has exceeded the 8 follow-up turn threshold.
-        If > 8 turns, flags status as RECEPTIONIST_REQUIRED and returns handoff payload.
+        If user sends 'hi', 'hello', or 'start over', session resets automatically.
         """
+        clean_msg = user_message.strip().lower()
+        if clean_msg in ["hi", "hello", "hey", "start over", "reset", "start", "1", "yes", "confirm"]:
+            self.reset_session(phone)
+            return False, {}
+
         session: Dict[str, Any] = self.load_patient_session(phone)
         current_turns: int = session.get("total_turns", 0)
+
+        # Check 30 minute timeout reset
+        last_updated_str = session.get("last_updated_utc")
+        if last_updated_str:
+            try:
+                last_updated = datetime.datetime.fromisoformat(last_updated_str)
+                now = datetime.datetime.now(datetime.timezone.utc)
+                if (now - last_updated).total_seconds() > 1800:
+                    self.reset_session(phone)
+                    return False, {}
+            except Exception:
+                pass
 
         if current_turns >= self.max_turns or session.get("status") == "RECEPTIONIST_REQUIRED":
             # Flag session as RECEPTIONIST_REQUIRED

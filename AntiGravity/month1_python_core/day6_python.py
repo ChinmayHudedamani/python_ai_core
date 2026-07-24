@@ -26,6 +26,8 @@ def is_within_operating_callback_hours(now: Optional[datetime.datetime] = None) 
     return 8 <= current_hour < 21
 
 
+
+
 class SafetyCircuitBreaker:
     """
     Enterprise Time-Aware Safety Circuit Breaker & Pre-Qualified VIP Dispatcher.
@@ -38,7 +40,7 @@ class SafetyCircuitBreaker:
         ensure_alerts_directories()
         self.ledger: OfflineLedgerWriter = ledger_writer or OfflineLedgerWriter()
 
-    def process_intake_safety_circuit(self, raw_patient_data: Dict[str, Any], current_time_override: Optional[datetime.datetime] = None, is_followup: bool = False) -> Dict[str, Any]:
+    def process_intake_safety_circuit(self, raw_patient_data: Dict[str, Any], current_time_override: Optional[datetime.datetime] = None, is_followup: bool = False, force_fast_rag: bool = False) -> Dict[str, Any]:
         """
         Executes Advanced Safety Circuit & Quiet-Hour Time-Aware VIP Hand-off:
         1. RAG & Threat Inspection (Day 4 Security Shield)
@@ -46,7 +48,7 @@ class SafetyCircuitBreaker:
         3. Pre-Qualified VIP Lead Dispatch (Time-Aware: Daytime 15-min SLA vs Nighttime 8-AM Queue)
         4. Idempotent Offline CSV Ledger Recording (Day 5)
         """
-        response: Dict[str, Any] = generate_zero_hallucination_response(raw_patient_data, is_followup=is_followup)
+        response: Dict[str, Any] = generate_zero_hallucination_response(raw_patient_data, is_followup=is_followup, force_fast_rag=force_fast_rag)
         triage: Dict[str, Any] = response.get("triage", {})
         lead_tier: str = triage.get("lead_tier", "COLD_ROUTINE")
         patient: Dict[str, Any] = response.get("patient", {})
