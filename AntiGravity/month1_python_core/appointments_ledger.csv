@@ -16,3 +16,6 @@ record_hash,timestamp_utc,patient_name,phone,procedure_code,lead_tier,intent_sco
 
 📅 **Real-Time Available Slots**: Saturday, Jul 25 at 11:00 AM, Saturday, Jul 25 at 03:30 PM, Sunday, Jul 26 at 10:00 AM
 ⭐ **VIP Priority Alert**: Our Senior Implantologist & AE team will contact you directly within 15 minutes to confirm your exclusive appointment slot."
+230ffd6cfb51e2ad,2026-07-23T21:20:53.559336+00:00,Rajesh Hegde,'+919900011122,EMERGENCY,RED_CRITICAL_EMERGENCY,100,Dr. Chinmay Hudedamani,PENDING_CONSULTATION,english,True,"🚨 CRITICAL MEDICAL EMERGENCY ALERT 🚨
+If the patient is experiencing profuse bleeding, chest pain, difficulty breathing, or severe trauma, PLEASE CALL NATIONAL EMERGENCY AT 112 IMMEDIATELY or visit the nearest Hospital Emergency Room.
+Our clinic emergency line has been alerted."
