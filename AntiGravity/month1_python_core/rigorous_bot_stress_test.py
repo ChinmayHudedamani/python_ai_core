@@ -172,7 +172,33 @@ class RigorousBotBreakdownMachine(unittest.TestCase):
         acquired_b, info_b = lock_mgr.acquire_ephemeral_slot_hold("dr_chinmay", "Saturday 11:00 AM", "+91-9111122222")
         self.assertFalse(acquired_b)
         self.assertEqual(info_b["status"], "CONCURRENCY_COLLISION_SLOT_HELD")
-        print("  ✅ [PASS 11/11] Concurrency Control & Double-Booking Lockout Verified.")
+        print("  ✅ [PASS 11/13] Concurrency Control & Double-Booking Lockout Verified.")
+
+    def test_12_rate_limiter_anti_spam_protection(self):
+        """Scenario 12: Token Bucket Rate Limiter DDoS Protection."""
+        from rate_limiter import TokenBucketRateLimiter
+        limiter = TokenBucketRateLimiter(max_requests=2, window_seconds=60)
+        client = "+91-9988776655"
+
+        # Request 1 & 2 pass
+        limiter.is_rate_limited(client)
+        limiter.is_rate_limited(client)
+
+        # Request 3 fails -> Rate Limited!
+        is_limited, msg = limiter.is_rate_limited(client)
+        self.assertTrue(is_limited)
+        self.assertIn("RATE LIMIT EXCEEDED", msg)
+        print("  ✅ [PASS 12/13] Token Bucket Rate Limiter Anti-Spam Verified.")
+
+    def test_13_unicode_homoglyph_obfuscated_attack(self):
+        """Scenario 13: Unicode Homoglyph & Obfuscated Prompt Injection Interceptor."""
+        from hardened_security_shield import FortifiedSecurityShield
+        shield = FortifiedSecurityShield()
+        homoglyph_attack = "frëë trêatmènt 100% discount"
+        res = shield.inspect_input_security(homoglyph_attack)
+        self.assertTrue(res["is_threat"])
+        self.assertIn("FINANCIAL_FRAUD_EXPLOIT", res["threat_categories"])
+        print("  ✅ [PASS 13/13] Unicode Homoglyph Attack Intercepted.")
 
 
 def run_rigorous_bot_breakdown_machine():
