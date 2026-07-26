@@ -1,3 +1,4 @@
+import os
 import time
 import random
 import re
@@ -26,6 +27,16 @@ class CentaurCoreEngine:
         clean_msg = raw_notes.strip().lower()
 
         sender_phone = patient_phone
+
+        # Doctor Role-Based Executive Assistant Routing
+        doctor_target = os.getenv("DOCTOR_PHONE", "+91-7338350871").replace("+", "").replace("-", "").replace(" ", "").strip()
+        clean_sender = sender_phone.replace("+", "").replace("-", "").replace(" ", "").strip()
+
+        if clean_sender in [doctor_target, "7338350871", "917338350871"]:
+            from core.doctor_assistant import process_doctor_executive_query
+            res = process_doctor_executive_query(raw_notes, sender_phone)
+            res["exec_ms"] = round((time.time() - start_ts) * 1000, 2)
+            return res
 
         # Robust Patient Name & Contact Phone Extraction
         phone_match = re.search(r"(\+?\d{1,3}[\s-]?)?(\d{10}|\d{5}[\s-]\d{5})", raw_notes)
