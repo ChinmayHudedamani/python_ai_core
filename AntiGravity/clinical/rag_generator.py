@@ -84,49 +84,45 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     if "PRESCRIPTION_MEDICATION_ATTEMPT" in security_audit["threat_categories"]:
         return {
             "whatsapp_response": (
-                "Medical Disclaimer Notice:\n\n"
-                "I am an automated clinical assistant and cannot prescribe medications or dosage advice legally.\n"
-                "For your clinical safety, prescription of medication requires an in-person or telehealth evaluation by a licensed dentist.\n\n"
-                "Our senior clinical team has been alerted and will contact you directly.\n"
-                "Emergency Desk: +91-9988776655"
+                "For your safety, I am unable to prescribe medications or provide dosage advice over chat. "
+                "Dental prescriptions require a quick clinical evaluation by a licensed dentist to prevent adverse reactions.\n\n"
+                "I've flagged your request for our clinical team, and our receptionist will call you directly. "
+                "If you are in severe pain or need immediate help, please call our emergency desk at +91-9988776655."
             )
         }
 
     if is_gibberish_text(raw_notes):
         return {
-            "whatsapp_response": "Thank you for contacting Apex Dental Center. Please let us know how we can assist you with your dental health today!"
+            "whatsapp_response": "Hello! Thanks for reaching out to Apex Dental Center in Koramangala. 😊 How can I help you with your teeth or appointments today?"
         }
 
     kb_facts = lookup_clinic_knowledge(raw_notes)
 
-    # Build Clinical Response
+    # Build Natural Human Receptionist Response
     if kb_facts["matched_procedures"]:
         proc = kb_facts["matched_procedures"][0]
         doc = kb_facts["matched_doctors"][0] if kb_facts["matched_doctors"] else CLINIC_KB["doctors"][0]
         response_text = (
-            f"Hello! Thank you for contacting Apex Dental Center, Koramangala.\n\n"
-            f"📍 Treatment: {proc['name']}\n"
-            f"💰 Price Range: {proc['price_range_inr']}\n"
-            f"💳 EMI Options: {proc['emi_starting']}\n"
-            f"👨‍⚕️ Specialist: {doc['name']} ({doc['title']})\n\n"
-            f"Description: {proc['description']}\n\n"
-            f"Would you like to schedule a consultation with {doc['name']} this week? "
-            f"Reply '1' or 'YES' to reserve your slot."
+            f"Hello! Thanks for reaching out to Apex Dental Center in Koramangala. 😊\n\n"
+            f"Regarding {proc['name']}, our complete packages range between {proc['price_range_inr']}. "
+            f"We also offer easy 0% interest EMI options starting at {proc['emi_starting']} so treatment is comfortable for your budget.\n\n"
+            f"{proc['description']}\n\n"
+            f"Our specialist, {doc['name']} ({doc['title']}), handles all our {proc['name']} consultations. "
+            f"Would you like me to check available slots for you to see {doc['name']} this week?"
         )
     elif kb_facts["matched_faqs"]:
         faq = kb_facts["matched_faqs"][0]
         response_text = (
-            f"Hello! Thank you for contacting Apex Dental Center.\n\n"
-            f"Q: {faq['question']}\n"
-            f"A: {faq['answer']}\n\n"
-            f"Would you like to speak to our clinic receptionist or book a consultation? Reply '1' to confirm."
+            f"Hello! Thanks for asking about that. 😊\n\n"
+            f"{faq['answer']}\n\n"
+            f"Please let me know if you would like to book a consultation at our Koramangala clinic or if you have any other questions I can help answer!"
         )
     else:
         response_text = (
-            "Hello! Thank you for contacting Apex Dental Center & Implant Institute, Koramangala.\n\n"
-            "We offer complete dental care including Invisalign clear aligners, dental implants, root canal treatments, and smile makeovers.\n"
-            "Chief Dentist: Dr. Chinmay Hudedamani.\n\n"
-            "How can we assist you today?"
+            "Hello! Welcome to Apex Dental Center in Koramangala. 😊\n\n"
+            "I'm here to help you with treatment information, pricing, or booking your dental visit. "
+            "We offer Invisalign clear aligners, dental implants, root canal treatments, and smile makeovers under our Chief Dentist, Dr. Chinmay Hudedamani.\n\n"
+            "What can I help answer for you today?"
         )
 
     return {

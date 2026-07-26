@@ -32,12 +32,11 @@ class CentaurCoreEngine:
             )
             self.conv_store.reset_session(patient_phone)
             confirm_reply = (
-                f"Appointment Confirmed!\n\n"
-                f"Patient: {patient_name}\n"
-                f"Doctor: Dr. Chinmay Hudedamani\n"
-                f"Location: Apex Dental Center, Koramangala, Bengaluru\n"
-                f"Booking ID: {slot_id}\n\n"
-                f"We look forward to seeing you!"
+                f"Wonderful! I have reserved your appointment slot with Dr. Chinmay Hudedamani at Apex Dental Center, Koramangala. 😊\n\n"
+                f"📋 Booking Reference: {slot_id}\n"
+                f"📍 Location: 100 Feet Road, Koramangala, Bengaluru\n"
+                f"📞 Direct Desk: +91-9988776655\n\n"
+                f"We look forward to welcoming you! If you need to change your timing or ask any questions before coming, just message me here."
             )
             return {
                 "status": "APPOINTMENT_CONFIRMED",
