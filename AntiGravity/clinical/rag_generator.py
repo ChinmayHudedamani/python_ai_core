@@ -150,9 +150,10 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             )
         else:
             response_text = (
-                f"{welcome_prefix}"
-                f"Regarding {proc['name']}, packages range between {proc['price_range_inr']} with 0% EMI options from {proc['emi_starting']}.\n\n"
-                f"Would you like to book a consultation slot with {doc['name']} or ask a specific question?"
+                f"Got it! For {proc['name']}, our consultation fee is {proc['price_range_inr']}.\n\n"
+                f"Our clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
+                f"We have consultation slots available today, tomorrow, and this Saturday!\n\n"
+                f"What day and time works best for you?"
             )
 
     elif kb_facts["matched_faqs"]:

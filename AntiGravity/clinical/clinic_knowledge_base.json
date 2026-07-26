@@ -14,6 +14,27 @@
   },
   "procedures": [
     {
+      "code": "GENERAL",
+      "name": "General Dental Consultation & Checkup",
+      "aliases": [
+        "general",
+        "checkup",
+        "general checkup",
+        "consultation",
+        "doctor consultation",
+        "check up",
+        "dental checkup",
+        "routine checkup",
+        "inspection",
+        "examination"
+      ],
+      "price_range_inr": "₹500 (Includes intraoral examination & 3D scan planning)",
+      "emi_starting": "N/A",
+      "warranty": "N/A",
+      "duration_mins": 30,
+      "description": "Comprehensive intraoral evaluation by senior dentists with digital X-ray and personalized treatment roadmap."
+    },
+    {
       "code": "IMP",
       "name": "Dental Implants",
       "aliases": [
