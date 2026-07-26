@@ -111,6 +111,8 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         "available", "visit", "open", "hours", "enquire", "inquire", "time"
     ])
 
+    welcome_prefix = "Hello! Welcome to Apex Dental Center in Koramangala. 😊\n\n"
+
     # Build Focused, Step-by-Step Receptionist Response (No Info Dumping)
     if kb_facts["matched_procedures"]:
         proc = kb_facts["matched_procedures"][0]
@@ -121,18 +123,21 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
 
         if is_price_query:
             response_text = (
+                f"{welcome_prefix}"
                 f"Our {proc['name']} packages range between {proc['price_range_inr']}. "
                 f"We also offer 0% interest EMI options starting at {proc['emi_starting']}.\n\n"
                 f"Would you like to schedule a consultation with {doc['name']} or know more about what the package includes?"
             )
         elif is_doctor_query:
             response_text = (
+                f"{welcome_prefix}"
                 f"Our {proc['name']} consultations are led by {doc['name']} ({doc['title']}), "
                 f"who has {doc['experience_years']} years of specialized experience.\n\n"
                 f"Would you like me to check available consultation slots for you this week?"
             )
         else:
             response_text = (
+                f"{welcome_prefix}"
                 f"Regarding {proc['name']}, packages range between {proc['price_range_inr']} with 0% EMI options from {proc['emi_starting']}.\n\n"
                 f"Would you like to book a consultation slot with {doc['name']} or ask a specific question?"
             )
@@ -140,18 +145,20 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     elif kb_facts["matched_faqs"]:
         faq = kb_facts["matched_faqs"][0]
         response_text = (
+            f"{welcome_prefix}"
             f"{faq['answer']}\n\n"
             f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
         )
     elif is_slot_query:
         response_text = (
-            "Our clinic in Koramangala is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
+            f"{welcome_prefix}"
+            "Our clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
             "We have consultation slots available today, tomorrow, and this Saturday!\n\n"
             "Which treatment are you looking to visit for (such as Invisalign clear aligners, dental implants, or a general checkup), and what time works best for you?"
         )
     else:
         response_text = (
-            "Thank you for reaching out to Apex Dental Center in Koramangala. "
+            f"{welcome_prefix}"
             "We offer clear aligners, dental implants, single-visit root canals, and smile makeovers.\n\n"
             "How may I help you today?"
         )
