@@ -16,14 +16,17 @@ from send_pdf_to_doctor import send_pdf_report_to_doctor
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-DOCTOR_PHONE = "+91-7338350871"
-TARGET_HOUR = 6  # 6 AM
-TARGET_MINUTE = 0  # 00 mins
+DOCTOR_PHONE = os.getenv("DOCTOR_PHONE", "+91-7338350871")
+TARGET_HOUR = int(os.getenv("REPORT_DISPATCH_HOUR", 6))     # 24-hour format: 6 for 6 AM, 7 for 7 AM, 18 for 6 PM
+TARGET_MINUTE = int(os.getenv("REPORT_DISPATCH_MINUTE", 0))  # 0 to 59 minutes
 
 
-def run_6am_daily_loop(doctor_phone: str = DOCTOR_PHONE):
-    """Background thread loop that waits until 6:00 AM every morning and dispatches the PDF report."""
-    logger.info(f"⏰ Daily 6:00 AM WhatsApp PDF Dispatcher Started for Doctor ({doctor_phone})")
+def run_6am_daily_loop(doctor_phone: str = None):
+    """Background thread loop that waits until configured daily time every morning and dispatches the PDF report."""
+    if not doctor_phone:
+        doctor_phone = os.getenv("DOCTOR_PHONE", DOCTOR_PHONE)
+
+    logger.info(f"⏰ Daily {TARGET_HOUR:02d}:{TARGET_MINUTE:02d} WhatsApp PDF Dispatcher Started for Doctor ({doctor_phone})")
 
     while True:
         now = datetime.datetime.now()
