@@ -268,6 +268,23 @@ def download_doctor_pdf():
 def dispatch_doctor_pdf_api():
     from send_pdf_to_doctor import send_pdf_report_to_doctor
     phone = request.args.get("phone") or (request.get_json(force=True, silent=True) or {}).get("phone", os.getenv("DOCTOR_PHONE", "+91-7338350871"))
+    res = send_pdf_report_to_doctor(doctor_phone=phone)
+    return jsonify(res), 200
+
+
+@app.route("/download/financial_report.pdf", methods=["GET"])
+def download_financial_pdf():
+    from generate_doctor_financial_pdf import build_doctor_financial_pdf_report
+    pdf_path = build_doctor_financial_pdf_report("Apex_Dental_Doctor_Financial_Report.pdf")
+    from flask import send_file
+    return send_file(pdf_path, as_attachment=True, download_name="Apex_Dental_Doctor_Financial_Report.pdf")
+
+
+@app.route("/api/v1/doctor_payments_report", methods=["POST", "GET"])
+def dispatch_doctor_financial_pdf_api():
+    from send_financial_report_to_doctor import send_financial_pdf_report_to_doctor
+    phone = request.args.get("phone") or (request.get_json(force=True, silent=True) or {}).get("phone", os.getenv("DOCTOR_PHONE", "+91-7338350871"))
+    res = send_financial_pdf_report_to_doctor(doctor_phone=phone)
     return jsonify(res), 200
 
 

@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from pathlib import Path
 
@@ -90,7 +91,7 @@ def setup_database(db_url: str = None) -> bool:
 
 
 if __name__ == "__main__":
-    url = os.getenv("DATABASE_URL", "")
+    url = sys.argv[1] if len(sys.argv) > 1 else os.getenv("DATABASE_URL", "")
     if not url:
         print("\n[!] DATABASE_URL variable not detected in environment.")
         url = input("Enter your Neon DATABASE_URL: ").strip()
