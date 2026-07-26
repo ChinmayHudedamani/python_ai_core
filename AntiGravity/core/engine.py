@@ -45,6 +45,15 @@ class CentaurCoreEngine:
                 "ledger_result": ledger_res
             }
 
+        # 0b. Direct Greeting Check
+        if clean_msg in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
+            self.conv_store.reset_session(patient_phone)
+            return {
+                "status": "GREETING",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+            }
+
         # 1. Rate Limit Inspection
         is_limited, limit_msg = self.rate_limiter.is_rate_limited(patient_phone)
         if is_limited:

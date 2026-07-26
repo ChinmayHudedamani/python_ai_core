@@ -77,6 +77,13 @@ def lookup_clinic_knowledge(query: str, procedure_code: str = "") -> Dict[str, A
 
 def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Dict[str, Any]:
     raw_notes = raw_patient_data.get("notes", "")
+    query_clean = raw_notes.strip().lower()
+
+    # 0. Direct Simple Greetings
+    if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
+        return {
+            "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+        }
 
     # Security Check
     security_audit = inspect_security_threats(raw_notes)
@@ -85,44 +92,56 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         return {
             "whatsapp_response": (
                 "For your safety, I am unable to prescribe medications or provide dosage advice over chat. "
-                "Dental prescriptions require a quick clinical evaluation by a licensed dentist to prevent adverse reactions.\n\n"
-                "I've flagged your request for our clinical team, and our receptionist will call you directly. "
-                "If you are in severe pain or need immediate help, please call our emergency desk at +91-9988776655."
+                "Dental prescriptions require a quick evaluation by a licensed dentist.\n\n"
+                "I have notified our clinical desk, and our team will call you directly. "
+                "For urgent pain or emergency assistance, please call us at +91-9988776655."
             )
         }
 
     if is_gibberish_text(raw_notes):
         return {
-            "whatsapp_response": "Hello! Thanks for reaching out to Apex Dental Center in Koramangala. 😊 How can I help you with your teeth or appointments today?"
+            "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
         }
 
     kb_facts = lookup_clinic_knowledge(raw_notes)
 
-    # Build Natural Human Receptionist Response
+    # Build Focused, Step-by-Step Receptionist Response (No Info Dumping)
     if kb_facts["matched_procedures"]:
         proc = kb_facts["matched_procedures"][0]
         doc = kb_facts["matched_doctors"][0] if kb_facts["matched_doctors"] else CLINIC_KB["doctors"][0]
-        response_text = (
-            f"Hello! Thanks for reaching out to Apex Dental Center in Koramangala. 😊\n\n"
-            f"Regarding {proc['name']}, our complete packages range between {proc['price_range_inr']}. "
-            f"We also offer easy 0% interest EMI options starting at {proc['emi_starting']} so treatment is comfortable for your budget.\n\n"
-            f"{proc['description']}\n\n"
-            f"Our specialist, {doc['name']} ({doc['title']}), handles all our {proc['name']} consultations. "
-            f"Would you like me to check available slots for you to see {doc['name']} this week?"
-        )
+
+        is_price_query = any(w in query_clean for w in ["cost", "price", "rate", "fee", "kharcha", "emi", "discount", "package", "how much"])
+        is_doctor_query = any(w in query_clean for w in ["doctor", "dentist", "specialist", "who", "qualification", "experience"])
+
+        if is_price_query:
+            response_text = (
+                f"Our {proc['name']} packages range between {proc['price_range_inr']}. "
+                f"We also offer 0% interest EMI options starting at {proc['emi_starting']}.\n\n"
+                f"Would you like to schedule a consultation with {doc['name']} or know more about what the package includes?"
+            )
+        elif is_doctor_query:
+            response_text = (
+                f"Our {proc['name']} consultations are led by {doc['name']} ({doc['title']}), "
+                f"who has {doc['experience_years']} years of specialized experience.\n\n"
+                f"Would you like me to check available consultation slots for you this week?"
+            )
+        else:
+            response_text = (
+                f"Regarding {proc['name']}, packages range between {proc['price_range_inr']} with 0% EMI options from {proc['emi_starting']}.\n\n"
+                f"Would you like to book a consultation slot with {doc['name']} or ask a specific question?"
+            )
+
     elif kb_facts["matched_faqs"]:
         faq = kb_facts["matched_faqs"][0]
         response_text = (
-            f"Hello! Thanks for asking about that. 😊\n\n"
             f"{faq['answer']}\n\n"
-            f"Please let me know if you would like to book a consultation at our Koramangala clinic or if you have any other questions I can help answer!"
+            f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
         )
     else:
         response_text = (
-            "Hello! Welcome to Apex Dental Center in Koramangala. 😊\n\n"
-            "I'm here to help you with treatment information, pricing, or booking your dental visit. "
-            "We offer Invisalign clear aligners, dental implants, root canal treatments, and smile makeovers under our Chief Dentist, Dr. Chinmay Hudedamani.\n\n"
-            "What can I help answer for you today?"
+            "Thank you for reaching out to Apex Dental Center in Koramangala. "
+            "We offer clear aligners, dental implants, single-visit root canals, and smile makeovers.\n\n"
+            "How may I help you today?"
         )
 
     return {
