@@ -38,12 +38,12 @@ class CentaurCoreEngine:
             res["exec_ms"] = round((time.time() - start_ts) * 1000, 2)
             return res
 
-        # Robust Patient Name & Contact Phone Extraction
-        phone_match = re.search(r"(\+?\d{1,3}[\s-]?)?(\d{10}|\d{5}[\s-]\d{5})", raw_notes)
+        # Robust Patient Name & Contact Phone Extraction (Enforce valid mobile prefix 6-9)
+        phone_match = re.search(r"(\+?91[\s-]?)?([6-9]\d{9}|[6-9]\d{4}[\s-]\d{5})", raw_notes)
         
         # Insufficient Data Guard: Check if patient provided name but NO 10-digit phone number
         is_generic_word = clean_msg in ["hi", "hello", "hey", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update"]
-        is_name_only = not phone_match and len(raw_notes.split()) <= 4 and not is_generic_word and any(w.isalpha() for w in clean_msg.split())
+        is_name_only = not phone_match and len(raw_notes.split()) <= 4 and not is_generic_word and any(w.isalpha() for w in clean_msg.split()) and not re.search(r"\d", raw_notes)
 
         if is_name_only:
             extracted_name = raw_notes.strip().title()
@@ -54,6 +54,22 @@ class CentaurCoreEngine:
                     f"⚠️ Data Insufficient!\n\n"
                     f"Thank you, {extracted_name}. We received your name, but your 10-digit contact mobile number is missing.\n\n"
                     f"Please reply with your 10-digit mobile number (e.g., '{extracted_name} - 9876543210' or '9876543210') so we can issue your consultation slot & appointment OTP!"
+                )
+            }
+
+        # Invalid / Incomplete Mobile Number Guard (e.g. 1234, 98765, 0000000000, 1234567890)
+        short_num_match = re.search(r"\b\d{1,9}\b", raw_notes)
+        dummy_num_match = re.search(r"\b([0-5]\d{9}|(\d)\2{9}|1234567890)\b", raw_notes)
+
+        if not phone_match and (short_num_match or dummy_num_match):
+            invalid_digits = (short_num_match or dummy_num_match).group(0)
+            return {
+                "status": "INVALID_PHONE_NUMBER",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": (
+                    f"⚠️ Invalid Mobile Number!\n\n"
+                    f"The number provided ('{invalid_digits}') is not a valid 10-digit mobile number.\n\n"
+                    f"Please reply with a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g., 'Chinmay - 7338350871' or '7338350871') so we can send your appointment OTP & booking details!"
                 )
             }
 
