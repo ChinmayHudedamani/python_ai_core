@@ -111,6 +111,13 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         "available", "visit", "open", "hours", "enquire", "inquire", "time"
     ])
 
+    has_day_ref = any(w in query_clean for w in [
+        "today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
+    ])
+    has_time_ref = any(w in query_clean for w in [
+        "am", "pm", "morning", "afternoon", "evening", "baje", "o'clock"
+    ]) or bool(re.search(r"\b\d{1,2}(:\d{2})?\s*(am|pm)?\b", query_clean))
+
     welcome_prefix = "Hello! Welcome to Apex Dental Center in Koramangala. 😊\n\n"
 
     # Build Focused, Step-by-Step Receptionist Response (No Info Dumping)
@@ -148,6 +155,13 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             f"{welcome_prefix}"
             f"{faq['answer']}\n\n"
             f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
+        )
+    elif has_day_ref or has_time_ref:
+        response_text = (
+            f"Perfect! I can hold that time for you. 😊\n\n"
+            f"Doctor: Dr. Chinmay Hudedamani\n"
+            f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
+            f"Would you like me to lock this slot for you? Reply '1' or 'YES' to confirm your appointment!"
         )
     elif is_slot_query:
         response_text = (
