@@ -42,6 +42,52 @@ def handle_global_exception(e):
     return jsonify({"status": "ERROR_RECOVERED", "error": error_msg, "timestamp": time.time()}), 200
 
 
+from core.meta_whatsapp import MetaWhatsAppCloudEngine
+
+meta_engine = MetaWhatsAppCloudEngine()
+
+
+@app.route("/webhook/meta", methods=["GET", "POST"])
+def meta_whatsapp_webhook():
+    """Official Meta WhatsApp Cloud API Webhook Handler."""
+    if request.method == "GET":
+        mode = request.args.get("hub.mode")
+        token = request.args.get("hub.verify_token")
+        challenge = request.args.get("hub.challenge")
+        if mode == "subscribe" and token == meta_engine.verify_token:
+            return Response(challenge, status=200, mimetype="text/plain")
+        return Response("Verification failed", status=403)
+
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+        entries = body.get("entry", [])
+        if entries:
+            changes = entries[0].get("changes", [])
+            if changes:
+                value = changes[0].get("value", {})
+                messages = value.get("messages", [])
+                if messages:
+                    msg = messages[0]
+                    from_phone = msg.get("from", "")
+                    body_text = msg.get("text", {}).get("body", "").strip()
+                    contacts = value.get("contacts", [])
+                    name = contacts[0].get("profile", {}).get("name", "Patient") if contacts else "Patient"
+
+                    if body_text and from_phone:
+                        res = core_engine.process_patient_intake(
+                            raw_notes=body_text,
+                            patient_name=name,
+                            patient_phone=from_phone,
+                            send_dispatch=False
+                        )
+                        reply = res.get("whatsapp_response", "")
+                        meta_engine.send_whatsapp_message(from_phone, reply)
+    except Exception as ex:
+        print(f"  🚨 [META WEBHOOK EXCEPTION]: {ex}")
+
+    return Response("EVENT_RECEIVED", status=200, mimetype="text/plain")
+
+
 @app.route("/demo", methods=["GET"])
 def whatsapp_simulator():
     return render_template("whatsapp_demo.html")
