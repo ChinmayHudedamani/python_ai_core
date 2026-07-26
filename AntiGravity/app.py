@@ -184,10 +184,6 @@ def payment_confirm_api():
 
 
 @app.route("/", methods=["GET"])
-def official_website_landing():
-    return render_template("index.html")
-
-
 @app.route("/health", methods=["GET"])
 def health_check():
     return jsonify({
