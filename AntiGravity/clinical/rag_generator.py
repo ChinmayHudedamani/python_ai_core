@@ -105,6 +105,12 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
 
     kb_facts = lookup_clinic_knowledge(raw_notes)
 
+    # 0c. Appointment / Slot / Timing Query Detection
+    is_slot_query = any(w in query_clean for w in [
+        "appointment", "appointments", "slot", "slots", "schedule", "timing", "timings",
+        "available", "visit", "open", "hours", "enquire", "inquire", "time"
+    ])
+
     # Build Focused, Step-by-Step Receptionist Response (No Info Dumping)
     if kb_facts["matched_procedures"]:
         proc = kb_facts["matched_procedures"][0]
@@ -136,6 +142,12 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         response_text = (
             f"{faq['answer']}\n\n"
             f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
+        )
+    elif is_slot_query:
+        response_text = (
+            "Our clinic in Koramangala is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
+            "We have consultation slots available today, tomorrow, and this Saturday!\n\n"
+            "Which treatment are you looking to visit for (such as Invisalign clear aligners, dental implants, or a general checkup), and what time works best for you?"
         )
     else:
         response_text = (
