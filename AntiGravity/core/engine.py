@@ -21,31 +21,54 @@ class CentaurCoreEngine:
         start_ts = time.time()
         clean_msg = raw_notes.strip().lower()
 
-        # 0. Check Confirmation / Booking Intent ("1", "yes", "confirm")
+        # 0a. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
         if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+            pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
+            pay_reply = (
+                f"To confirm your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
+                f"💳 Payment Link: {pay_url}\n"
+                f"📌 Consultation Fee: ₹500 (Includes intraoral examination & 3D scan planning)\n"
+                f"⌛ Slot Reference: {slot_id} (Held for 10 minutes)\n\n"
+                f"Once paid, reply 'PAID' or '1' to lock your appointment slot!"
+            )
+            return {
+                "status": "PAYMENT_LINK_GENERATED",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": pay_reply,
+                "payment_url": pay_url
+            }
+
+        # 0b. Check Payment Confirmation ("paid", "payment done", "done", "txn")
+        if clean_msg in ["paid", "payment done", "payment completed", "done", "txn"]:
+            slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+            txn_id = f"TXN_{int(time.time())}"
             ledger_res = self.ledger.write_appointment_lead(
                 name=patient_name,
                 phone=patient_phone,
                 procedure_code="GENERAL",
-                raw_notes=f"Confirmed Appointment (Slot {slot_id})"
+                raw_notes=f"Confirmed Appointment (Slot {slot_id})",
+                payment_status="PAID_CONFIRMED",
+                transaction_id=txn_id
             )
             self.conv_store.reset_session(patient_phone)
             confirm_reply = (
-                f"Wonderful! I have reserved your appointment slot with Dr. Chinmay Hudedamani at Apex Dental Center, Koramangala. 😊\n\n"
-                f"📋 Booking Reference: {slot_id}\n"
-                f"📍 Location: 100 Feet Road, Koramangala, Bengaluru\n"
-                f"📞 Direct Desk: +91-9988776655\n\n"
-                f"We look forward to welcoming you! If you need to change your timing or ask any questions before coming, just message me here."
+                f"🎉 Payment Confirmed & Appointment Locked!\n\n"
+                f"Patient: {patient_name}\n"
+                f"Doctor: Dr. Chinmay Hudedamani\n"
+                f"Clinic: Apex Dental Center, Koramangala, Bengaluru\n"
+                f"Slot Reference: {slot_id}\n"
+                f"Payment Status: PAID (₹500 - Ref: {txn_id})\n\n"
+                f"Dr. Chinmay's schedule has been updated. We look forward to seeing you!"
             )
             return {
-                "status": "APPOINTMENT_CONFIRMED",
+                "status": "APPOINTMENT_CONFIRMED_PAID",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
                 "whatsapp_response": confirm_reply,
                 "ledger_result": ledger_res
             }
 
-        # 0b. Direct Greeting Check
+        # 0c. Direct Greeting Check
         if clean_msg in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
             self.conv_store.reset_session(patient_phone)
             return {

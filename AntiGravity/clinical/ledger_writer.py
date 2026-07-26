@@ -24,6 +24,8 @@ class OfflineLedgerWriter:
                     "patient_name",
                     "patient_phone",
                     "procedure_code",
+                    "payment_status",
+                    "transaction_id",
                     "raw_notes",
                     "hash_sha256"
                 ])
@@ -32,11 +34,11 @@ class OfflineLedgerWriter:
         raw_str = f"{timestamp}|{name}|{phone}|{proc}|{notes}"
         return hashlib.sha256(raw_str.encode("utf-8")).hexdigest()
 
-    def write_appointment_lead(self, name: str, phone: str, procedure_code: str, raw_notes: str) -> Dict[str, Any]:
+    def write_appointment_lead(self, name: str, phone: str, procedure_code: str, raw_notes: str, payment_status: str = "PENDING_PAYMENT", transaction_id: str = "N/A") -> Dict[str, Any]:
         timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
         hash_val = self.calculate_sha256(timestamp, name, phone, procedure_code, raw_notes)
 
-        row = [timestamp, name, phone, procedure_code, raw_notes, hash_val]
+        row = [timestamp, name, phone, procedure_code, payment_status, transaction_id, raw_notes, hash_val]
         try:
             with open(self.ledger_file, "a", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)

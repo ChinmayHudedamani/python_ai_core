@@ -47,6 +47,35 @@ def whatsapp_simulator():
     return render_template("whatsapp_demo.html")
 
 
+@app.route("/pay/<slot_id>", methods=["GET"])
+def payment_checkout_page(slot_id):
+    return render_template("payment_gateway.html", slot_id=slot_id)
+
+
+@app.route("/api/v1/pay_confirm", methods=["POST"])
+def payment_confirm_api():
+    data = request.get_json(force=True, silent=True) or {}
+    slot_id = data.get("slot_id", "SLOT_GENERAL")
+    txn_id = data.get("transaction_id", f"TXN_{int(time.time())}")
+    phone = data.get("phone", "+91-9988776655")
+    name = data.get("name", "Patient")
+
+    ledger_res = ledger_writer.write_appointment_lead(
+        name=name,
+        phone=phone,
+        procedure_code="GENERAL",
+        raw_notes=f"Confirmed Paid Appointment (Slot {slot_id})",
+        payment_status="PAID_CONFIRMED",
+        transaction_id=txn_id
+    )
+    return jsonify({
+        "status": "SUCCESS",
+        "slot_id": slot_id,
+        "transaction_id": txn_id,
+        "ledger_result": ledger_res
+    }), 200
+
+
 @app.route("/", methods=["GET"])
 def health_check():
     return jsonify({
