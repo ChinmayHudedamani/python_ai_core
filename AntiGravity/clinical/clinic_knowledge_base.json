@@ -26,7 +26,10 @@
         "dental checkup",
         "routine checkup",
         "inspection",
-        "examination"
+        "examination",
+        "first visit",
+        "second opinion",
+        "opinion"
       ],
       "price_range_inr": "₹500 (Includes intraoral examination & 3D scan planning)",
       "emi_starting": "N/A",
@@ -43,7 +46,11 @@
         "teeth root replacement",
         "titanium tooth",
         "straumann",
-        "nobel biocare"
+        "nobel biocare",
+        "missing tooth",
+        "tooth replacement",
+        "fixed tooth",
+        "daant lagwana"
       ],
       "price_range_inr": "₹25,000 - ₹55,000 per implant",
       "emi_starting": "₹2,500/month (12-month 0% EMI via Bajaj Finserv)",
@@ -60,7 +67,11 @@
         "aligner",
         "invisible braces",
         "clear aligner",
-        "invislin"
+        "clear aligners",
+        "invislin",
+        "transparent braces",
+        "teeth straightening",
+        "daant sidha karna"
       ],
       "price_range_inr": "₹85,000 - ₹2,20,000 (Complete Package)",
       "emi_starting": "₹7,500/month (12-month 0% EMI)",
@@ -77,218 +88,229 @@
         "ceramic braces",
         "tooth braces",
         "wire braces",
-        "clip braces"
+        "clip braces",
+        "teeth alignment",
+        "wires",
+        "clips"
       ],
-      "price_range_inr": "₹35,000 - ₹65,000 (Complete Package)",
+      "price_range_inr": "₹35,000 - ₹65,000 (Complete Treatment)",
       "emi_starting": "₹3,000/month (12-month 0% EMI)",
-      "warranty": "Lifetime Retention Guarantee",
-      "duration_mins": 30,
-      "description": "High-precision metal and tooth-colored ceramic bracket braces for comprehensive teeth alignment."
+      "warranty": "Includes post-treatment retainer set",
+      "duration_mins": 45,
+      "description": "High-precision orthodontic brackets (metal or tooth-colored ceramic) for complex alignment corrections."
     },
     {
       "code": "CLEANING",
       "name": "Teeth Cleaning & Ultrasonic Scaling",
       "aliases": [
         "cleaning",
-        "teeth cleaning",
+        "clean",
         "scaling",
+        "teeth cleaning",
         "polishing",
-        "tarter removal",
+        "stain removal",
         "plaque removal",
-        "clean"
+        "tartar",
+        "daant saaf"
       ],
-      "price_range_inr": "₹1,500 - ₹3,500",
-      "emi_starting": "N/A (Direct Payment)",
-      "warranty": "Includes complimentary fluoride polish",
+      "price_range_inr": "₹1,500 - ₹3,500 per session",
+      "emi_starting": "N/A",
+      "warranty": "N/A",
       "duration_mins": 30,
-      "description": "Ultrasonic painless removal of plaque, tartar stain, and gum calculus, followed by high-gloss enamel polishing."
+      "description": "Painless ultrasonic scaling and air-polishing to remove plaque, calculus stains, and prevent gum disease."
     },
     {
       "code": "FILLING",
-      "name": "Tooth Filling & Cavity Restoration",
+      "name": "Composite Tooth Filling & Cavity Restoration",
       "aliases": [
         "filling",
         "fillings",
         "cavity",
-        "tooth filling",
-        "composite filling",
-        "decay",
-        "hole in tooth"
+        "tooth decay",
+        "hole in tooth",
+        "composite",
+        "cement",
+        "kida",
+        "keda",
+        "daant bharna"
       ],
       "price_range_inr": "₹1,200 - ₹3,000 per tooth",
-      "emi_starting": "N/A (Direct Payment)",
-      "warranty": "2-Year Bonded Resin Warranty",
+      "emi_starting": "N/A",
+      "warranty": "2-Year Warranty on Tooth-Colored Fillings",
       "duration_mins": 30,
-      "description": "Tooth-colored German composite resin restoration to fix decay holes, gaps, and tooth wear seamlessly."
+      "description": "Tooth-colored composite restoration to repair decay, fractures, and gaps with natural aesthetics."
     },
     {
       "code": "EXTRACTION",
-      "name": "Tooth Extraction & Wisdom Tooth Surgery",
+      "name": "Tooth Extraction & Wisdom Teeth Surgery",
       "aliases": [
         "extraction",
-        "tooth removal",
+        "extractions",
         "wisdom tooth",
-        "impaction",
-        "pull tooth",
-        "remove tooth",
-        "tooth extract"
+        "wisdom teeth",
+        "tooth removal",
+        "impacted molar",
+        "surgery",
+        "daant nikalna"
       ],
-      "price_range_inr": "₹2,500 - ₹8,500 (depending on simple vs painless surgical wisdom tooth removal)",
-      "emi_starting": "₹1,000/month (6-month EMI)",
-      "warranty": "Includes complimentary post-op checkup & sutures removal",
+      "price_range_inr": "₹2,500 - ₹8,500 per tooth",
+      "emi_starting": "N/A",
+      "warranty": "Post-extraction healing checkup included",
       "duration_mins": 45,
-      "description": "Painless extraction of damaged or impacted wisdom teeth under computer-assisted local anesthesia."
+      "description": "Painless surgical and painless extractions including impacted 3rd molar wisdom teeth under local anesthesia."
     },
     {
       "code": "RCT",
-      "name": "Single-Visit Root Canal Treatment",
+      "name": "Single-Visit Root Canal Treatment (RCT)",
       "aliases": [
         "rct",
         "root canal",
-        "tooth pain treatment",
-        "pulpitis",
-        "nerve treatment"
+        "single visit rct",
+        "nerve treatment",
+        "crown",
+        "cap",
+        "zirconia crown",
+        "pfm crown",
+        "tooth pain"
       ],
-      "price_range_inr": "₹4,500 - ₹9,500 (depending on molar complexity & micro-endodontic scope)",
-      "emi_starting": "₹1,500/month (6-month EMI)",
-      "warranty": "10-Year Structural Integrity Guarantee (when paired with Zirconia Crown)",
-      "duration_mins": 45,
-      "description": "Pain-free rotary endodontic treatment completed under magnification to eliminate deep dental infection."
+      "price_range_inr": "₹4,500 - ₹9,500 per tooth",
+      "emi_starting": "N/A",
+      "warranty": "10-Year Warranty on Zirconia Crowns",
+      "duration_mins": 60,
+      "description": "Painless rotary endodontic root canal completed in a single 60-minute visit, preserving natural teeth."
     },
     {
       "code": "WHITENING",
       "name": "Professional Laser Teeth Whitening",
       "aliases": [
         "whitening",
+        "laser whitening",
         "teeth whitening",
         "bleaching",
-        "teeth bleaching",
-        "smile whitening",
-        "white teeth"
+        "yellow teeth",
+        "daant safed"
       ],
       "price_range_inr": "₹8,500 - ₹18,000",
-      "emi_starting": "₹1,500/month (6-month EMI)",
-      "warranty": "Includes custom home-touchup whitening kit",
+      "emi_starting": "N/A",
+      "warranty": "Includes take-home maintenance whitening pen",
       "duration_mins": 45,
-      "description": "In-office 45-minute laser teeth whitening that brightens teeth up to 8 shades instantly without enamel sensitivity."
+      "description": "In-office LED laser teeth whitening system brightening smiles up to 8 shades in under 45 minutes."
     },
     {
-      "code": "FMR",
-      "name": "Full Mouth Rehabilitation",
+      "code": "FULL_REHAB",
+      "name": "Full Mouth Rehabilitation & All-on-4 Implants",
       "aliases": [
-        "full mouth rehab",
+        "full mouth",
         "all on 4",
-        "all on 6",
-        "full jaw implants",
-        "complete teeth replacement"
+        "all-on-4",
+        "dentures",
+        "full mouth rehab",
+        "complete dental reconstruction"
       ],
-      "price_range_inr": "₹1,80,000 - ₹4,50,000 per arch",
-      "emi_starting": "₹15,000/month (18-month 0% EMI)",
-      "warranty": "15-Year Comprehensive Clinical Warranty",
-      "duration_mins": 90,
-      "description": "Complete restoration of severely worn, missing, or broken teeth using All-on-4 / All-on-6 computer-guided implant bridges."
+      "price_range_inr": "₹1,80,000 - ₹4,50,000",
+      "emi_starting": "₹15,000/month (0% EMI)",
+      "warranty": "Lifetime Warranty on Titanium Framework",
+      "duration_mins": 120,
+      "description": "Complete jaw restoration using 4 or 6 dental implants supporting fixed hybrid prosthetic bridge."
     }
   ],
   "faqs": [
     {
+      "category": "LOCATION",
       "keywords": [
         "location",
         "address",
         "where",
-        "direction",
+        "map",
         "directions",
-        "landmark",
         "koramangala",
-        "reach"
+        "landmark",
+        "reach",
+        "kaha"
       ],
-      "question": "Where is Apex Dental Center located?",
-      "answer": "We are located at 100 Feet Road, Koramangala 4th Block, Bengaluru, right near the Sony World Signal. We have free dedicated valet parking for all patients!"
+      "answer": "Apex Dental Center is located on 100 Feet Road, Koramangala 4th Block, Bengaluru, right near the Sony World Signal. We have free dedicated valet parking for all patients!"
     },
     {
+      "category": "PARKING",
       "keywords": [
-        "timing",
+        "parking",
+        "car park",
+        "valet",
+        "vehicle",
+        "gadi"
+      ],
+      "answer": "Yes! We offer free dedicated valet parking right in front of our Koramangala clinic for all visiting patients."
+    },
+    {
+      "category": "TIMINGS",
+      "keywords": [
         "timings",
+        "timing",
         "hours",
         "open",
         "close",
         "sunday",
-        "saturday",
-        "working hours"
+        "weekend",
+        "time",
+        "kab"
       ],
-      "question": "What are your clinic operating hours?",
-      "answer": "We are open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM for prior appointments and emergency consultations."
+      "answer": "Our Koramangala clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM (Emergency & Prior Appointments)."
     },
     {
-      "keywords": [
-        "consultation fee",
-        "checkup fee",
-        "doctor fee",
-        "visiting fee",
-        "consult fee"
-      ],
-      "question": "How much is the initial consultation fee?",
-      "answer": "Our comprehensive initial consultation fee is ₹500, which includes a complete digital intraoral exam and treatment planning session with our senior specialist."
-    },
-    {
-      "keywords": [
-        "insurance",
-        "cashless",
-        "star health",
-        "hdfc ergo",
-        "tpa",
-        "reimbursement",
-        "claim"
-      ],
-      "question": "Do you accept health insurance for dental treatments?",
-      "answer": "Yes! We support cashless treatment & reimbursement assistance for major health insurers including Star Health, HDFC ERGO, ICICI Lombard, and corporate TPA policies for surgical procedures & extractions."
-    },
-    {
+      "category": "FINANCE_EMI",
       "keywords": [
         "emi",
         "installment",
-        "bajaj finserv",
-        "credit card",
+        "bajaj",
         "finance",
-        "0% interest"
+        "monthly",
+        "credit card",
+        "loan",
+        "0%"
       ],
-      "question": "What flexible payment and EMI options do you offer?",
-      "answer": "We offer 0% interest monthly EMI plans over 3, 6, 12, or 18 months for treatments above ₹15,000 via Bajaj Finserv, Credit Cards, and LiquiLoans."
+      "answer": "We offer 0% interest EMI payment plans via Bajaj Finserv and major credit cards for treatments over ₹15,000, with monthly installments starting at ₹2,500/month."
     },
     {
+      "category": "INSURANCE",
       "keywords": [
-        "parking",
-        "valet",
-        "car parking"
+        "insurance",
+        "cashless",
+        "claim",
+        "mediclaim",
+        "star health",
+        "hdfc ergo",
+        "policy"
       ],
-      "question": "Is parking available at the clinic?",
-      "answer": "Yes, we provide free dedicated basement parking and complimentary valet parking for all our patients at our 100 Feet Road Koramangala facility."
+      "answer": "We support cashless dental insurance claims for select corporate networks and provide itemized clinical bills & tax receipts for all major health insurance reimbursements."
     },
     {
+      "category": "CONSULTATION_FEE",
       "keywords": [
-        "pain",
-        "hurt",
-        "anesthesia",
-        "sedation",
-        "fear"
+        "consultation fee",
+        "doctor fee",
+        "checkup cost",
+        "first visit fee",
+        "visiting fee"
       ],
-      "question": "Are treatments painful?",
-      "answer": "All surgical and root canal procedures are performed under painless computer-controlled local anesthesia or conscious sedation, ensuring 100% comfort during treatment."
+      "answer": "Our initial specialist consultation fee is ₹500, which includes a comprehensive intraoral examination, digital X-ray review, and personalized 3D treatment planning."
     }
   ],
   "doctors": [
     {
       "name": "Dr. Chinmay Hudedamani",
-      "title": "Chief Implantologist & Prosthodontist",
-      "specialty": "Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics",
-      "qualification": "MDS (Prosthodontics & Implantology), Fellow of ICOI (USA)",
-      "experience_years": 14
+      "title": "MDS - Senior Dental Surgeon & Implantologist",
+      "specialty": "Implantology, Orthodontics & Cosmetic Dentistry",
+      "experience_years": 14,
+      "qualification": "MDS (Orthodontics & Dentofacial Orthopedics), Fellow of International Congress of Oral Implantologists (USA)",
+      "consultation_fee_inr": 500
     },
     {
       "name": "Dr. Ananya Roy",
-      "title": "Senior Orthodontist & Cosmetic Dentist",
-      "specialty": "Invisalign Clear Aligners, Smile Design, Braces",
-      "qualification": "MDS (Orthodontics & Dentofacial Orthopedics), Invisalign Platinum Provider",
-      "experience_years": 11
+      "title": "MDS - Consultant Orthodontist & Clear Aligner Specialist",
+      "specialty": "Invisalign Certified Provider & Pediatric Orthodontics",
+      "experience_years": 10,
+      "qualification": "MDS (Orthodontics), Certified Invisalign Provider (USA)",
+      "consultation_fee_inr": 500
     }
   ]
 }
