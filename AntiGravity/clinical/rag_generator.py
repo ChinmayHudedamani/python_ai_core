@@ -79,10 +79,16 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     raw_notes = raw_patient_data.get("notes", "")
     query_clean = raw_notes.strip().lower()
 
-    # 0. Direct Simple Greetings
+    # 0a. Direct Simple Greetings
     if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
         return {
             "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+        }
+
+    # 0b. Direct Gratitude & Goodbye Detection
+    if any(w in query_clean for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks"]):
+        return {
+            "whatsapp_response": "You're very welcome! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
 
     # Security Check

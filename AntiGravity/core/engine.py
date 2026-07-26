@@ -77,6 +77,15 @@ class CentaurCoreEngine:
                 "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
             }
 
+        # 0d. Gratitude & Exit Check ("thank you", "thanks", "bye")
+        if any(w in clean_msg for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks"]):
+            self.conv_store.reset_session(patient_phone)
+            return {
+                "status": "GRATITUDE_EXIT",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": "You're very welcome! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
+            }
+
         # 1. Rate Limit Inspection
         is_limited, limit_msg = self.rate_limiter.is_rate_limited(patient_phone)
         if is_limited:
