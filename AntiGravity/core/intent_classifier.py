@@ -8,6 +8,11 @@ TRAINING_DATA = [
     ("kitna kharcha hoga dam kitne ka hai kitni fees hai discount emi option hai", "PRICING"),
     ("how much does invisalign dental implants cost in koramangala price list", "PRICING"),
     ("how much do traditional metal ceramic braces cost price list package", "PRICING"),
+    ("how much for teeth cleaning scaling polishing cost price", "PRICING"),
+    ("how much is composite tooth filling cavity treatment cost", "PRICING"),
+    ("how much is tooth extraction wisdom tooth removal surgery price", "PRICING"),
+    ("how much is laser teeth whitening bleaching price cost", "PRICING"),
+    ("how much is initial consultation checkup doctor fee", "PRICING"),
     ("I want to book an appointment for saturday at 11 am confirm my slot schedule visit", "SLOT_BOOKING"),
     ("can i schedule a visit for tomorrow morning slot available lock appointment time", "SLOT_BOOKING"),
     ("appointment book karna hai saturday 11 baje slot milega kya timing fix kardo", "SLOT_BOOKING"),
@@ -47,8 +52,8 @@ if __name__ == "__main__":
     engine = ScikitLearnMLIntentEngine()
     test_queries = [
         "What is the cost of clear aligners?",
+        "How much is teeth cleaning?",
         "I want to book a slot for Saturday 11 AM",
-        "Can I take painkillers for toothache?",
         "Where is your clinic located in Koramangala?"
     ]
     for q in test_queries:
