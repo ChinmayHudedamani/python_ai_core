@@ -7,7 +7,7 @@ root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
-from app import app
+from app import app, core_engine
 
 
 class TestFlaskBackend(unittest.TestCase):
@@ -15,6 +15,8 @@ class TestFlaskBackend(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
         self.client.testing = True
+        core_engine.conv_store.reset_session("+91-9988776655")
+        core_engine.conv_store.reset_session("+919876543210")
 
     def test_01_health_check(self):
         response = self.client.get("/")
