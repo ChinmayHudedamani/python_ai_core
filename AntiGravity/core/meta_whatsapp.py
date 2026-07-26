@@ -45,7 +45,8 @@ class MetaWhatsAppCloudEngine:
         }
 
         try:
-            response = requests.post(self.graph_url, json=payload, headers=headers, timeout=10)
+            # Enforce (connect, read) timeout tuple to prevent Gunicorn worker freezing
+            response = requests.post(self.graph_url, json=payload, headers=headers, timeout=(3.05, 5.0))
             res_data = response.json()
             if response.status_code == 200 and "messages" in res_data:
                 msg_id = res_data["messages"][0]["id"]

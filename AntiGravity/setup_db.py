@@ -24,7 +24,7 @@ DDL_STATEMENTS = [
     CREATE TABLE IF NOT EXISTS appointments_ledger (
         id UUID PRIMARY KEY,
         patient_number VARCHAR(50) NOT NULL,
-        time_slot VARCHAR(150) NOT NULL,
+        time_slot VARCHAR(150) NOT NULL UNIQUE,
         procedure_type VARCHAR(100) NOT NULL,
         transaction_id VARCHAR(100) NOT NULL,
         sha256_hash VARCHAR(64) NOT NULL,

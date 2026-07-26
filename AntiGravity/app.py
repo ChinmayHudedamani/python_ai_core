@@ -105,8 +105,62 @@ def payment_checkout_page(slot_id):
     return render_template("payment_gateway.html", slot_id=slot_id)
 
 
+import hmac
+import hashlib
+
+RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "centaur_razorpay_secret_2026")
+
+
+@app.route("/api/v1/razorpay_webhook", methods=["POST"])
+def razorpay_webhook_authenticated():
+    """Cryptographically validated Razorpay Payment Webhook Handler."""
+    received_signature = request.headers.get("X-Razorpay-Signature", "")
+    raw_payload = request.get_data()
+
+    if not received_signature:
+        return jsonify({"status": "FORBIDDEN", "message": "Missing X-Razorpay-Signature header."}), 403
+
+    expected_signature = hmac.new(
+        key=RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+        msg=raw_payload,
+        digestmod=hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_signature, received_signature):
+        return jsonify({"status": "FORBIDDEN", "message": "HMAC signature verification failed."}), 403
+
+    payload = request.get_json(force=True, silent=True) or {}
+    event = payload.get("event")
+
+    if event in ["payment.captured", "payment.authorized"]:
+        entity = payload.get("payload", {}).get("payment", {}).get("entity", {})
+        txn_id = entity.get("id", f"TXN_RZP_{int(time.time())}")
+        notes = entity.get("notes", {})
+        patient_phone = notes.get("phone", "+91-9988776655")
+        patient_name = notes.get("name", "Valued Patient")
+        slot_id = notes.get("slot_id", "SLOT_GENERAL")
+
+        ledger_res = ledger_writer.write_appointment_lead(
+            name=patient_name,
+            phone=patient_phone,
+            procedure_code="GENERAL",
+            raw_notes=f"Confirmed Paid Appointment (Slot {slot_id})",
+            payment_status="PAID_CONFIRMED",
+            transaction_id=txn_id
+        )
+        return jsonify({"status": "SUCCESS", "event": event, "ledger_result": ledger_res}), 200
+
+    return jsonify({"status": "IGNORED_EVENT", "event": event}), 200
+
+
 @app.route("/api/v1/pay_confirm", methods=["POST"])
 def payment_confirm_api():
+    # Enforce token header validation for legacy checkout endpoint
+    auth_header = request.headers.get("Authorization", "")
+    expected_secret = os.getenv("API_SECRET_KEY", "centaur_api_secret_2026")
+    if not auth_header or expected_secret not in auth_header:
+        return jsonify({"status": "UNAUTHORIZED", "message": "Valid API secret key required."}), 401
+
     data = request.get_json(force=True, silent=True) or {}
     slot_id = data.get("slot_id", "SLOT_GENERAL")
     txn_id = data.get("transaction_id", f"TXN_{int(time.time())}")

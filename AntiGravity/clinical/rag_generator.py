@@ -75,6 +75,19 @@ def lookup_clinic_knowledge(query: str, procedure_code: str = "") -> Dict[str, A
     }
 
 
+def sanitize_llm_response(response_text: str) -> str:
+    """Post-processing sanitizer against medical liability jailbreaks and fake discount injection."""
+    forbidden_terms = [
+        r"\bamoxicillin\b", r"\bibuprofen\b", r"\bpenicillin\b", r"\bvicodin\b", r"\btramadol\b",
+        r"\bdiscount100\b", r"\b100%\s*off\b", r"\bfree\s*appointment\b", r"\bbypass\s*payment\b"
+    ]
+    clean_text = response_text
+    for pattern in forbidden_terms:
+        if re.search(pattern, clean_text, flags=re.IGNORECASE):
+            clean_text = re.sub(pattern, "[REDACTED_CLINICAL_POLICY]", clean_text, flags=re.IGNORECASE)
+    return clean_text
+
+
 def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Dict[str, Any]:
     raw_notes = raw_patient_data.get("notes", "")
     query_clean = raw_notes.strip().lower()
@@ -185,6 +198,6 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         )
 
     return {
-        "whatsapp_response": response_text,
+        "whatsapp_response": sanitize_llm_response(response_text),
         "grounding_facts": kb_facts
     }

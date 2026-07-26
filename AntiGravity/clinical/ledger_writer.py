@@ -76,13 +76,18 @@ def log_appointment(patient_number: str, time_slot: str, procedure_type: str, tr
 
     insert_sql = """
     INSERT INTO appointments_ledger (id, patient_number, time_slot, procedure_type, transaction_id, sha256_hash)
-    VALUES (%s, %s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, %s, %s)
+    ON CONFLICT (time_slot) DO NOTHING;
     """
 
     try:
         with psycopg2.connect(db_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(insert_sql, (booking_id, patient_number, time_slot, procedure_type, transaction_id, sha256_hash))
+                if cur.rowcount == 0:
+                    conn.rollback()
+                    logger.warning(f"Double-booking prevented for slot '{time_slot}'.")
+                    return {"status": "DOUBLE_BOOKING_PREVENTED", "error": "This slot was already booked."}
             conn.commit()
         logger.info(f"Successfully logged appointment {booking_id} for {patient_number} to Neon PostgreSQL.")
         return {"status": "SUCCESS", "id": booking_id, "sha256": sha256_hash}
