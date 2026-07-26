@@ -1,16 +1,12 @@
 import os
 import sys
-import time
 
-# Ensure root and month1_python_core are in sys.path
+# Ensure current directory is in sys.path
 root_dir = os.path.dirname(os.path.abspath(__file__))
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
-core_dir = os.path.join(root_dir, "month1_python_core")
-if core_dir not in sys.path:
-    sys.path.insert(0, core_dir)
 
-from core_engine import CentaurCoreEngine
+from core.engine import CentaurCoreEngine
 
 
 def start_patient_chat():

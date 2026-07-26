@@ -1,0 +1,238 @@
+{
+  "clinic_info": {
+    "name": "Apex Dental Center",
+    "location": "Koramangala, Bengaluru",
+    "gmaps_link": "https://maps.google.com/?q=Apex+Dental+Koramangala",
+    "contact_phone": "+91-9988776655",
+    "emergency_desk_phone": "+91-9988776600",
+    "operating_hours": {
+      "monday_to_saturday": "9:00 AM - 8:00 PM",
+      "sunday": "10:00 AM - 2:00 PM (Emergency & Prior VIP Appointments Only)",
+      "vip_callback_hours": "8:00 AM - 9:00 PM (Non-emergency VIP calls queued outside these hours)"
+    },
+    "legal_disclaimer": "Notice: AI Triage provides preliminary pricing ranges and scheduling guidance. Final treatment plans and exact fees require an in-person clinical examination and 3D CBCT digital scan by a licensed practitioner."
+  },
+  "procedures": [
+    {
+      "code": "IMP",
+      "name": "Dental Implants",
+      "aliases": [
+        "implant",
+        "implants",
+        "teeth root replacement",
+        "titanium tooth",
+        "straumann",
+        "nobel biocare"
+      ],
+      "price_range_inr": "₹25,000 - ₹55,000 per implant",
+      "emi_starting": "₹2,500/month (12-month 0% EMI via Bajaj Finserv)",
+      "warranty": "Lifetime Warranty on Swiss Straumann / Nobel Biocare Implants",
+      "duration_mins": 45,
+      "description": "Permanent titanium tooth root replacement with computer-guided placement. Includes 3D CBCT imaging and custom zirconia crown.",
+      "treatment_stages": [
+        "Stage 1: 3D CBCT Scan & Computer-Guided Titanium Implant Placement",
+        "Stage 2: Osseointegration Healing (8-12 weeks)",
+        "Stage 3: Custom Abutment & Zirconia Crown Placement"
+      ],
+      "contraindications": "Uncontrolled diabetes, active heavy smoking (>20 cigarettes/day), or severe unmanaged osteoporosis require medical clearance."
+    },
+    {
+      "code": "INVIS",
+      "name": "Invisalign Clear Aligners",
+      "aliases": [
+        "invisalign",
+        "aligners",
+        "aligner",
+        "invisible braces",
+        "clear aligner",
+        "invislin"
+      ],
+      "price_range_inr": "₹85,000 - ₹2,20,000 (Complete Package)",
+      "emi_starting": "₹7,500/month (12-month 0% EMI)",
+      "warranty": "5-Year Guarantee with free tray refinements & Vivera retainers",
+      "duration_mins": 30,
+      "description": "US-FDA approved transparent removable aligners for discreet teeth straightening without metal wires.",
+      "treatment_stages": [
+        "Stage 1: 3D iTero Digital Intraoral Scan & ClinCheck Video Simulation",
+        "Stage 2: Delivery of Custom SmartTrack Aligner Trays (changed every 10-14 days)",
+        "Stage 3: Final Alignment & Vivera Nighttime Retainers"
+      ],
+      "contraindications": "Severe skeletal jaw discrepancies may require combined orthognathic surgery."
+    },
+    {
+      "code": "BRACES",
+      "name": "Traditional Metal & Ceramic Braces",
+      "aliases": [
+        "braces",
+        "metal braces",
+        "ceramic braces",
+        "tooth braces",
+        "wire braces",
+        "clip braces"
+      ],
+      "price_range_inr": "₹35,000 - ₹65,000 (Complete Package)",
+      "emi_starting": "₹3,000/month (12-month 0% EMI)",
+      "warranty": "Lifetime Retention Guarantee",
+      "duration_mins": 30,
+      "description": "High-precision metal and tooth-colored ceramic bracket braces for comprehensive teeth alignment.",
+      "treatment_stages": [
+        "Stage 1: 3D X-Ray Diagnostic Modeling & Bracket Bonding",
+        "Stage 2: Monthly Wire Adjustments & Alignment Tracking",
+        "Stage 3: Debonding & Custom Nighttime Retainers"
+      ]
+    },
+    {
+      "code": "FMR",
+      "name": "Full Mouth Rehabilitation",
+      "aliases": [
+        "full mouth rehab",
+        "all on 4",
+        "all on 6",
+        "full jaw implants",
+        "complete teeth replacement"
+      ],
+      "price_range_inr": "₹1,80,000 - ₹4,50,000 per arch",
+      "emi_starting": "₹15,000/month (18-month 0% EMI)",
+      "warranty": "15-Year Comprehensive Clinical Warranty",
+      "duration_mins": 90,
+      "description": "Complete restoration of severely worn, missing, or broken teeth using All-on-4 / All-on-6 computer-guided implant bridges.",
+      "treatment_stages": [
+        "Stage 1: Full-jaw 3D CBCT Diagnostic Modeling & Immediate Fixed Provisional Bridge",
+        "Stage 2: Tissue Healing & Osseointegration (3 months)",
+        "Stage 3: Monolithic Zirconia Permanent Bridge Placement"
+      ]
+    },
+    {
+      "code": "RCT",
+      "name": "Single-Visit Root Canal Treatment",
+      "aliases": [
+        "rct",
+        "root canal",
+        "tooth pain treatment",
+        "pulpitis",
+        "nerve treatment"
+      ],
+      "price_range_inr": "₹4,500 - ₹9,500 (depending on molar complexity & micro-endodontic scope)",
+      "emi_starting": "₹1,500/month (6-month EMI)",
+      "warranty": "10-Year Structural Integrity Guarantee (when paired with Zirconia Crown)",
+      "duration_mins": 45,
+      "description": "Pain-free rotary endodontic treatment completed under magnification to eliminate deep dental infection.",
+      "treatment_stages": [
+        "Stage 1: Local Anesthesia & Rubber Dam Isolation",
+        "Stage 2: Rotary Cleaning, Disinfection & Gutta-Percha Canal Obturation",
+        "Stage 3: Fiber Post Core Build-up & CAD/CAM Crown Scan"
+      ]
+    },
+    {
+      "code": "SMB",
+      "name": "Hollywood Smile Makeover & Veneers",
+      "aliases": [
+        "veneers",
+        "veneer",
+        "smile makeover",
+        "porcelain veneers",
+        "composite veneers",
+        "cosmetic dentistry"
+      ],
+      "price_range_inr": "₹12,000 - ₹28,000 per tooth",
+      "emi_starting": "₹3,500/month (12-month 0% EMI)",
+      "warranty": "10-Year Porcelain Chip & Stain Guarantee",
+      "duration_mins": 60,
+      "description": "Ultra-thin custom E-Max porcelain veneers designed to correct gap, discoloration, and tooth shape misalignment.",
+      "treatment_stages": [
+        "Stage 1: Digital Smile Design (DSD) Mock-up Preview",
+        "Stage 2: Minimal Enamel Preparation & Digital Intraoral Scan",
+        "Stage 3: E-Max Porcelain Bonding & Occlusal Balancing"
+      ]
+    }
+  ],
+  "faqs": [
+    {
+      "keywords": [
+        "insurance",
+        "cashless",
+        "star health",
+        "hdfc ergo",
+        "tpa",
+        "reimbursement",
+        "claim"
+      ],
+      "question": "Do you accept health insurance for dental treatments?",
+      "answer": "Yes! We support cashless treatment & reimbursement assistance for major health insurers including Star Health, HDFC ERGO, ICICI Lombard, and corporate TPA policies for surgical procedures & hospital-based extractions."
+    },
+    {
+      "keywords": [
+        "emi",
+        "installment",
+        "bajaj finserv",
+        "credit card",
+        "finance",
+        "0% interest"
+      ],
+      "question": "What flexible payment and EMI options do you offer?",
+      "answer": "We offer 0% interest monthly EMI plans over 3, 6, 12, or 18 months for treatments above ₹15,000 via Bajaj Finserv, Credit Cards, and LiquiLoans."
+    },
+    {
+      "keywords": [
+        "parking",
+        "valet",
+        "car parking"
+      ],
+      "question": "Is parking available at the clinic?",
+      "answer": "Yes, we provide free dedicated basement parking and complimentary valet parking for all our patients at our 100 Feet Road Koramangala facility."
+    },
+    {
+      "keywords": [
+        "pain",
+        "hurt",
+        "anesthesia",
+        "sedation",
+        "fear"
+      ],
+      "question": "Are treatments painful?",
+      "answer": "All surgical and root canal procedures are performed under painless computer-controlled local anesthesia or conscious sedation, ensuring 100% comfort during treatment."
+    },
+    {
+      "keywords": [
+        "post op",
+        "after care",
+        "bleeding after extraction",
+        "eating after treatment"
+      ],
+      "question": "What are the immediate post-treatment care guidelines?",
+      "answer": "For extractions/implants: bite gently on the gauze for 45 minutes, avoid hot food/drinks for 24 hours, do not spit forcefully, and take prescribed anti-inflammatory medications as instructed."
+    }
+  ],
+  "doctors": [
+    {
+      "name": "Dr. Chinmay Hudedamani",
+      "title": "Chief Implantologist & Prosthodontist",
+      "specialty": "Dental Implants, Full Mouth Rehab, Maxillofacial Prosthetics",
+      "qualification": "MDS (Prosthodontics & Implantology), Fellow of ICOI (USA)",
+      "experience_years": 14,
+      "available_days": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "quiet_hours_override": false
+    },
+    {
+      "name": "Dr. Ananya Roy",
+      "title": "Senior Orthodontist & Cosmetic Dentist",
+      "specialty": "Invisalign Clear Aligners, Smile Design, Pediatric Orthodontics",
+      "qualification": "MDS (Orthodontics & Dentofacial Orthopedics), Invisalign Platinum Provider",
+      "experience_years": 11,
+      "available_days": [
+        "Monday",
+        "Wednesday",
+        "Friday",
+        "Saturday"
+      ],
+      "quiet_hours_override": false
+    }
+  ]
+}

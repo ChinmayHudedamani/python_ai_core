@@ -2,20 +2,16 @@ import os
 import sys
 import time
 import threading
-import traceback
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, Response, jsonify, render_template
 from flask_cors import CORS
 
-# Add root directory and month1_python_core to Python System Path
+# Add root directory to Python System Path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
-core_dir = os.path.join(current_dir, "month1_python_core")
-if core_dir not in sys.path:
-    sys.path.insert(0, core_dir)
 
-from core_engine import CentaurCoreEngine
-from day5_python import OfflineLedgerWriter
+from core.engine import CentaurCoreEngine
+from clinical.ledger_writer import OfflineLedgerWriter
 
 # Initialize Flask App
 app = Flask(__name__)
@@ -25,7 +21,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 core_engine = CentaurCoreEngine()
 ledger_writer = OfflineLedgerWriter()
 
-processed_sids_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "processed_sids.txt")
+processed_sids_file = os.path.join(current_dir, "processed_sids.txt")
 processed_sids = set()
 if os.path.exists(processed_sids_file):
     try:
@@ -46,9 +42,6 @@ def handle_global_exception(e):
     return jsonify({"status": "ERROR_RECOVERED", "error": error_msg, "timestamp": time.time()}), 200
 
 
-from flask import Flask, request, Response, jsonify, render_template
-
-
 @app.route("/demo", methods=["GET"])
 def whatsapp_simulator():
     return render_template("whatsapp_demo.html")
@@ -58,7 +51,7 @@ def whatsapp_simulator():
 def health_check():
     return jsonify({
         "status": "HEALTHY",
-        "system": "Centaur OS Pure TwiML Production Backend",
+        "system": "Centaur OS Enterprise Backend",
         "uptime_seconds": round(time.time() - start_timestamp, 2),
         "port": int(os.getenv("PORT", 5000))
     }), 200
@@ -75,7 +68,7 @@ def whatsapp_webhook():
     body_text = form_data.get("Body", "").strip()
     profile_name = form_data.get("ProfileName", "Patient").strip()
 
-    # 1. Ignore Twilio Status Callbacks & empty bodies
+    # 1. Ignore Twilio Status Callbacks (sent, delivered, read) & empty messages
     if form_data.get("MessageStatus") or form_data.get("SmsStatus") or not body_text:
         return Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', mimetype="text/xml")
 
