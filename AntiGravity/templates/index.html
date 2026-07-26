@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Dental Center - Premium Oral Healthcare & AI Appointments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; line-height: 1.6; }
+        header { background: #1e293b; border-bottom: 1px solid #334155; padding: 20px 0; position: sticky; top: 0; z-index: 100; }
+        .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+        .nav-wrap { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 22px; font-weight: 800; color: #38bdf8; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .nav-links a:hover { color: #38bdf8; }
+        .btn-primary { background: #0284c7; color: #fff; padding: 10px 20px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: 0.2s; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4); }
+        .btn-primary:hover { background: #0369a1; }
+        
+        .hero { padding: 80px 0 60px; text-align: center; background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%); }
+        .hero-badge { display: inline-block; background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 20px; }
+        .hero h1 { font-size: 44px; font-weight: 800; margin-bottom: 16px; line-height: 1.2; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { font-size: 18px; color: #94a3b8; max-width: 680px; margin: 0 auto 32px; }
+        
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin: 60px 0; }
+        .service-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 28px; transition: 0.3s; }
+        .service-card:hover { border-color: #38bdf8; transform: translateY(-4px); }
+        .service-title { font-size: 18px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+        .service-price { font-size: 20px; font-weight: 800; color: #4ade80; margin-bottom: 12px; }
+        .service-desc { font-size: 14px; color: #94a3b8; margin-bottom: 20px; }
+        
+        .doctor-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #0284c7; border-radius: 20px; padding: 36px; margin: 40px 0; display: flex; gap: 32px; align-items: center; }
+        .doctor-info h3 { font-size: 24px; font-weight: 800; color: #38bdf8; }
+        .doctor-info p { color: #cbd5e1; font-size: 15px; margin-top: 8px; }
+
+        footer { background: #090d16; border-top: 1px solid #1e293b; padding: 40px 0; font-size: 13px; color: #64748b; margin-top: 80px; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; }
+        .footer-title { font-size: 15px; font-weight: 700; color: #f8fafc; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container nav-wrap">
+        <a href="/" class="logo">Apex Dental Center 🦷</a>
+        <div class="nav-links">
+            <a href="#services">Services & Pricing</a>
+            <a href="#doctor">Chief Dentist</a>
+            <a href="/pay/SLOT_DEMO" class="btn-primary">Book Consultation (₹1 Demo)</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="container">
+        <div class="hero-badge">OFFICIAL CLINICAL PAYMENT PORTAL</div>
+        <h1>Advanced AI-Powered Dental Care in Koramangala</h1>
+        <p>Experience pain-free laser dentistry, clear aligners, single-visit root canals, and 3D implant planning led by Dr. Chinmay Hudedamani.</p>
+        <a href="/pay/SLOT_DEMO" class="btn-primary" style="padding: 14px 28px; font-size: 16px;">Pay ₹1 Consultation Fee via Razorpay</a>
+    </div>
+</section>
+
+<section class="container" id="services">
+    <div class="services-grid">
+        <div class="service-card">
+            <div class="service-title">General Consultation & 3D Scan</div>
+            <div class="service-price">₹1 Demo Fee / ₹500 Regular</div>
+            <div class="service-desc">Complete intraoral exam, digital X-rays, treatment planning & doctor consultation.</div>
+            <a href="/pay/SLOT_GENERAL" class="btn-primary" style="display:block; text-align:center;">Book Slot</a>
+        </div>
+        <div class="service-card">
+            <div class="service-title">Invisalign & Clear Aligners</div>
+            <div class="service-price">From ₹45,000 (0% EMI Available)</div>
+            <div class="service-desc">Virtually invisible teeth straightening with 3D digital simulation scan.</div>
+            <a href="/pay/SLOT_ALIGNERS" class="btn-primary" style="display:block; text-align:center;">Book Slot</a>
+        </div>
+        <div class="service-card">
+            <div class="service-title">Single-Visit Laser Root Canal</div>
+            <div class="service-price">From ₹4,500</div>
+            <div class="service-desc">Painless, high-precision laser endodontics completed in one appointment.</div>
+            <a href="/pay/SLOT_RCT" class="btn-primary" style="display:block; text-align:center;">Book Slot</a>
+        </div>
+    </div>
+</section>
+
+<section class="container" id="doctor">
+    <div class="doctor-card">
+        <div class="doctor-info">
+            <h3>Dr. Chinmay Hudedamani</h3>
+            <p><strong>Chief Dental Surgeon & Implantologist</strong> (BDS, MDS Orthodontics)</p>
+            <p style="margin-top:12px;">Over 12+ years of experience in laser dentistry, smile designing, and advanced implantology. Registered Medical Practitioner.</p>
+            <p style="margin-top:12px; color:#38bdf8;">📍 Apex Dental Center, 100 Feet Road, Koramangala 4th Block, Bengaluru, Karnataka 560034</p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container footer-grid">
+        <div>
+            <div class="footer-title">Apex Dental Center</div>
+            <p>Official Healthcare & Razorpay Payment Integration Portal.</p>
+            <p style="margin-top:8px;">© 2026 Apex Dental Center. All rights reserved.</p>
+        </div>
+        <div>
+            <div class="footer-title">Contact & Support</div>
+            <p>📞 Phone: +91 7338350871</p>
+            <p>📧 Email: contact@apexdental.com</p>
+            <p>⏰ Open Mon - Sat: 9 AM - 8 PM</p>
+        </div>
+        <div>
+            <div class="footer-title">Razorpay Compliance</div>
+            <p>Verified Gateway Merchant</p>
+            <p><a href="/pay/SLOT_DEMO" style="color:#0284c7;">Payment Gateway Checkout</a></p>
+            <p><a href="/download/financial_report.pdf" style="color:#0284c7;">Financial Audit Statement</a></p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
