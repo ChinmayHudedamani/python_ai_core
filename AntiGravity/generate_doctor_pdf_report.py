@@ -34,7 +34,7 @@ def fetch_ledger_data(db_url: str = None) -> list:
     records = []
     if PSYCOPG2_AVAILABLE and db_url:
         try:
-            with psycopg2.connect(db_url) as conn:
+            with psycopg2.connect(db_url, connect_timeout=3, options="-c statement_timeout=2000") as conn:
                 with conn.cursor() as cur:
                     cur.execute("""
                         SELECT id, patient_number, procedure_type, transaction_id, sha256_hash, time_slot, created_at 

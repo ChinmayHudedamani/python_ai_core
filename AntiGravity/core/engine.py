@@ -96,6 +96,14 @@ class CentaurCoreEngine:
 
         if is_paid_msg or is_confirm_when_pending:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+            
+            if not is_locked:
+                return {
+                    "status": "DOUBLE_BOOKING_PREVENTED",
+                    "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                    "whatsapp_response": "⚠️ Apologies! That consultation slot was reserved by another patient. Please select another slot or reply '1' to check available timings!"
+                }
+
             txn_id = f"TXN_{int(time.time())}"
             auth_otp = str(abs(hash(patient_phone + str(int(time.time())))) % 9000 + 1000)
 
@@ -109,6 +117,14 @@ class CentaurCoreEngine:
                 payment_status="PAID_CONFIRMED",
                 transaction_id=txn_id
             )
+
+            if ledger_res.get("status") == "DOUBLE_BOOKING_PREVENTED":
+                return {
+                    "status": "DOUBLE_BOOKING_PREVENTED",
+                    "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                    "whatsapp_response": "⚠️ This slot has already been confirmed by another patient. Please choose a different time slot!"
+                }
+
             self.conv_store.reset_session(sender_phone)
             self._pending_payment_links.discard(sender_phone)
             self._pending_payment_links.discard(patient_phone)
@@ -138,6 +154,12 @@ class CentaurCoreEngine:
         # 0b. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
         if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+            if not is_locked:
+                return {
+                    "status": "DOUBLE_BOOKING_PREVENTED",
+                    "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                    "whatsapp_response": "⚠️ That consultation slot is currently held by another patient. Please select another time!"
+                }
             pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
             self._pending_payment_links.add(sender_phone)
             self._pending_payment_links.add(patient_phone)
