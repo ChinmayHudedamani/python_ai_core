@@ -88,6 +88,36 @@ def sanitize_llm_response(response_text: str) -> str:
     return clean_text
 
 
+def check_operating_hours_validity(query_clean: str) -> tuple:
+    """Checks if requested time is outside clinic operating hours (9:00 AM - 8:00 PM Mon-Sat / 10:00 AM - 2:00 PM Sun)."""
+    # Match patterns like: 10:30pm, 10 30pm, 10pm, 9:30pm, 11pm, 8:30pm, 9pm, 10:30 pm, 4am, etc.
+    time_match = re.search(r"\b(1[0-2]|[1-9])(?::([0-5]\d)|\s+([0-5]\d))?\s*(am|pm)\b", query_clean)
+    if time_match:
+        hour = int(time_match.group(1))
+        mins = int(time_match.group(2) or time_match.group(3) or 0)
+        ampm = time_match.group(4).lower()
+
+        if ampm == "pm" and hour < 12:
+            hour24 = hour + 12
+        elif ampm == "am" and hour == 12:
+            hour24 = 0
+        else:
+            hour24 = hour
+
+        is_sunday = "sun" in query_clean or "sunday" in query_clean
+
+        if is_sunday:
+            if hour24 < 10 or (hour24 == 14 and mins > 0) or hour24 > 14:
+                time_str = f"{hour}:{mins:02d} {ampm.upper()}" if mins else f"{hour} {ampm.upper()}"
+                return False, time_str
+        else:
+            if hour24 < 9 or (hour24 == 20 and mins > 0) or hour24 > 20:
+                time_str = f"{hour}:{mins:02d} {ampm.upper()}" if mins else f"{hour} {ampm.upper()}"
+                return False, time_str
+
+    return True, ""
+
+
 def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Dict[str, Any]:
     raw_notes = raw_patient_data.get("notes", "")
     query_clean = raw_notes.strip().lower()
@@ -177,12 +207,25 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
         )
     elif has_day_ref or has_time_ref:
-        response_text = (
-            f"Perfect! I can hold that time for you. 😊\n\n"
-            f"Doctor: Dr. Chinmay Hudedamani\n"
-            f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
-            f"Who is this appointment for? Please reply with the Patient's Full Name & Contact Number (e.g. 'Sita Sharma - 9876500000') or reply '1' or 'YES' to confirm!"
-        )
+        is_valid_time, invalid_time_str = check_operating_hours_validity(query_clean)
+        if not is_valid_time:
+            response_text = (
+                f"⚠️ Our clinic operating hours are Monday to Saturday from 9:00 AM to 8:00 PM (and Sunday 10:00 AM to 2:00 PM).\n\n"
+                f"*{invalid_time_str}* is outside our operating hours.\n\n"
+                f"Available consultation slots tomorrow include:\n"
+                f"• 10:30 AM\n"
+                f"• 11:30 AM\n"
+                f"• 04:00 PM\n"
+                f"• 06:30 PM\n\n"
+                f"Please let us know which of these times works best for you!"
+            )
+        else:
+            response_text = (
+                f"Perfect! I can hold that time for you. 😊\n\n"
+                f"Doctor: Dr. Chinmay Hudedamani\n"
+                f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
+                f"Who is this appointment for? Please reply with the Patient's Full Name & Contact Number (e.g. 'Sita Sharma - 9876500000') or reply '1' or 'YES' to confirm!"
+            )
     elif is_slot_query:
         response_text = (
             f"{welcome_prefix}"
