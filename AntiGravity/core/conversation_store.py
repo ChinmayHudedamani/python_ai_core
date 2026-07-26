@@ -38,6 +38,14 @@ class ConversationSessionStore:
             "turns": []
         }
 
+    def get_last_bot_reply(self, phone: str) -> str:
+        """Returns the bot reply from the most recent chat turn for anti-repetition guards."""
+        session = self.load_patient_session(phone)
+        turns = session.get("turns", [])
+        if turns:
+            return turns[-1].get("bot_reply", "").strip()
+        return ""
+
     def reset_session(self, phone: str) -> None:
         """Resets session turn counter and clears RECEPTIONIST_REQUIRED status."""
         session_file = self.get_session_file_path(phone)

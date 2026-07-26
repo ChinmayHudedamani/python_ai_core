@@ -42,8 +42,10 @@ class CentaurCoreEngine:
         phone_match = re.search(r"(\+?91[\s-]?)?([6-9]\d{9}|[6-9]\d{4}[\s-]\d{5})", raw_notes)
         
         # Insufficient Data Guard: Check if patient provided name but NO 10-digit phone number
-        is_generic_word = clean_msg in ["hi", "hello", "hey", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update"]
-        is_name_only = not phone_match and len(raw_notes.split()) <= 4 and not is_generic_word and any(w.isalpha() for w in clean_msg.split()) and not re.search(r"\d", raw_notes)
+        has_pending_link = sender_phone in self._pending_payment_links or sender_phone in self._verified_patients
+        has_name_kw = any(w in clean_msg for w in ["name", "patient", "mr ", "mrs ", "ms ", "dr "])
+        is_generic_word = clean_msg in ["hi", "hello", "hey", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update", "something", "info", "details"]
+        is_name_only = not phone_match and not is_generic_word and not re.search(r"\d", raw_notes) and (has_pending_link or has_name_kw or (len(raw_notes.split()) in [2, 3] and all(w[0].isupper() for w in raw_notes.split() if w)))
 
         if is_name_only:
             extracted_name = raw_notes.strip().title()
@@ -247,6 +249,20 @@ class CentaurCoreEngine:
         # 4. Generate Grounded Clinical Response
         patient_payload = {"notes": raw_notes, "name": patient_name, "phone": patient_phone}
         rag_result = generate_zero_hallucination_response(patient_payload)
+
+        # Anti-Repetition Guard: Intercept duplicate consecutive replies
+        last_bot_reply = self.conv_store.get_last_bot_reply(sender_phone)
+        current_bot_reply = rag_result.get("whatsapp_response", "").strip()
+
+        if last_bot_reply and last_bot_reply == current_bot_reply:
+            rag_result["whatsapp_response"] = (
+                "I notice we might be discussing similar points! 😊\n\n"
+                "To help you directly without repeating information:\n"
+                "• Reply *'book slot'* to reserve a consultation with Dr. Chinmay Hudedamani.\n"
+                "• Reply *'cost'* to view treatment pricing & 0% EMI packages.\n"
+                "• Call our clinical reception desk directly at *+91-7338350871*.\n\n"
+                "Which option would you like to explore?"
+            )
 
         # 5. Append Turn to Session Store
         self.conv_store.append_chat_turn(sender_phone, raw_notes, rag_result)

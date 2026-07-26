@@ -235,9 +235,14 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         )
     else:
         response_text = (
-            f"{welcome_prefix}"
-            "We offer clear aligners, dental implants, single-visit root canals, and smile makeovers.\n\n"
-            "How may I help you today?"
+            f"I want to make sure I assist you accurately! 😊\n\n"
+            f"Here is a quick overview of what we offer at Apex Dental Center, Koramangala:\n\n"
+            f"• 🦷 *Invisalign & Clear Aligners* (Virtually invisible straightening, 0% EMI)\n"
+            f"• ⚡ *Single-Visit Laser Root Canal (RCT)* (Painless 1-hour procedure)\n"
+            f"• 🦷 *3D Digital Dental Implants* (Permanent tooth replacement)\n"
+            f"• ✨ *Teeth Whitening & Smile Makeovers* (Instant brightening & veneers)\n"
+            f"• 👨‍⚕️ *Doctor Consultation & 3D Intraoral Scan*\n\n"
+            f"Please let me know if you would like to know the cost/details of any treatment, or reply with your preferred day and time (e.g. 'tomorrow 4pm') to book a consultation with Dr. Chinmay Hudedamani!"
         )
 
     return {
