@@ -92,8 +92,8 @@ class CentaurCoreEngine:
                 "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
             }
 
-        # 0d. Gratitude & Exit Check ("thank you", "thanks", "bye")
-        if any(w in clean_msg for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks"]):
+        # 0d. Gratitude & Exit Check ("thank you", "thanks", "bye", "dhanyawad")
+        if any(w in clean_msg for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
             self.conv_store.reset_session(patient_phone)
             return {
                 "status": "GRATITUDE_EXIT",

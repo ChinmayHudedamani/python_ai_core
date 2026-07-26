@@ -86,7 +86,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
         }
 
     # 0b. Direct Gratitude & Goodbye Detection
-    if any(w in query_clean for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks"]):
+    if any(w in query_clean for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
         return {
             "whatsapp_response": "You're very welcome! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
