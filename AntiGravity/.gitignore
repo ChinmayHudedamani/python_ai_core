@@ -12,3 +12,5 @@ OneDrive/
 Sentra/
 ../OneDrive/
 conversations/
+*.pdf
+*.log

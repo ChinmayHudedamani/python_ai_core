@@ -21,6 +21,13 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 core_engine = CentaurCoreEngine()
 ledger_writer = OfflineLedgerWriter()
 
+# Start 6:00 AM Daily WhatsApp PDF Dispatcher for Dr. Chinmay Hudedamani
+try:
+    from daily_cron_scheduler import start_automated_6am_scheduler
+    start_automated_6am_scheduler(doctor_phone="+91-7338350871")
+except Exception as ex:
+    print(f"Daily 6AM Scheduler Initialization Error: {ex}")
+
 processed_sids_file = os.path.join(current_dir, "processed_sids.txt")
 processed_sids = set()
 if os.path.exists(processed_sids_file):
@@ -193,6 +200,21 @@ def patient_intake_api():
         send_dispatch=False
     )
     return jsonify(result), 200
+
+
+@app.route("/download/doctor_report.pdf", methods=["GET"])
+def download_doctor_pdf():
+    from generate_doctor_pdf_report import build_doctor_pdf_report
+    pdf_path = build_doctor_pdf_report("Apex_Dental_Doctor_Report.pdf")
+    from flask import send_file
+    return send_file(pdf_path, as_attachment=True, download_name="Apex_Dental_Doctor_Report.pdf")
+
+
+@app.route("/api/v1/send_doctor_pdf", methods=["POST", "GET"])
+def dispatch_doctor_pdf_api():
+    from send_pdf_to_doctor import send_pdf_report_to_doctor
+    phone = request.args.get("phone") or (request.get_json(force=True, silent=True) or {}).get("phone", os.getenv("DOCTOR_PHONE", "+91-7338350871"))
+    return jsonify(res), 200
 
 
 if __name__ == "__main__":

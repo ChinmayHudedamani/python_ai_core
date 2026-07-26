@@ -19,6 +19,7 @@ class CentaurCoreEngine:
         self.conv_store = ConversationSessionStore(max_turns=8)
         self.ledger = OfflineLedgerWriter()
         self._verified_patients: Dict[str, Dict[str, str]] = {}
+        self._pending_payment_links: set = set()
 
     def process_patient_intake(self, raw_notes: str, patient_name: str = "Patient", patient_phone: str = "+91-9988776655", send_dispatch: bool = False) -> Dict[str, Any]:
         start_ts = time.time()
@@ -52,6 +53,8 @@ class CentaurCoreEngine:
             if len(raw_notes.split()) <= 10:
                 slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
                 pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
+                self._pending_payment_links.add(sender_phone)
+                self._pending_payment_links.add(patient_phone)
                 pay_reply = (
                     f"Thank you! Booking registered for:\n"
                     f"👤 Patient Name: {patient_name}\n"
@@ -74,26 +77,13 @@ class CentaurCoreEngine:
             patient_name = self._verified_patients[sender_phone]["name"]
             patient_phone = self._verified_patients[sender_phone]["phone"]
 
-        # 0a. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
-        if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
-            slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
-            pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
-            pay_reply = (
-                f"To confirm your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
-                f"💳 Payment Link: {pay_url}\n"
-                f"📌 Consultation Fee: ₹500 (Includes intraoral examination & 3D scan planning)\n"
-                f"⌛ Slot Reference: {slot_id} (Held for 10 minutes)\n\n"
-                f"Once paid, reply 'PAID' or '1' to lock your appointment slot!"
-            )
-            return {
-                "status": "PAYMENT_LINK_GENERATED",
-                "exec_ms": round((time.time() - start_ts) * 1000, 2),
-                "whatsapp_response": pay_reply,
-                "payment_url": pay_url
-            }
+        has_pending = sender_phone in self._pending_payment_links or patient_phone in self._pending_payment_links
 
-        # 0b. Check Payment Confirmation ("paid", "payment done", "done", "txn")
-        if clean_msg in ["paid", "payment done", "payment completed", "done", "txn"]:
+        # 0a. Check Payment Confirmation ("paid", "1", "yes", "done", "confirm") when payment link is pending OR msg is explicit paid
+        is_paid_msg = clean_msg in ["paid", "payment done", "payment completed", "done", "txn"]
+        is_confirm_when_pending = has_pending and clean_msg in ["1", "yes", "confirm", "confirm booking", "lock", "pay"]
+
+        if is_paid_msg or is_confirm_when_pending:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
             txn_id = f"TXN_{int(time.time())}"
             auth_otp = str(abs(hash(patient_phone + str(int(time.time())))) % 9000 + 1000)
@@ -109,6 +99,8 @@ class CentaurCoreEngine:
                 transaction_id=txn_id
             )
             self.conv_store.reset_session(sender_phone)
+            self._pending_payment_links.discard(sender_phone)
+            self._pending_payment_links.discard(patient_phone)
             if sender_phone in self._verified_patients:
                 del self._verified_patients[sender_phone]
 
@@ -130,6 +122,26 @@ class CentaurCoreEngine:
                 "whatsapp_response": confirm_reply,
                 "auth_otp": auth_otp,
                 "ledger_result": ledger_res
+            }
+
+        # 0b. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
+        if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
+            slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+            pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
+            self._pending_payment_links.add(sender_phone)
+            self._pending_payment_links.add(patient_phone)
+            pay_reply = (
+                f"To confirm your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
+                f"💳 Payment Link: {pay_url}\n"
+                f"📌 Consultation Fee: ₹500 (Includes intraoral examination & 3D scan planning)\n"
+                f"⌛ Slot Reference: {slot_id} (Held for 10 minutes)\n\n"
+                f"Once paid, reply 'PAID' or '1' to lock your appointment slot!"
+            )
+            return {
+                "status": "PAYMENT_LINK_GENERATED",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": pay_reply,
+                "payment_url": pay_url
             }
 
         # 0c. Direct Greeting Check
