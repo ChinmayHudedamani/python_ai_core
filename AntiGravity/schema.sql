@@ -34,3 +34,10 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
     payload JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 4. DB-backed Atomic Slot Reservations Table
+CREATE TABLE IF NOT EXISTS slot_reservations (
+    slot_id VARCHAR(150) PRIMARY KEY,
+    reserved_by VARCHAR(50) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

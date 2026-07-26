@@ -28,6 +28,13 @@ try:
 except Exception as ex:
     print(f"Daily 6AM Scheduler Initialization Error: {ex}")
 
+# Start 24/7 Always-Active Keep-Alive Daemons for Render App + Neon PostgreSQL
+try:
+    from keep_alive_service import start_always_active_daemons
+    start_always_active_daemons()
+except Exception as ex:
+    print(f"24/7 Keep-Alive Uptime Daemon Initialization Error: {ex}")
+
 processed_sids_file = os.path.join(current_dir, "processed_sids.txt")
 processed_sids = set()
 if os.path.exists(processed_sids_file):
