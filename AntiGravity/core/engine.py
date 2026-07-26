@@ -1,4 +1,5 @@
 import time
+import random
 from typing import Dict, Any
 from core.intent_classifier import ScikitLearnMLIntentEngine
 from core.rate_limiter import TokenBucketRateLimiter, SlotConcurrencyLockManager
@@ -20,6 +21,12 @@ class CentaurCoreEngine:
     def process_patient_intake(self, raw_notes: str, patient_name: str = "Patient", patient_phone: str = "+91-9988776655", send_dispatch: bool = False) -> Dict[str, Any]:
         start_ts = time.time()
         clean_msg = raw_notes.strip().lower()
+
+        # Extract patient name from notes if patient provided "Name - Problem"
+        if "-" in raw_notes and len(raw_notes.split("-")[0].strip().split()) <= 3:
+            extracted_name = raw_notes.split("-")[0].strip()
+            if len(extracted_name) > 2:
+                patient_name = extracted_name
 
         # 0a. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
         if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
@@ -43,28 +50,36 @@ class CentaurCoreEngine:
         if clean_msg in ["paid", "payment done", "payment completed", "done", "txn"]:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
             txn_id = f"TXN_{int(time.time())}"
+            auth_otp = str(abs(hash(patient_phone + str(int(time.time())))) % 9000 + 1000)
+
+            display_name = patient_name if patient_name != "Patient" else "Valued Patient"
+
             ledger_res = self.ledger.write_appointment_lead(
-                name=patient_name,
+                name=display_name,
                 phone=patient_phone,
                 procedure_code="GENERAL",
-                raw_notes=f"Confirmed Appointment (Slot {slot_id})",
+                raw_notes=f"Confirmed Appointment (Slot {slot_id}) | OTP: {auth_otp}",
                 payment_status="PAID_CONFIRMED",
                 transaction_id=txn_id
             )
             self.conv_store.reset_session(patient_phone)
             confirm_reply = (
                 f"🎉 Payment Confirmed & Appointment Locked!\n\n"
-                f"Patient: {patient_name}\n"
+                f"Patient Name: {display_name}\n"
+                f"Phone Number: {patient_phone}\n"
                 f"Doctor: Dr. Chinmay Hudedamani\n"
                 f"Clinic: Apex Dental Center, Koramangala, Bengaluru\n"
                 f"Slot Reference: {slot_id}\n"
                 f"Payment Status: PAID (₹500 - Ref: {txn_id})\n\n"
+                f"🔑 Clinic Check-In OTP: {auth_otp}\n"
+                f"(Please present this 4-digit authentication code at the reception desk tomorrow for instant check-in!)\n\n"
                 f"Dr. Chinmay's schedule has been updated. We look forward to seeing you!"
             )
             return {
                 "status": "APPOINTMENT_CONFIRMED_PAID",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
                 "whatsapp_response": confirm_reply,
+                "auth_otp": auth_otp,
                 "ledger_result": ledger_res
             }
 
