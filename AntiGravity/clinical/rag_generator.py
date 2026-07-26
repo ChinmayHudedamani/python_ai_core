@@ -168,7 +168,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             f"Perfect! I can hold that time for you. 😊\n\n"
             f"Doctor: Dr. Chinmay Hudedamani\n"
             f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
-            f"Would you like me to lock this slot for you? Reply '1' or 'YES' to confirm your appointment!"
+            f"Who is this appointment for? Please reply with the Patient's Full Name & Contact Number (e.g. 'Sita Sharma - 9876500000') or reply '1' or 'YES' to confirm!"
         )
     elif is_slot_query:
         response_text = (

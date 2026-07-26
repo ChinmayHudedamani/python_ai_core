@@ -1,5 +1,6 @@
 import time
 import random
+import re
 from typing import Dict, Any
 from core.intent_classifier import ScikitLearnMLIntentEngine
 from core.rate_limiter import TokenBucketRateLimiter, SlotConcurrencyLockManager
@@ -17,16 +18,61 @@ class CentaurCoreEngine:
         self.lock_mgr = SlotConcurrencyLockManager(ttl_seconds=600)
         self.conv_store = ConversationSessionStore(max_turns=8)
         self.ledger = OfflineLedgerWriter()
+        self._verified_patients: Dict[str, Dict[str, str]] = {}
 
     def process_patient_intake(self, raw_notes: str, patient_name: str = "Patient", patient_phone: str = "+91-9988776655", send_dispatch: bool = False) -> Dict[str, Any]:
         start_ts = time.time()
         clean_msg = raw_notes.strip().lower()
 
-        # Extract patient name from notes if patient provided "Name - Problem"
-        if "-" in raw_notes and len(raw_notes.split("-")[0].strip().split()) <= 3:
-            extracted_name = raw_notes.split("-")[0].strip()
-            if len(extracted_name) > 2:
-                patient_name = extracted_name
+        sender_phone = patient_phone
+
+        # Robust Patient Name & Contact Phone Extraction
+        phone_match = re.search(r"(\+?\d{1,3}[\s-]?)?(\d{10}|\d{5}[\s-]\d{5})", raw_notes)
+        if phone_match:
+            extracted_phone = phone_match.group(0).strip()
+            clean_for_name = raw_notes.replace(extracted_phone, "")
+            clean_for_name = re.sub(
+                r"\b(for|my|father|mother|son|daughter|wife|husband|friend|brother|sister|patient|name|is|phone|number|mobile|contact)\b",
+                "",
+                clean_for_name,
+                flags=re.IGNORECASE
+            )
+            clean_for_name = clean_for_name.replace("-", "").replace(":", "").strip()
+            words = [w for w in clean_for_name.split() if len(w) > 1 and w.isalpha()]
+            if words:
+                patient_name = " ".join(words[:3]).title()
+            patient_phone = extracted_phone
+
+            self._verified_patients[sender_phone] = {
+                "name": patient_name,
+                "phone": patient_phone
+            }
+
+            # If user provided Patient Name & Contact Phone during booking step
+            if len(raw_notes.split()) <= 10:
+                slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
+                pay_url = f"https://centaur-bot.onrender.com/pay/{slot_id}"
+                pay_reply = (
+                    f"Thank you! Booking registered for:\n"
+                    f"👤 Patient Name: {patient_name}\n"
+                    f"📞 Contact Phone: {patient_phone}\n\n"
+                    f"To lock your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
+                    f"💳 Payment Link: {pay_url}\n"
+                    f"📌 Consultation Fee: ₹500 (Includes intraoral examination & 3D scan planning)\n"
+                    f"⌛ Slot Reference: {slot_id} (Held for 10 minutes)\n\n"
+                    f"Once paid, reply 'PAID' or '1' to lock your appointment slot!"
+                )
+                return {
+                    "status": "PATIENT_VERIFIED_PAYMENT_LINK_GENERATED",
+                    "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                    "whatsapp_response": pay_reply,
+                    "payment_url": pay_url
+                }
+
+        # Check if we have previously verified patient details for this sender
+        if sender_phone in self._verified_patients:
+            patient_name = self._verified_patients[sender_phone]["name"]
+            patient_phone = self._verified_patients[sender_phone]["phone"]
 
         # 0a. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
         if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
@@ -62,11 +108,14 @@ class CentaurCoreEngine:
                 payment_status="PAID_CONFIRMED",
                 transaction_id=txn_id
             )
-            self.conv_store.reset_session(patient_phone)
+            self.conv_store.reset_session(sender_phone)
+            if sender_phone in self._verified_patients:
+                del self._verified_patients[sender_phone]
+
             confirm_reply = (
                 f"🎉 Payment Confirmed & Appointment Locked!\n\n"
                 f"Patient Name: {display_name}\n"
-                f"Phone Number: {patient_phone}\n"
+                f"Contact Phone: {patient_phone}\n"
                 f"Doctor: Dr. Chinmay Hudedamani\n"
                 f"Clinic: Apex Dental Center, Koramangala, Bengaluru\n"
                 f"Slot Reference: {slot_id}\n"
@@ -85,7 +134,7 @@ class CentaurCoreEngine:
 
         # 0c. Direct Greeting Check
         if clean_msg in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
-            self.conv_store.reset_session(patient_phone)
+            self.conv_store.reset_session(sender_phone)
             return {
                 "status": "GREETING",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
@@ -94,7 +143,7 @@ class CentaurCoreEngine:
 
         # 0d. Gratitude & Exit Check ("thank you", "thanks", "bye", "dhanyawad")
         if any(w in clean_msg for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
-            self.conv_store.reset_session(patient_phone)
+            self.conv_store.reset_session(sender_phone)
             return {
                 "status": "GRATITUDE_EXIT",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
@@ -102,7 +151,7 @@ class CentaurCoreEngine:
             }
 
         # 1. Rate Limit Inspection
-        is_limited, limit_msg = self.rate_limiter.is_rate_limited(patient_phone)
+        is_limited, limit_msg = self.rate_limiter.is_rate_limited(sender_phone)
         if is_limited:
             return {
                 "status": "RATE_LIMITED",
@@ -110,7 +159,7 @@ class CentaurCoreEngine:
             }
 
         # 2. Check 8-Turn Limit
-        exceeded, handoff_data = self.conv_store.check_turn_limit_exceeded(patient_phone, raw_notes)
+        exceeded, handoff_data = self.conv_store.check_turn_limit_exceeded(sender_phone, raw_notes)
         if exceeded:
             return handoff_data
 
@@ -122,7 +171,7 @@ class CentaurCoreEngine:
         rag_result = generate_zero_hallucination_response(patient_payload)
 
         # 5. Append Turn to Session Store
-        self.conv_store.append_chat_turn(patient_phone, raw_notes, rag_result)
+        self.conv_store.append_chat_turn(sender_phone, raw_notes, rag_result)
 
         return {
             "status": "PROCESSED_SUCCESSFULLY",
