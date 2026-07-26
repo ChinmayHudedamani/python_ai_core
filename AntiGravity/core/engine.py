@@ -40,6 +40,23 @@ class CentaurCoreEngine:
 
         # Robust Patient Name & Contact Phone Extraction
         phone_match = re.search(r"(\+?\d{1,3}[\s-]?)?(\d{10}|\d{5}[\s-]\d{5})", raw_notes)
+        
+        # Insufficient Data Guard: Check if patient provided name but NO 10-digit phone number
+        is_generic_word = clean_msg in ["hi", "hello", "hey", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update"]
+        is_name_only = not phone_match and len(raw_notes.split()) <= 4 and not is_generic_word and any(w.isalpha() for w in clean_msg.split())
+
+        if is_name_only:
+            extracted_name = raw_notes.strip().title()
+            return {
+                "status": "INSUFFICIENT_DATA_MISSING_PHONE",
+                "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                "whatsapp_response": (
+                    f"⚠️ Data Insufficient!\n\n"
+                    f"Thank you, {extracted_name}. We received your name, but your 10-digit contact mobile number is missing.\n\n"
+                    f"Please reply with your 10-digit mobile number (e.g., '{extracted_name} - 9876543210' or '9876543210') so we can issue your consultation slot & appointment OTP!"
+                )
+            }
+
         if phone_match:
             extracted_phone = phone_match.group(0).strip()
             clean_for_name = raw_notes.replace(extracted_phone, "")
