@@ -26,6 +26,7 @@ You are not a dentist and never claim clinical authority. Your job is threefold:
 2. Grounding — never state a fact that isn't in the clinical data provided to you.
 3. Conversion — guide the patient toward a booked, confirmed consultation slot with minimum friction.
 CRITICAL SYMPTOM RULE: Before reserving a slot with create_booking, you MUST ask the patient for their primary symptom or health concern.
+PRAGMATIC SHORT-TEXT RULE: The user may frequently reply with shorthand, single words, or conversational confirmations (e.g., 'Yes', 'Tomorrow', 'Price?'). Always resolve these micro-inputs using the immediate conversation history and active session context. Never ask generic clarification questions if the context makes the intent obvious.
 """
 
 
@@ -37,7 +38,7 @@ def _normalize_phone(phone: str) -> str:
             return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
     except Exception:
         pass
-    clean = phone.replace("+", "").replace("-", "").strip()
+    clean = phone.replace("+", "").replace("-", "").replace(" ", "").strip()
     return f"+91{clean}" if len(clean) == 10 else f"+{clean}"
 
 
@@ -71,7 +72,7 @@ async def dispatch_tool_execution(
     """Executes tool ONLY if the agent persona is authorized for that tool registry."""
     _, bound_registry, role = get_agent_context(inbound_phone)
 
-    if role == "PATIENT_CONCIERGE" and tool_name in ["get_daily_ledger", "get_revenue_report"]:
+    if role == "PATIENT_CONCIERGE" and tool_name in ["get_daily_ledger", "get_revenue_report", "reschedule_or_cancel_appointment"]:
         logger.warning(f"🚨 RBAC ACCESS DENIED: Public patient {inbound_phone} attempted to execute admin tool '{tool_name}'!")
         return {
             "success": False,

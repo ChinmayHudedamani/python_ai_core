@@ -8,6 +8,7 @@ from datetime import datetime, date
 
 from app.services.guardrails import sanitize_input
 from app.services.triage_engine import TriageEngine
+from app.services.normalizers import augment_short_text
 from app.services.llm_router import get_agent_context, is_authorized_doctor
 from app.ui.receptionist_dashboard import render_receptionist_dashboard
 
@@ -35,13 +36,13 @@ st.sidebar.markdown("### 🛡️ System Guardrails & Architecture")
 st.sidebar.write("• **Architecture**: AI Sandwich")
 st.sidebar.write("• **Database**: SQLite SQLModel KB & Postgres Models")
 st.sidebar.write("• **State**: Redis Hashes (45-min TTL, 6-turn sliding window)")
-st.sidebar.write("• **Slot Cache**: Ambiguity-Free Structured Slot Cache")
+st.sidebar.write("• **Context Injection**: Universal Short-Text Augmenter")
 st.sidebar.write("• **Circuit Breaker**: 4.0s Maximum Timeout")
 st.sidebar.write("• **Safety**: Zero-hallucination medical safety hard-stop")
 
 
 # ---------------------------------------------------------
-# Persona 1: Patient View (WhatsApp Simulator with Slot Buttons)
+# Persona 1: Patient View (WhatsApp Simulator with Context Badges)
 # ---------------------------------------------------------
 
 if role_choice == "👤 Patient View (Rahul)":
@@ -68,6 +69,8 @@ if role_choice == "👤 Patient View (Rahul)":
         if msg["role"] == "user":
             with st.chat_message("user", avatar="👤"):
                 st.markdown(msg["content"])
+                if msg.get("context_badge"):
+                    st.info(msg["context_badge"])
         else:
             with st.chat_message("assistant", avatar="🦷"):
                 st.markdown(msg["content"])
@@ -92,14 +95,32 @@ if role_choice == "👤 Patient View (Rahul)":
 
     # Handle slot button selection
     selected_time = st.session_state.pop("selected_slot_time", None)
-    user_input = st.chat_input("Type your message to APEX AI...") or selected_time
+    raw_user_input = st.chat_input("Type your message to APEX AI...") or selected_time
 
-    if user_input:
+    if raw_user_input:
         start_t = time.time()
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(user_input)
+        
+        # Contextual Input Augmentation for short text
+        mock_session_state = {
+            "last_intent": "SELECTING_SLOT",
+            "last_topic": "Root Canal",
+            "pending_code": "APX-4928"
+        }
+        aug_res = augment_short_text(raw_user_input, mock_session_state)
+        
+        user_input = aug_res["augmented_text"]
+        context_badge = f"💡 [Context Injection] User: '{raw_user_input}' -> Expanded: '{user_input}' ({aug_res.get('applied_rule')})" if aug_res.get("was_augmented") else None
 
-        st.session_state["patient_messages"].append({"role": "user", "content": user_input})
+        with st.chat_message("user", avatar="👤"):
+            st.markdown(raw_user_input if not aug_res["was_augmented"] else f"{raw_user_input} *(Expanded: '{user_input}')*")
+            if context_badge:
+                st.info(context_badge)
+
+        st.session_state["patient_messages"].append({
+            "role": "user",
+            "content": raw_user_input,
+            "context_badge": context_badge
+        })
 
         # Pre-Guardrail Sanitization
         sanitized = sanitize_input(user_input)
@@ -124,13 +145,13 @@ if role_choice == "👤 Patient View (Rahul)":
             reply = f"✅ Thank you! Your appointment has been confirmed with check-in code '{code}'. We look forward to seeing you at Apex Dental!"
             reasoning = f"Check-in confirmation code '{code}' verified against Postgres DB."
             tools = [{"tool": "confirm_booking_with_code", "input": {"code": code}}]
-        elif any(t in user_input.lower() for t in ["10:30", "02:00", "04:30", "1", "2", "3", "first", "second", "third"]):
+        elif any(t in user_input.lower() for t in ["10:30", "02:00", "04:30", "1", "2", "3", "first", "second", "third", "yes", "confirm", "pending"]):
             reply = (
-                f"✅ Selected slot '{user_input}' reserved!\n\n"
+                f"✅ Selected slot reserved!\n\n"
                 f"Your unique check-in code is **APX-4928**.\n"
                 f"Please reply with **APX-4928** to confirm your slot!"
             )
-            reasoning = f"Deterministic Slot Cache Interceptor matched user input '{user_input}'. Reserved slot APX-4928."
+            reasoning = f"Context Augmentation & Slot Interceptor matched input '{user_input}'. Reserved slot APX-4928."
             tools = [{"tool": "create_booking", "result": {"check_in_code": "APX-4928", "status": "SLOT_HELD"}}]
         else:
             slots_to_render = [
@@ -149,7 +170,7 @@ if role_choice == "👤 Patient View (Rahul)":
         end_t = time.time()
         latency_ms = (end_t - start_t) * 1000
 
-        with st.chat_message("assistant", avatar="🦷"):
+        with st.chat_message("assistant", avatar="!("{reply}")):
             st.markdown(reply)
             if slots_to_render:
                 st.write("**Click to select an appointment slot:**")
