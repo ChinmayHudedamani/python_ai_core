@@ -8,6 +8,7 @@ from app.services.session.models import PatientSession, CommandResult, ActionTyp
 from app.services.session.base_strategy import AbstractTierStrategy
 from app.services.session.tier1_strategy import Tier1Strategy
 from app.services.session.tier2_strategy import Tier2Strategy
+from app.services.session.tier25_beta_strategy import Tier25BetaStrategy
 from app.services.session.tier3_strategy import Tier3Strategy
 from app.services.tier_config import SaaSPlanTier
 from app.services.session_manager import InputSanitizationPipeline, SecurityViolationException, StructuredJsonLogger
@@ -24,6 +25,7 @@ class SessionContextManager:
         self._strategy_registry: Dict[SaaSPlanTier, AbstractTierStrategy] = {
             SaaSPlanTier.TIER_1: Tier1Strategy(),
             SaaSPlanTier.TIER_2: Tier2Strategy(),
+            SaaSPlanTier.TIER_2_5_BETA: Tier25BetaStrategy(),
             SaaSPlanTier.TIER_3: Tier3Strategy()
         }
         self.telemetry = StructuredJsonLogger()

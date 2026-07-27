@@ -9,6 +9,7 @@ class SaaSPlanTier(str, Enum):
     """SaaS Subscription Tiers defining capability escalation levels."""
     TIER_1 = "TIER_1_ESSENTIAL"
     TIER_2 = "TIER_2_PRO"
+    TIER_2_5_BETA = "TIER_2_5_BETA"
     TIER_3 = "TIER_3_ENTERPRISE"
 
 
@@ -83,6 +84,30 @@ TIER_CAPABILITIES: Final[Dict[SaaSPlanTier, Dict[str, Any]]] = {
             "has_otp_auth",
             "has_surgical_priority",
             "has_checkin_codes"
+        })
+    },
+    SaaSPlanTier.TIER_2_5_BETA: {
+        "name": "Tier 2.5: Beta Testing (Pre-Triage & Care Cards Sandbox)",
+        "menu": (
+            "1. Doctor Details & Clinic Timings",
+            "2. Cost Ranges & Pricing Sheet",
+            "3. 📅 Book Appointment (Live Slots)",
+            "4. 🩺 🧪 Guided Clinical Pre-Triage (Beta)",
+            "5. 📋 🧪 Digital Care Cards (Beta)",
+            "6. ⭐ Patient Reviews",
+            "7. 🚨 Emergency Triage",
+            "8. Exit Session"
+        ),
+        "features": frozenset({
+            "has_live_status_clock",
+            "has_pricing_disclaimer",
+            "has_emergency_tap_to_call",
+            "has_live_slots",
+            "has_otp_auth",
+            "has_surgical_priority",
+            "has_checkin_codes",
+            "has_pre_triage_beta",
+            "has_care_cards_beta"
         })
     },
     SaaSPlanTier.TIER_3: {

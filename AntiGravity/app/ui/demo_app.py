@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI / Copus AI — Dual-Portal Clinic Concierge Frontend Application
+# APEX AI / Copus AI — Dual-Portal & Sandbox Clinic Concierge Frontend Application
 
 import streamlit as st
 import sys
@@ -16,7 +16,7 @@ from app.ui.reception_cache import ReceptionistDailyCache, OfflineAppointmentRec
 
 # Page Configuration
 st.set_page_config(
-    page_title="APEX AI — Dual-Portal Clinic Concierge",
+    page_title="APEX AI — Clinic Concierge Hub",
     page_icon="🩺",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -39,13 +39,24 @@ CUSTOM_CSS = """
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         color: #e65100;
     }
+    .beta-card {
+        background: rgba(255, 248, 225, 0.95);
+        backdrop-filter: blur(8px);
+        border-left: 6px solid #f57c00;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(245, 124, 0, 0.1);
+        color: #e65100;
+    }
     .production-card {
-        background: rgba(235, 243, 255, 0.9);
+        background: rgba(235, 243, 255, 0.95);
         backdrop-filter: blur(8px);
         border-left: 6px solid #0F52BA;
         border-radius: 8px;
         padding: 16px;
         margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(15, 82, 186, 0.1);
         color: #0d47a1;
     }
     div[data-testid="stMetricValue"] {
@@ -96,6 +107,7 @@ selected_tier_str = st.sidebar.selectbox(
     format_func=lambda x: {
         SaaSPlanTier.TIER_1.value: "🟢 Tier 1: Essential (Menu Bot)",
         SaaSPlanTier.TIER_2.value: "🟡 Tier 2: Pro (Dual Admin Portals)",
+        SaaSPlanTier.TIER_2_5_BETA.value: "🧪 Tier 2.5: Beta Testing (Pre-Triage & Care Cards)",
         SaaSPlanTier.TIER_3.value: "🔴 Tier 3: Enterprise (🚀 In Production)"
     }[x],
     index=[t.value for t in SaaSPlanTier].index(st.session_state.active_tier.value)
@@ -138,11 +150,22 @@ tab_patient, tab_doctor, tab_reception = st.tabs([
 with tab_patient:
     st.title("💬 WhatsApp Interactive Concierge")
     
-    if st.session_state.active_tier == SaaSPlanTier.TIER_3:
+    if st.session_state.active_tier == SaaSPlanTier.TIER_2_5_BETA:
+        st.markdown(
+            """
+            <div class="beta-card">
+                <b>🧪 Tier 2.5 Beta Testing Active</b><br/>
+                <b>Sandbox Active</b>: Testing Guided Clinical Pre-Triage & Digital Care Cards without full Enterprise infrastructure.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    elif st.session_state.active_tier == SaaSPlanTier.TIER_3:
         st.markdown(
             """
             <div class="production-card">
-                <b>🚀 Enterprise Mode Active (In Production)</b>: Multi-Branch Routing, TPA Insurance Desk, & Pre-Triage Trees are live.
+                <b>🚀 Enterprise Mode Active (In Production)</b><br/>
+                Full Multi-Branch Auto-Router, Cashless TPA Insurance Desk, & Pre-Triage Trees are live.
             </div>
             """,
             unsafe_allow_html=True
@@ -181,7 +204,7 @@ with tab_patient:
         if user_choice:
             st.session_state.chat_history.append({"sender": "user", "text": user_choice})
             
-            # OTP Verification step in Tier 2/3
+            # OTP Verification step in Tier 2/2.5/3
             if st.session_state.session_state_obj.otp_code and not st.session_state.session_state_obj.is_authenticated:
                 if user_choice.strip() == st.session_state.session_state_obj.otp_code:
                     st.session_state.session_state_obj.is_authenticated = True
@@ -197,18 +220,18 @@ with tab_patient:
             st.rerun()
 
 # ==========================================
-# TAB 2: DOCTOR COMMAND CENTER (UNLOCKED IN TIER 2 & TIER 3)
+# TAB 2: DOCTOR COMMAND CENTER (UNLOCKED IN TIER 2, TIER 2.5 & TIER 3)
 # ==========================================
 with tab_doctor:
     st.title("👨‍⚕️ Doctor Command Center (Dr. Chinmay Hudedamani, MDS)")
 
-    # Unlocked in Tier 2 and Tier 3!
+    # Unlocked in Tier 2, Tier 2.5, and Tier 3!
     if st.session_state.active_tier == SaaSPlanTier.TIER_1:
         st.markdown(
             """
             <div class="lock-card">
                 <h3>🔒 Tier 2 Pro Upgrade Required</h3>
-                <p>The Doctor Command Center, OT Emergency Override Tool, and Schedule Analytics require Tier 2 (Pro) or Tier 3 (Enterprise).</p>
+                <p>The Doctor Command Center, OT Emergency Override Tool, and Schedule Analytics require Tier 2 (Pro), Tier 2.5 (Beta), or Tier 3 (Enterprise).</p>
             </div>
             """,
             unsafe_allow_html=True
@@ -241,7 +264,7 @@ with tab_reception:
             """
             <div class="lock-card">
                 <h3>🔒 Tier 2 Pro Upgrade Required</h3>
-                <p>Check-In Code verification (<code>APX-XXXX</code>) and waiting-room roster management require Tier 2 or Tier 3.</p>
+                <p>Check-In Code verification (<code>APX-XXXX</code>) and waiting-room roster management require Tier 2, Tier 2.5, or Tier 3.</p>
             </div>
             """,
             unsafe_allow_html=True
