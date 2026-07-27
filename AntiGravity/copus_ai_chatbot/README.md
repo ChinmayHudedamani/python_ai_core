@@ -1,12 +1,29 @@
-# 🤖 Copus AI Chatbot
+# 🩺 APEX AI Clinic Concierge ("Copus") — Dual-Portal SaaS Hub
 
-Welcome to **Copus AI Chatbot**, built from scratch.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://copus-ai-chatbot.streamlit.app)
+
+APEX AI Clinic Concierge ("Copus") is an enterprise 4-tier SaaS platform featuring:
+- **Strict IST Timezone (`Asia/Kolkata`)**
+- **Instant Pay-at-Clinic Slot Booking Protocol**
+- **Dual Admin Portals** (Doctor Command Center + Receptionist Operations Desk)
+- **Local NLM Engine & Branch-and-Bound Decision Tree Fallback**
+- **Gated AI Sandwich Architecture**
 
 ---
 
-## 📁 Directory Structure
-```text
-copus_ai_chatbot/
-├── __init__.py
-└── README.md
+## 🚀 Streamlit Community Cloud Deployment Settings
+
+When deploying on [Streamlit Community Cloud](https://share.streamlit.io/):
+
+1. **Repository**: `ChinmayHudedamani/copus_ai_chatbot`
+2. **Branch**: `main`
+3. **Main file path**: `app.py` (or `app/ui/demo_app.py`)
+
+---
+
+## 💻 Local Execution
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
 ```
