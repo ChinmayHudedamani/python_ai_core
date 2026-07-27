@@ -4,7 +4,7 @@
 import re
 from typing import Dict, Any, Optional
 from sqlmodel import select
-from app.sqlite_db import get_sqlite_session
+from app.core.sqlite_db import get_sqlite_session
 from app.models.kb import ClinicalTriageRule
 
 

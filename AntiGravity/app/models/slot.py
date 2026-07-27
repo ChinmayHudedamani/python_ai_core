@@ -23,5 +23,6 @@ class Slot(Base, TimestampMixin):
     doctor_name: Mapped[str] = mapped_column(String(100), default="Dr. Chinmay Hudedamani", nullable=False)
     status: Mapped[SlotStatus] = mapped_column(SQLEnum(SlotStatus), default=SlotStatus.AVAILABLE, index=True, nullable=False)
     held_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    consultation_fee: Mapped[float] = mapped_column(default=500.0)
 
     booking: Mapped["Booking | None"] = relationship("Booking", back_populates="slot", uselist=False)
