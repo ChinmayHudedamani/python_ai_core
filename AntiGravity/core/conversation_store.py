@@ -14,7 +14,7 @@ def ensure_conversations_directory():
 class ConversationSessionStore:
     """Multi-Turn Conversation Transcript Store & Human Handoff Circuit Breaker."""
 
-    def __init__(self, max_turns: int = 8):
+    def __init__(self, max_turns: int = 12):
         ensure_conversations_directory()
         self.max_turns = max_turns
 
@@ -32,11 +32,26 @@ class ConversationSessionStore:
                 pass
         return {
             "phone": phone,
+            "patient_name": "",
             "session_created_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "status": "ACTIVE_AUTOMATED",
             "total_turns": 0,
             "turns": []
         }
+
+    def get_patient_name(self, phone: str) -> str:
+        session = self.load_patient_session(phone)
+        return session.get("patient_name", "")
+
+    def set_patient_name(self, phone: str, name: str) -> None:
+        session = self.load_patient_session(phone)
+        session["patient_name"] = name
+        session_file = self.get_session_file_path(phone)
+        try:
+            with open(session_file, "w", encoding="utf-8") as f:
+                json.dump(session, f, indent=2)
+        except Exception:
+            pass
 
     def get_last_bot_reply(self, phone: str) -> str:
         """Returns the bot reply from the most recent chat turn for anti-repetition guards."""

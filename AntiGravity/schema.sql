@@ -41,3 +41,15 @@ CREATE TABLE IF NOT EXISTS slot_reservations (
     reserved_by VARCHAR(50) NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+-- 5. Conversed Patients Table (Doctor Conversational Leads Tracking)
+CREATE TABLE IF NOT EXISTS conversed_patients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    patient_name VARCHAR(100) NOT NULL DEFAULT 'Patient',
+    phone VARCHAR(50) NOT NULL UNIQUE,
+    total_turns INT DEFAULT 1,
+    status VARCHAR(50) DEFAULT 'CONVERSED',
+    last_inquiry VARCHAR(255) DEFAULT '',
+    first_contact_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_active_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

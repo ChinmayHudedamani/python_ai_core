@@ -91,11 +91,14 @@ def sanitize_llm_response(response_text: str) -> str:
 def check_operating_hours_validity(query_clean: str) -> tuple:
     """Checks if requested time is outside clinic operating hours (9:00 AM - 8:00 PM Mon-Sat / 10:00 AM - 2:00 PM Sun)."""
     # Match patterns like: 10:30pm, 10 30pm, 10pm, 9:30pm, 11pm, 8:30pm, 9pm, 10:30 pm, 4am, etc.
-    time_match = re.search(r"\b(1[0-2]|[1-9])(?::([0-5]\d)|\s+([0-5]\d))?\s*(am|pm)\b", query_clean)
-    if time_match:
+    time_match = re.search(r"\b(1[0-2]|[1-9])(?::([0-5]\d)|\s+([0-5]\d))?\s*(am|pm)?\b", query_clean)
+    if time_match and (time_match.group(2) or time_match.group(3) or time_match.group(4) or "am" in query_clean or "pm" in query_clean):
         hour = int(time_match.group(1))
         mins = int(time_match.group(2) or time_match.group(3) or 0)
-        ampm = time_match.group(4).lower()
+        raw_ampm = (time_match.group(4) or "").lower()
+        if not raw_ampm:
+            raw_ampm = "pm" if "pm" in query_clean else "am"
+        ampm = raw_ampm
 
         if ampm == "pm" and hour < 12:
             hour24 = hour + 12
@@ -120,18 +123,29 @@ def check_operating_hours_validity(query_clean: str) -> tuple:
 
 def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Dict[str, Any]:
     raw_notes = raw_patient_data.get("notes", "")
+    patient_name = raw_patient_data.get("name", "").strip()
+    if patient_name == "Patient" or not patient_name:
+        patient_name = ""
+    else:
+        patient_name = patient_name.title()
+
+    name_greeting = f", {patient_name}" if patient_name else ""
     query_clean = raw_notes.strip().lower()
 
-    # 0a. Direct Simple Greetings
-    if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
+    # 0a. MAI-Style Warm Greeting & Name Inquiry
+    if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "hi mai", "hello mai"]:
+        if patient_name:
+            return {
+                "whatsapp_response": f"Hey there{name_greeting}! 👋 I'm your AI clinical assistant from Apex Dental Center. 🌿\n\nHow can I help you today? Are you looking to discuss a dental treatment (such as Invisalign clear aligners, laser root canal, or 3D implants), check pricing, or book a consultation?"
+            }
         return {
-            "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+            "whatsapp_response": "Hey there! 👋 I'm your AI clinical assistant from Apex Dental Center. 🌿\n\nI'm here to guide you, answer your health questions, and connect you to care when needed.\n\nTo start, may I know your name?"
         }
 
     # 0b. Direct Gratitude & Goodbye Detection
     if any(w in query_clean for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
         return {
-            "whatsapp_response": "You're very welcome! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
+            "whatsapp_response": f"You're very welcome{name_greeting}! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
 
     # Security Check
@@ -149,7 +163,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
 
     if is_gibberish_text(raw_notes):
         return {
-            "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+            "whatsapp_response": f"How can I help you today{name_greeting}? Feel free to ask about our treatments or booking a consultation at Apex Dental Center!"
         }
 
     kb_facts = lookup_clinic_knowledge(raw_notes)
@@ -157,19 +171,17 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     # 0c. Appointment / Slot / Timing Query Detection
     is_slot_query = any(w in query_clean for w in [
         "appointment", "appointments", "slot", "slots", "schedule", "timing", "timings",
-        "available", "visit", "open", "hours", "enquire", "inquire", "time"
+        "available", "visit", "open", "hours", "enquire", "inquire", "time", "book", "booking"
     ])
 
-    has_day_ref = any(w in query_clean for w in [
-        "today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
+    has_day_ref = any(w in query_clean.split() or w in query_clean for w in [
+        "today", "tomorrow", "tm", "tmrw", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
     ])
-    has_time_ref = any(w in query_clean for w in [
+    has_time_ref = any(w in query_clean.split() or w in query_clean for w in [
         "am", "pm", "morning", "afternoon", "evening", "baje", "o'clock"
-    ]) or bool(re.search(r"\b\d{1,2}(:\d{2})?\s*(am|pm)?\b", query_clean))
+    ]) or bool(re.search(r"\b(1[0-2]|[1-9])(?::[0-5]\d|\s+[0-5]\d)?\s*(am|pm)?\b", query_clean))
 
-    welcome_prefix = "Hello! Welcome to Apex Dental Center in Koramangala. 😊\n\n"
-
-    # Build Focused, Step-by-Step Receptionist Response (No Info Dumping)
+    # Build Focused, Progressive MAI-Style Receptionist Response
     if kb_facts["matched_procedures"]:
         proc = kb_facts["matched_procedures"][0]
         doc = kb_facts["matched_doctors"][0] if kb_facts["matched_doctors"] else CLINIC_KB["doctors"][0]
@@ -179,32 +191,30 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
 
         if is_price_query:
             response_text = (
-                f"{welcome_prefix}"
                 f"Our {proc['name']} packages range between {proc['price_range_inr']}. "
                 f"We also offer 0% interest EMI options starting at {proc['emi_starting']}.\n\n"
-                f"Would you like to schedule a consultation with {doc['name']} or know more about what the package includes?"
+                f"Would you like me to check available consultation slots for you with {doc['name']}?"
             )
         elif is_doctor_query:
             response_text = (
-                f"{welcome_prefix}"
                 f"Our {proc['name']} consultations are led by {doc['name']} ({doc['title']}), "
                 f"who has {doc['experience_years']} years of specialized experience.\n\n"
                 f"Would you like me to check available consultation slots for you this week?"
             )
         else:
             response_text = (
-                f"Got it! For {proc['name']}, our consultation fee is {proc['price_range_inr']}.\n\n"
-                f"Our clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
-                f"We have consultation slots available today, tomorrow, and this Saturday!\n\n"
-                f"What day and time works best for you?"
+                f"For {proc['name']}, our consultations are led by {doc['name']}. "
+                f"We have consultation slots available tomorrow:\n"
+                f"• 10:30 AM\n"
+                f"• 04:00 PM\n\n"
+                f"Which time works best for you?"
             )
 
     elif kb_facts["matched_faqs"]:
         faq = kb_facts["matched_faqs"][0]
         response_text = (
-            f"{welcome_prefix}"
             f"{faq['answer']}\n\n"
-            f"Please let me know if you would like to visit our Koramangala clinic or if you have any other questions!"
+            f"Would you like me to check available consultation slots for you at our Koramangala clinic?"
         )
     elif has_day_ref or has_time_ref:
         is_valid_time, invalid_time_str = check_operating_hours_validity(query_clean)
@@ -221,28 +231,19 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             )
         else:
             response_text = (
-                f"Perfect! I can hold that time for you. 😊\n\n"
+                f"Great choice{name_greeting}! I can hold that time for you. 😊\n\n"
                 f"Doctor: Dr. Chinmay Hudedamani\n"
                 f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
-                f"Who is this appointment for? Please reply with the Patient's Full Name & Contact Number (e.g. 'Sita Sharma - 9876500000') or reply '1' or 'YES' to confirm!"
+                f"To secure this slot, could you please provide your 10-digit registered mobile number?"
             )
     elif is_slot_query:
         response_text = (
-            f"{welcome_prefix}"
-            "Our clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM. "
-            "We have consultation slots available today, tomorrow, and this Saturday!\n\n"
+            "Our clinic is open Monday to Saturday from 9:00 AM to 8:00 PM, and Sunday from 10:00 AM to 2:00 PM.\n\n"
             "Which treatment are you looking to visit for (such as Invisalign clear aligners, dental implants, or a general checkup), and what time works best for you?"
         )
     else:
         response_text = (
-            f"I want to make sure I assist you accurately! 😊\n\n"
-            f"Here is a quick overview of what we offer at Apex Dental Center, Koramangala:\n\n"
-            f"• 🦷 *Invisalign & Clear Aligners* (Virtually invisible straightening, 0% EMI)\n"
-            f"• ⚡ *Single-Visit Laser Root Canal (RCT)* (Painless 1-hour procedure)\n"
-            f"• 🦷 *3D Digital Dental Implants* (Permanent tooth replacement)\n"
-            f"• ✨ *Teeth Whitening & Smile Makeovers* (Instant brightening & veneers)\n"
-            f"• 👨‍⚕️ *Doctor Consultation & 3D Intraoral Scan*\n\n"
-            f"Please let me know if you would like to know the cost/details of any treatment, or reply with your preferred day and time (e.g. 'tomorrow 4pm') to book a consultation with Dr. Chinmay Hudedamani!"
+            f"How can I help you today{name_greeting}? Feel free to ask about our dental treatments (Invisalign, Root Canal, Implants), pricing, or booking a consultation at Apex Dental Center!"
         )
 
     return {

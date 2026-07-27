@@ -7,7 +7,7 @@ from core.intent_classifier import ScikitLearnMLIntentEngine
 from core.rate_limiter import TokenBucketRateLimiter, SlotConcurrencyLockManager
 from core.conversation_store import ConversationSessionStore
 from clinical.rag_generator import generate_zero_hallucination_response
-from clinical.ledger_writer import OfflineLedgerWriter
+from clinical.ledger_writer import OfflineLedgerWriter, register_conversed_patient
 
 
 class CentaurCoreEngine:
@@ -17,7 +17,7 @@ class CentaurCoreEngine:
         self.intent_ml = ScikitLearnMLIntentEngine()
         self.rate_limiter = TokenBucketRateLimiter(max_requests=5, window_seconds=60)
         self.lock_mgr = SlotConcurrencyLockManager(ttl_seconds=600)
-        self.conv_store = ConversationSessionStore(max_turns=8)
+        self.conv_store = ConversationSessionStore(max_turns=12)
         self.ledger = OfflineLedgerWriter()
         self._verified_patients: Dict[str, Dict[str, str]] = {}
         self._pending_payment_links: set = set()
@@ -38,32 +38,46 @@ class CentaurCoreEngine:
             res["exec_ms"] = round((time.time() - start_ts) * 1000, 2)
             return res
 
+        # Load stored patient name from conversation session if available
+        stored_name = self.conv_store.get_patient_name(sender_phone)
+        if stored_name and (patient_name == "Patient" or not patient_name):
+            patient_name = stored_name
+
+        # Register/update lead in conversed_patients database table & local CSV leads file
+        register_conversed_patient(patient_name=patient_name, phone=sender_phone, inquiry=raw_notes)
+
         # Robust Patient Name & Contact Phone Extraction (Enforce valid mobile prefix 6-9)
         phone_match = re.search(r"(\+?91[\s-]?)?([6-9]\d{9}|[6-9]\d{4}[\s-]\d{5})", raw_notes)
         
-        # Insufficient Data Guard: Check if patient provided name but NO 10-digit phone number
+        # Name Provided Step: When patient responds with their name
         has_pending_link = sender_phone in self._pending_payment_links or sender_phone in self._verified_patients
-        has_name_kw = any(w in clean_msg for w in ["name", "patient", "mr ", "mrs ", "ms ", "dr "])
-        is_generic_word = clean_msg in ["hi", "hello", "hey", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update", "something", "info", "details"]
-        is_name_only = not phone_match and not is_generic_word and not re.search(r"\d", raw_notes) and (has_pending_link or has_name_kw or (len(raw_notes.split()) in [2, 3] and all(w[0].isupper() for w in raw_notes.split() if w)))
+        has_name_kw = any(w in clean_msg for w in ["my name is", "i am", "this is", "name:"])
+        is_generic_word = clean_msg in ["hi", "hello", "hey", "hi mai", "hello mai", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update", "something", "info", "details"]
+        is_name_only = not phone_match and not is_generic_word and not re.search(r"\d", raw_notes) and (has_name_kw or (len(raw_notes.split()) in [1, 2, 3] and all(w.isalpha() for w in raw_notes.split() if w)))
 
         if is_name_only:
             extracted_name = raw_notes.strip().title()
+            for kw in ["My Name Is", "I Am", "This Is", "Name:"]:
+                extracted_name = extracted_name.replace(kw, "").strip()
+
+            self.conv_store.set_patient_name(sender_phone, extracted_name)
+            register_conversed_patient(patient_name=extracted_name, phone=sender_phone, inquiry=raw_notes)
+
             return {
-                "status": "INSUFFICIENT_DATA_MISSING_PHONE",
+                "status": "PATIENT_NAME_REGISTERED",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
                 "whatsapp_response": (
-                    f"⚠️ Data Insufficient!\n\n"
-                    f"Thank you, {extracted_name}. We received your name, but your 10-digit contact mobile number is missing.\n\n"
-                    f"Please reply with your 10-digit mobile number (e.g., '{extracted_name} - 9876543210' or '9876543210') so we can issue your consultation slot & appointment OTP!"
+                    f"Nice to meet you, {extracted_name}! 😊\n\n"
+                    f"How can I help you today? Are you looking to discuss a health concern, check treatment options (like Invisalign, root canal, or 3D implants), check pricing, or ask any dental questions?"
                 )
             }
 
         # Invalid / Incomplete Mobile Number Guard (e.g. 1234, 98765, 0000000000, 1234567890)
         short_num_match = re.search(r"\b\d{1,9}\b", raw_notes)
         dummy_num_match = re.search(r"\b([0-5]\d{9}|(\d)\2{9}|1234567890)\b", raw_notes)
+        is_time_expression = any(w in clean_msg.split() for w in ["tm", "tmrw", "tomorrow", "today", "morning", "afternoon", "evening", "am", "pm", "slot", "slots", "baje"]) or bool(re.search(r"\b(1[0-2]|[1-9])(?::[0-5]\d|\s+[0-5]\d)?\s*(am|pm|tm|tomorrow)?\b", clean_msg))
 
-        if not phone_match and (short_num_match or dummy_num_match):
+        if not phone_match and not is_generic_word and not is_time_expression and (short_num_match or dummy_num_match):
             invalid_digits = (short_num_match or dummy_num_match).group(0)
             return {
                 "status": "INVALID_PHONE_NUMBER",
@@ -71,7 +85,7 @@ class CentaurCoreEngine:
                 "whatsapp_response": (
                     f"⚠️ Invalid Mobile Number!\n\n"
                     f"The number provided ('{invalid_digits}') is not a valid 10-digit mobile number.\n\n"
-                    f"Please reply with a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g., 'Chinmay - 7338350871' or '7338350871') so we can send your appointment OTP & booking details!"
+                    f"Please reply with a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g., '{patient_name} - 7338350871' or '7338350871') so we can send your appointment OTP & booking details!"
                 )
             }
 
@@ -88,7 +102,12 @@ class CentaurCoreEngine:
             words = [w for w in clean_for_name.split() if len(w) > 1 and w.isalpha()]
             if words:
                 patient_name = " ".join(words[:3]).title()
+            elif stored_name:
+                patient_name = stored_name
             patient_phone = extracted_phone
+
+            self.conv_store.set_patient_name(sender_phone, patient_name)
+            register_conversed_patient(patient_name=patient_name, phone=patient_phone, inquiry=raw_notes)
 
             self._verified_patients[sender_phone] = {
                 "name": patient_name,
@@ -214,20 +233,20 @@ class CentaurCoreEngine:
 
         # 0c. Direct Greeting Check
         if clean_msg in ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there"]:
-            self.conv_store.reset_session(sender_phone)
+            name_str = f", {patient_name}" if patient_name and patient_name != "Patient" else ""
             return {
                 "status": "GREETING",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
-                "whatsapp_response": "Thank you for contacting Apex Dental Center. How may I help you today?"
+                "whatsapp_response": f"Hey there{name_str}! 👋 How can I help you today? Feel free to ask about our dental treatments (Invisalign, Root Canal, Implants), pricing, or booking a consultation!"
             }
 
         # 0d. Gratitude & Exit Check ("thank you", "thanks", "bye", "dhanyawad")
         if any(w in clean_msg for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
-            self.conv_store.reset_session(sender_phone)
+            name_str = f", {patient_name}" if patient_name and patient_name != "Patient" else ""
             return {
                 "status": "GRATITUDE_EXIT",
                 "exec_ms": round((time.time() - start_ts) * 1000, 2),
-                "whatsapp_response": "You're very welcome! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
+                "whatsapp_response": f"You're very welcome{name_str}! 😊 Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
             }
 
         # 1. Rate Limit Inspection

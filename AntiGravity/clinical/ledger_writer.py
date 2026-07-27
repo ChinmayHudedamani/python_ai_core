@@ -96,6 +96,77 @@ def log_appointment(patient_number: str, time_slot: str, procedure_type: str, tr
         return {"status": "ERROR", "id": booking_id, "error": str(e)}
 
 
+PATIENT_LEADS_CSV = Path(__file__).parent.parent / "patient_leads.csv"
+
+
+def register_conversed_patient(patient_name: str, phone: str, inquiry: str = "") -> dict:
+    """Registers or updates a patient in the conversed_patients database table & local CSV leads file."""
+    db_url = get_db_url()
+    clean_phone = phone.strip()
+    clean_name = patient_name.strip() if patient_name and patient_name != "Patient" else "Patient"
+
+    # Always write/update local CSV fallback
+    try:
+        write_header = not PATIENT_LEADS_CSV.exists()
+        with open(PATIENT_LEADS_CSV, "a", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(["patient_name", "phone", "last_inquiry", "last_active_at"])
+            writer.writerow([clean_name, clean_phone, (inquiry or "")[:150], "2026-07-27T18:00:00Z"])
+    except Exception as e:
+        logger.error(f"Failed writing local patient leads CSV: {e}")
+
+    if not db_url or not PSYCOPG2_AVAILABLE:
+        return {"status": "LOCAL_LEAD_LOGGED", "name": clean_name, "phone": clean_phone}
+
+    upsert_sql = """
+    INSERT INTO conversed_patients (patient_name, phone, last_inquiry, total_turns, last_active_at)
+    VALUES (%s, %s, %s, 1, CURRENT_TIMESTAMP)
+    ON CONFLICT (phone) DO UPDATE SET
+        patient_name = CASE WHEN EXCLUDED.patient_name != 'Patient' THEN EXCLUDED.patient_name ELSE conversed_patients.patient_name END,
+        last_inquiry = EXCLUDED.last_inquiry,
+        total_turns = conversed_patients.total_turns + 1,
+        last_active_at = CURRENT_TIMESTAMP;
+    """
+
+    try:
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(upsert_sql, (clean_name, clean_phone, inquiry))
+            conn.commit()
+        return {"status": "SUCCESS_NEON_LEAD_LOGGED", "name": clean_name, "phone": clean_phone}
+    except Exception as e:
+        logger.error(f"Failed upsert to conversed_patients Neon table: {e}")
+        return {"status": "ERROR", "error": str(e)}
+
+
+def fetch_conversed_patients() -> list:
+    """Fetches list of all conversed patients from Neon DB or local CSV fallback."""
+    db_url = get_db_url()
+    if PSYCOPG2_AVAILABLE and db_url:
+        try:
+            with psycopg2.connect(db_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT patient_name, phone, total_turns, status, last_inquiry, last_active_at FROM conversed_patients ORDER BY last_active_at DESC;")
+                    rows = cur.fetchall()
+                    return [{"name": r[0], "phone": r[1], "turns": r[2], "status": r[3], "inquiry": r[4], "last_active": str(r[5])} for r in rows]
+        except Exception as e:
+            logger.error(f"Error reading conversed_patients Neon DB: {e}")
+
+    results = []
+    if PATIENT_LEADS_CSV.exists():
+        try:
+            with open(PATIENT_LEADS_CSV, "r", encoding="utf-8") as f:
+                reader = csv.reader(f)
+                next(reader, None)
+                for row in reader:
+                    if len(row) >= 4:
+                        results.append({"name": row[0], "phone": row[1], "turns": 1, "status": "CONVERSED", "inquiry": row[2], "last_active": row[3]})
+        except Exception:
+            pass
+    return results
+
+
 class OfflineLedgerWriter:
     """Backwards-compatible wrapper for Centaur OS Engine."""
 
@@ -110,3 +181,4 @@ class OfflineLedgerWriter:
             transaction_id=transaction_id,
             patient_name=name
         )
+

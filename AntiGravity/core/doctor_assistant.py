@@ -55,6 +55,34 @@ def process_doctor_executive_query(query_text: str, doctor_phone: str = "+91-733
             "total_count": total_count
         }
 
+    # 1b. Conversed Patients / Leads Queries ("conversed", "leads", "how many patients", "bot conversed")
+    if any(w in clean_q for w in ["conversed", "leads", "how many patients", "chat leads", "inbound"]):
+        from clinical.ledger_writer import fetch_conversed_patients
+        conversed_list = fetch_conversed_patients()
+        c_count = len(conversed_list)
+        response = (
+            f"👨‍⚕️ *APEX DENTAL CENTER — CONVERSED PATIENTS & LEADS*\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"👤 *Doctor:* Dr. Chinmay Hudedamani\n"
+            f"📅 *As of:* {now_str}\n"
+            f"👥 *Total Conversed Patients:* *{c_count}*\n\n"
+            f"📋 *LIVE CONVERSED PATIENTS TABLE (NEON DB):*\n"
+        )
+        if conversed_list:
+            for idx, p in enumerate(conversed_list[:10], 1):
+                p_name = p.get('name', 'Patient')
+                p_phone = p.get('phone', 'N/A')
+                p_inquiry = p.get('inquiry', 'General Inquiry')
+                response += f"{idx}. *{p_name}* ({p_phone})\n   └ Last Inquiry: _{p_inquiry}_\n   └ Turns: {p.get('turns', 1)} | Status: {p.get('status', 'CONVERSED')}\n"
+        else:
+            response += "No conversed patient leads recorded yet in database."
+
+        return {
+            "status": "DOCTOR_CONVERSED_PATIENTS_QUERY",
+            "whatsapp_response": response,
+            "conversed_count": c_count
+        }
+
     # 2. Appointment & Patient Schedule Queries ("appointment", "schedule", "who", "visiting", "patient", "list", "today")
     if any(w in clean_q for w in ["appointment", "appointments", "schedule", "who", "visiting", "patient", "patients", "list", "today", "tomorrow"]):
         response = (

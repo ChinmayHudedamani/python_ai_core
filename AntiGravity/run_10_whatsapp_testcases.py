@@ -102,14 +102,11 @@ def run_test_suite(db_url: str = None):
 
     current_db_url = get_db_url()
     if not current_db_url:
-        print("\n[!] DATABASE_URL is not set.")
-        db_url_input = input("Enter your Neon DATABASE_URL: ").strip()
+        print("\n[!] DATABASE_URL environment variable is not set. Running in Offline Local CSV Fallback Mode.")
+        db_url_input = os.getenv("DATABASE_URL", "").strip()
         if db_url_input:
             os.environ["DATABASE_URL"] = db_url_input
             current_db_url = db_url_input
-        else:
-            print("Aborting test run.")
-            return
 
     print("==========================================================================")
     print("      CENTAUR OS - WHATSAPP DEMO BOT 10 TEST CASES RUNNER                ")
