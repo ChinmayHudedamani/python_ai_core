@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Dr. Chinmay Hudedamani. All Rights Reserved.
+# APEX AI - Proprietary Clinical AI Assistant & Automated RAG Engine.
+
 import json
 import os
 import re
@@ -132,14 +135,14 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     name_greeting = f", {patient_name}" if patient_name else ""
     query_clean = raw_notes.strip().lower()
 
-    # 0a. MAI-Style Warm Greeting & Name Inquiry
-    if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "hi mai", "hello mai"]:
+    # 0a. APEX AI Warm Greeting & Name Inquiry
+    if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "hi mai", "hello mai", "hi apex", "hello apex", "hi apex ai"]:
         if patient_name:
             return {
-                "whatsapp_response": f"Hey there{name_greeting}! 👋 I'm your AI clinical assistant from Apex Dental Center. 🌿\n\nHow can I help you today? Are you looking to discuss a dental treatment (such as Invisalign clear aligners, laser root canal, or 3D implants), check pricing, or book a consultation?"
+                "whatsapp_response": f"Hey there{name_greeting}! 👋 I'm APEX AI, your clinical assistant from Apex Dental Center & Implant Institute. 🌿\n\nHow can I help you today? Are you looking to discuss a dental treatment (such as Invisalign clear aligners, laser root canal, or 3D implants), check pricing, or book a consultation?"
             }
         return {
-            "whatsapp_response": "Hey there! 👋 I'm your AI clinical assistant from Apex Dental Center. 🌿\n\nI'm here to guide you, answer your health questions, and connect you to care when needed.\n\nTo start, may I know your name?"
+            "whatsapp_response": "Hey there! 👋 I'm APEX AI, your clinical assistant from Apex Dental Center & Implant Institute, Koramangala. 🌿\n\nI'm here to guide you, answer your health questions, and connect you to care when needed.\n\nTo start, may I know your name?"
         }
 
     # 0b. Direct Gratitude & Goodbye Detection
