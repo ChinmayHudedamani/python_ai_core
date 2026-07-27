@@ -61,6 +61,10 @@ class PatientSession:
     is_active: bool = True
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
+    def mark_option_hidden(self, option_text: str):
+        """Adds option to hidden_options set."""
+        self.hidden_options.add(option_text)
+
     def reset_hidden_options(self):
         """Clears hidden options list."""
         self.hidden_options.clear()

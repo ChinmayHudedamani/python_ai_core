@@ -48,6 +48,16 @@ class SessionContextManager:
         strategy = self.get_strategy(session.active_tier)
         return strategy.get_menu(session)
 
+    def get_menu(self, session: Optional[PatientSession] = None) -> List[str]:
+        """Alias for get_available_menu."""
+        s = session or getattr(self, "session_state_obj", PatientSession("SESS", "+91"))
+        return self.get_available_menu(s)
+
+    def execute_choice(self, option_text: str, session: Optional[PatientSession] = None) -> CommandResult:
+        """Alias for execute_option."""
+        s = session or getattr(self, "session_state_obj", PatientSession("SESS", "+91"))
+        return self.execute_option(s, option_text)
+
     def execute_option(self, session: PatientSession, raw_input: str) -> CommandResult:
         """Sanitizes input, resolves tier strategy, and executes command via Dispatcher Map."""
         if not session.is_active:
