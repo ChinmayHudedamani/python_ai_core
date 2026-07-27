@@ -106,9 +106,9 @@ class Tier2Strategy(AbstractTierStrategy):
                 f"🚨 *SURGICAL PRIORITY SLOT LOCKED*:\n"
                 f"• Check-In Code: **{code}**\n"
                 f"• Clinical Priority: SURGICAL PRIORITY (Supersedes General Consult)\n"
-                f"• Micro-Deposit Required: ₹{hold_record.deposit_amount_inr}\n"
-                f"💳 UPI Link: {hold_record.upi_payment_link}\n"
-                f"⏰ Expires in 10 minutes (at {hold_record.expires_at[:19]})."
+                f"• Micro-Deposit Required: ₹{hold_record.amount_inr}\n"
+                f"💳 UPI Link: {hold_record.upi_uri}\n"
+                f"⏰ Expires in 10 minutes (at {hold_record.expires_at_iso[:19]})."
             )
         else:
             msg = (
@@ -116,9 +116,9 @@ class Tier2Strategy(AbstractTierStrategy):
                 f"• Doctor: Dr. Chinmay Hudedamani\n"
                 f"• Slot: Tomorrow at 10:30 AM\n"
                 f"• Check-In Code: **{code}**\n\n"
-                f"⚠️ *SLOT HOLD REQUIRED*: Micro-deposit of ₹{hold_record.deposit_amount_inr} "
+                f"⚠️ *SLOT HOLD REQUIRED*: Micro-deposit of ₹{hold_record.amount_inr} "
                 f"is required to confirm.\n"
-                f"💳 Pay via UPI: {hold_record.upi_payment_link}\n"
+                f"💳 Pay via UPI: {hold_record.upi_uri}\n"
                 f"⏰ Hold expires in 10 minutes."
             )
 

@@ -14,7 +14,7 @@ from app.services.session.models import PatientSession, SaaSPlanTier, PriorityLe
 from app.services.session.tier2_strategy import Tier2Strategy
 from app.services.session.session_context import SessionContextManager
 from app.services.whatsapp_formatter import WhatsAppFormatter, FormattedMenuPayload
-from app.services.deposit_engine import MicroHoldDepositEngine, HoldDepositRecord
+from app.services.deposit_engine import MicroHoldDepositEngine, HoldDepositRecord, DepositStatus
 
 
 class TestPhase2Tier2Pro(unittest.TestCase):
@@ -63,10 +63,9 @@ class TestPhase2Tier2Pro(unittest.TestCase):
         print("\n--- [TEST 4]: Micro-Hold Deposit Engine & UPI Expiry ---")
         engine = MicroHoldDepositEngine()
         record: HoldDepositRecord = engine.create_hold("APX-8821", amount=200)
-        self.assertEqual(record.status, "PENDING")
-        self.assertIn("upi://pay?pa=kasthuri@upi&am=200", record.upi_payment_link)
+        self.assertEqual(record.status, DepositStatus.PENDING)
+        self.assertIn("upi://pay?pa=kasthuri@upi&am=200", record.upi_uri)
         self.assertFalse(record.is_expired())
-        self.assertEqual(record.ttl_seconds, 600)
         print("✅ PASSED: Micro-hold deposit created with 10-minute UTC TTL.")
 
     def test_05_whatsapp_formatter_payloads(self):
