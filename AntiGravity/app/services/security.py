@@ -44,3 +44,27 @@ class MetaWebhookVerifier:
         ).hexdigest()
 
         return hmac.compare_digest(calculated_sig, expected_sig)
+
+
+class RateLimiter:
+    """Sliding-window IP / Phone Rate Limiter protecting against DoS and IDOR probes."""
+
+    def __init__(self, max_requests: int = 10, window_seconds: int = 60) -> None:
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._requests = {}
+
+    def is_allowed(self, identifier: str) -> bool:
+        import time
+        now = time.time()
+        timestamps = self._requests.get(identifier, [])
+        valid_timestamps = [ts for ts in timestamps if now - ts < self.window_seconds]
+
+        if len(valid_timestamps) >= self.max_requests:
+            self._requests[identifier] = valid_timestamps
+            return False
+
+        valid_timestamps.append(now)
+        self._requests[identifier] = valid_timestamps
+        return True
+

@@ -25,10 +25,13 @@ class LocalNLMEngine:
         "POST_CARE": ["care", "post-op", "extraction", "root canal", "instructions", "recovery", "after"],
     }
 
+    MAX_INPUT_LENGTH: Final[int] = 128
+
     @classmethod
     def classify_intent(cls, text: str) -> IntentCandidate:
-        """Classifies text using keyword feature vectors and normalized scoring."""
-        tokens = text.lower().split()
+        """Classifies text using keyword feature vectors and normalized scoring with input length bounding."""
+        bounded_text = text[:cls.MAX_INPUT_LENGTH].strip()
+        tokens = bounded_text.lower().split()
         if not tokens:
             return IntentCandidate("UNKNOWN", 0.0, 0.0)
 

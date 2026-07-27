@@ -25,6 +25,7 @@ class Tier2Strategy(AbstractTierStrategy):
 
     INFORMATIONAL_OPTIONS: Final[Set[str]] = {
         "1. Doctor Details & Clinic Timings",
+        "1. Doctor Details",
         "2. Cost Ranges & Pricing Sheet",
         "4. ⭐ Patient Reviews",
     }
@@ -36,6 +37,7 @@ class Tier2Strategy(AbstractTierStrategy):
         """Polymorphic Dispatcher Map providing $O(1)$ constant-time lookup execution."""
         return {
             "1. Doctor Details & Clinic Timings": self._handle_doctor_timings,
+            "1. Doctor Details": self._handle_doctor_timings,
             "2. Cost Ranges & Pricing Sheet": self._handle_pricing,
             "3. 📅 Book Appointment (Instant Lock)": self._handle_instant_booking,
             "4. 📅 Book Appointment (Live Slots)": self._handle_instant_booking,
@@ -103,10 +105,16 @@ class Tier2Strategy(AbstractTierStrategy):
         self,
         appointment_id: str,
         requesting_priority: PriorityLevel = PriorityLevel.GENERAL_CONSULTATION,
-        session: Optional[PatientSession] = None
+        session: Optional[PatientSession] = None,
+        assigned_code: Optional[str] = None
     ) -> CommandResult:
         """Surgical Priority Slot Resolution with Pay-at-Clinic Confirmation."""
-        return self._handle_instant_booking(session or PatientSession("SESS", "+91"), "3. 📅 Book Appointment (Instant Lock)")
+        res = self._handle_instant_booking(session or PatientSession("SESS", "+91"), "3. 📅 Book Appointment (Instant Lock)")
+        if assigned_code:
+            res.payload["check_in_code"] = assigned_code
+            if session:
+                session.check_in_code = assigned_code
+        return res
 
     def _handle_reviews(self, session: PatientSession, option_text: str) -> CommandResult:
         body = "⭐ *Verified Reviews*: Rated 4.9/5 stars across 500+ patient visits."

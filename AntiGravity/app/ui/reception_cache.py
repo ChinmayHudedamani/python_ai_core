@@ -12,7 +12,8 @@ class OfflineAppointmentRecord:
     patient_name: str
     patient_phone: str
     procedure: str
-    slot_time_ist: str
+    slot_time_ist: str = "10:00 AM IST"
+    slot_time_iso: Optional[str] = None
     amount_due_inr: int = 700
     is_verified: bool = False
     payment_status: str = "PENDING_AT_DESK"  # PENDING_AT_DESK -> PAID_AT_DESK
