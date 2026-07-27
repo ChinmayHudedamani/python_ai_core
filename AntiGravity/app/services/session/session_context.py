@@ -82,8 +82,13 @@ class SessionContextManager:
         # Step 2: Resolve Strategy via Factory Registry ($O(1)$ lookup)
         strategy = self.get_strategy(session.active_tier)
 
-        # Step 3: Execute Option via Strategy Dispatcher
-        result = strategy.process_option(session, clean_text)
+        # Step 3: Atomic Execution via Redis Mutex Lock
+        from app.db.redis_store import RedisSessionStore
+        store = RedisSessionStore()
+
+        with store.session_mutex(session.phone_number):
+            result = strategy.process_option(session, clean_text)
+            store.save_session(session)
 
         # Step 4: Audit Telemetry Logging
         self.telemetry.log_event("STRATEGY_EXECUTED", session.session_id, {

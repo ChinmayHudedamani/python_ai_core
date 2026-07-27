@@ -68,3 +68,15 @@ class RateLimiter:
         self._requests[identifier] = valid_timestamps
         return True
 
+
+class MandatoryMetaHMACMiddleware:
+    """Non-bypassable HTTP Middleware enforcing Meta WhatsApp HMAC-SHA256 signatures."""
+
+    def __init__(self, app_secret: str) -> None:
+        self.app_secret = app_secret
+
+    def verify_request(self, payload_bytes: bytes, signature_header: Optional[str]) -> bool:
+        """Verifies signature header against payload and app secret in constant-time."""
+        return MetaWebhookVerifier.verify_signature(payload_bytes, signature_header or "", self.app_secret)
+
+
