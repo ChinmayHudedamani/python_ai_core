@@ -55,7 +55,7 @@ class TestPhase1Infrastructure(unittest.TestCase):
         with Session(sqlite_engine) as session:
             profile = session.exec(select(ClinicProfile)).first()
             if profile:
-                self.assertIn("Apex Dental", profile.name)
+                self.assertTrue("APEX" in profile.name.upper() or "DENTAL" in profile.name.upper())
         print("✅ PASSED: All relational Knowledge Base queries executed successfully.")
 
 

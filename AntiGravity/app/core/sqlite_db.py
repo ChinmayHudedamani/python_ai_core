@@ -1,5 +1,6 @@
 """Synchronous SQLite engine and session management for the relational Knowledge Base."""
 
+from contextlib import contextmanager
 from sqlmodel import create_engine, SQLModel, Session
 from app.core.config import settings
 
@@ -18,6 +19,7 @@ def init_sqlite_db():
     SQLModel.metadata.create_all(sqlite_engine)
 
 
+@contextmanager
 def get_sqlite_session():
     """Yields a synchronous SQLite session for Knowledge Base queries."""
     with Session(sqlite_engine) as session:

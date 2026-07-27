@@ -4,7 +4,6 @@ import sys
 import unittest
 import asyncio
 from pathlib import Path
-from pydantic import ValidationError
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -12,7 +11,6 @@ if hasattr(sys.stdout, 'reconfigure'):
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.core.guardrails import sanitize_input, with_circuit_breaker
-from app.schemas.llm import LLMExtractionResult, HandoffRuleEvaluator, HandoffTrigger
 
 
 class TestPhase2Hardening(unittest.TestCase):
