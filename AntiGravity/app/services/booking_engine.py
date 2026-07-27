@@ -1,10 +1,12 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Code-Based Booking Engine & Expiry Manager
+# APEX AI Code-Based Booking Engine with Symptom Capture & Revenue Calculations
 
 import uuid
 import secrets
+import decimal
 import asyncio
 import logging
+from decimal import Decimal
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from sqlalchemy import select, and_
@@ -55,9 +57,11 @@ async def create_booking(
     db: AsyncSession,
     patient_id: uuid.UUID,
     slot_id: uuid.UUID,
-    procedure_name: str = "General Consultation"
+    patient_symptoms: str,
+    procedure_name: str = "General Consultation",
+    custom_revenue: Optional[Decimal] = None
 ) -> Dict[str, Any]:
-    """Reserves a slot as SLOT_HELD and generates a unique check-in confirmation code."""
+    """Reserves a slot as SLOT_HELD, captures symptoms, and calculates expected procedure revenue."""
     # Verify slot availability
     slot_stmt = select(Slot).where(Slot.id == slot_id).with_for_update()
     slot_res = await db.execute(slot_stmt)
@@ -66,20 +70,36 @@ async def create_booking(
     if not slot or slot.status != SlotStatus.AVAILABLE:
         return {"success": False, "error": "Requested appointment slot is no longer available."}
 
+    # Estimate procedure revenue
+    if custom_revenue is not None:
+        revenue = custom_revenue
+    elif "Root Canal" in procedure_name or "RCT" in procedure_name:
+        revenue = Decimal("4500.00")
+    elif "Implant" in procedure_name:
+        revenue = Decimal("25000.00")
+    elif "Aligner" in procedure_name or "Invisalign" in procedure_name:
+        revenue = Decimal("140000.00")
+    elif "Extraction" in procedure_name or "Surgery" in procedure_name:
+        revenue = Decimal("4000.00")
+    else:
+        revenue = Decimal("700.00")
+
     # Generate unique check-in code
     check_in_code = generate_check_in_code()
 
     # Update slot status
     slot.status = SlotStatus.HELD
 
-    # Create Booking row
+    # Create Booking row with symptoms & revenue
     booking = Booking(
         patient_id=patient_id,
         slot_id=slot_id,
         procedure_name=procedure_name,
         status=BookingStatus.SLOT_HELD,
         check_in_code=check_in_code,
-        is_code_verified=False
+        is_code_verified=False,
+        symptoms_reported=patient_symptoms,
+        expected_revenue=revenue
     )
     db.add(booking)
     await db.commit()
@@ -88,10 +108,15 @@ async def create_booking(
     await log_audit_event_async(
         entity_name="Booking",
         entity_id=booking.id,
-        trigger_event_id="SLOT_RESERVED_CODE_GENERATED",
+        trigger_event_id="SLOT_RESERVED_SYMPTOMS_CAPTURED",
         from_state=None,
         to_state="SLOT_HELD",
-        payload={"check_in_code": check_in_code, "slot_id": str(slot_id)}
+        payload={
+            "check_in_code": check_in_code,
+            "slot_id": str(slot_id),
+            "symptoms": patient_symptoms,
+            "expected_revenue": str(revenue)
+        }
     )
 
     return {
@@ -100,7 +125,9 @@ async def create_booking(
         "check_in_code": check_in_code,
         "date": str(slot.date),
         "time": slot.time.strftime("%I:%M %p"),
-        "doctor": slot.doctor_name
+        "doctor": slot.doctor_name,
+        "symptoms": patient_symptoms,
+        "expected_revenue": str(revenue)
     }
 
 
