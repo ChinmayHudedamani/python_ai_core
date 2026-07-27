@@ -1,4 +1,4 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# Copus AI Chatbot — 3-Tier SaaS Configuration Engine
+# Copus AI — Enterprise Tier Configuration Module
 
-from app.services.tier_config import SaaSPlanTier, INFORMATIONAL_OPTIONS, TIER_CAPABILITIES
+from app.services.tier_config import SaaSPlanTier, MenuOptionCategory, INFORMATIONAL_OPTIONS, TIER_CAPABILITIES
