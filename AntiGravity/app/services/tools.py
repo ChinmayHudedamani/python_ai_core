@@ -1,12 +1,15 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI ActionRegistry & LLM Deterministic Tools with Required Symptom Capture
+# APEX AI ActionRegistry & LLM Deterministic Tools with Slot Caching
 
 import uuid
 import logging
-from typing import Dict, Any, Callable, Optional
+from datetime import datetime, date
+from typing import Dict, Any, Callable, Optional, List
 from pydantic import BaseModel, Field
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.slot import Slot, SlotStatus
 from app.services.booking_engine import (
     create_booking as engine_create_booking,
     confirm_booking_with_code as engine_confirm,
@@ -37,6 +40,11 @@ class ConfirmBookingInput(BaseModel):
 
 class CancelBookingInput(BaseModel):
     code: str = Field(description="The unique 6-character check-in confirmation code to cancel.")
+
+
+class SlotLookupInput(BaseModel):
+    target_date: str = Field(description="Target date expression in YYYY-MM-DD format.")
+    doctor_name: Optional[str] = Field(default="Dr. Chinmay Hudedamani", description="Name of the attending doctor.")
 
 
 # ---------------------------------------------------------
@@ -74,6 +82,47 @@ class PatientToolsRegistry:
 # ---------------------------------------------------------
 # Registered Patient Tools
 # ---------------------------------------------------------
+
+@PatientToolsRegistry.register(name="lookup_available_slots", input_schema=SlotLookupInput)
+async def tool_lookup_slots(db: AsyncSession, target_date: str, doctor_name: str = "Dr. Chinmay Hudedamani") -> Dict[str, Any]:
+    """Queries Postgres for available appointment slots on a given date."""
+    try:
+        q_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+    except ValueError:
+        q_date = date.today()
+
+    stmt = (
+        select(Slot)
+        .where(
+            and_(
+                Slot.date == q_date,
+                Slot.doctor_name == doctor_name,
+                Slot.status == SlotStatus.AVAILABLE
+            )
+        )
+        .order_by(Slot.time)
+    )
+    result = await db.execute(stmt)
+    slots = result.scalars().all()
+
+    slot_items = []
+    for idx, s in enumerate(slots, start=1):
+        slot_items.append({
+            "index": idx,
+            "slot_id": str(s.id),
+            "date": str(s.date),
+            "time": s.time.strftime("%I:%M %p"),
+            "doctor": s.doctor_name
+        })
+
+    return {
+        "success": True,
+        "date": str(q_date),
+        "doctor_name": doctor_name,
+        "available_slots_count": len(slot_items),
+        "slots": slot_items
+    }
+
 
 @PatientToolsRegistry.register(name="create_booking", input_schema=CreateBookingInput)
 async def tool_create_booking(

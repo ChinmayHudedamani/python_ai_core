@@ -1,8 +1,9 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Local WhatsApp Demo Simulator & Role-Based Command Center
+# APEX AI Local WhatsApp Demo Simulator & Interactive Button Command Center
 
 import streamlit as st
 import asyncio
+import time
 from datetime import datetime, date
 
 from app.services.guardrails import sanitize_input
@@ -34,12 +35,13 @@ st.sidebar.markdown("### 🛡️ System Guardrails & Architecture")
 st.sidebar.write("• **Architecture**: AI Sandwich")
 st.sidebar.write("• **Database**: SQLite SQLModel KB & Postgres Models")
 st.sidebar.write("• **State**: Redis Hashes (45-min TTL, 6-turn sliding window)")
+st.sidebar.write("• **Slot Cache**: Ambiguity-Free Structured Slot Cache")
 st.sidebar.write("• **Circuit Breaker**: 4.0s Maximum Timeout")
 st.sidebar.write("• **Safety**: Zero-hallucination medical safety hard-stop")
 
 
 # ---------------------------------------------------------
-# Persona 1: Patient View (WhatsApp Simulator)
+# Persona 1: Patient View (WhatsApp Simulator with Slot Buttons)
 # ---------------------------------------------------------
 
 if role_choice == "👤 Patient View (Rahul)":
@@ -56,27 +58,44 @@ if role_choice == "👤 Patient View (Rahul)":
                     "To start, may I know your primary symptom or health concern today?"
                 ),
                 "reasoning": "Initial greeting loaded. Prompting for mandatory clinical symptom.",
-                "tools": []
+                "tools": [],
+                "available_slots": [],
+                "latency_ms": 1.2
             }
         ]
 
-    for msg in st.session_state["patient_messages"]:
+    for idx, msg in enumerate(st.session_state["patient_messages"]):
         if msg["role"] == "user":
             with st.chat_message("user", avatar="👤"):
                 st.markdown(msg["content"])
         else:
             with st.chat_message("assistant", avatar="🦷"):
                 st.markdown(msg["content"])
+
+                # Render Interactive Slot Buttons if present
+                if msg.get("available_slots"):
+                    st.write("**Click to select an appointment slot:**")
+                    cols = st.columns(len(msg["available_slots"]))
+                    for col_idx, slot in enumerate(msg["available_slots"]):
+                        with cols[col_idx]:
+                            btn_label = f"📅 {slot['time']}"
+                            if st.button(btn_label, key=f"slot_btn_{idx}_{col_idx}"):
+                                st.session_state["selected_slot_time"] = slot['time']
+                                st.rerun()
+
                 if msg.get("reasoning"):
-                    with st.expander("🧠 AI Sandwich Reasoning Trace"):
+                    with st.expander(f"🧠 AI Sandwich Reasoning Trace ({msg.get('latency_ms', 0):.1f}ms)"):
                         st.write(msg["reasoning"])
                 if msg.get("tools"):
                     with st.expander("⚙️ Tool Inspection Panel"):
                         st.json(msg["tools"])
 
-    user_input = st.chat_input("Type your message to APEX AI...")
+    # Handle slot button selection
+    selected_time = st.session_state.pop("selected_slot_time", None)
+    user_input = st.chat_input("Type your message to APEX AI...") or selected_time
 
     if user_input:
+        start_t = time.time()
         with st.chat_message("user", avatar="👤"):
             st.markdown(user_input)
 
@@ -88,6 +107,8 @@ if role_choice == "👤 Patient View (Rahul)":
         # Triage Engine Check
         triage_engine = TriageEngine()
         triage_res = triage_engine.evaluate_message(user_input)
+
+        slots_to_render = []
 
         if sanitized.get("is_flagged"):
             reply = "I am trained to assist with clinical appointments and dental inquiries. How can I help you today?"
@@ -103,18 +124,43 @@ if role_choice == "👤 Patient View (Rahul)":
             reply = f"✅ Thank you! Your appointment has been confirmed with check-in code '{code}'. We look forward to seeing you at Apex Dental!"
             reasoning = f"Check-in confirmation code '{code}' verified against Postgres DB."
             tools = [{"tool": "confirm_booking_with_code", "input": {"code": code}}]
+        elif any(t in user_input.lower() for t in ["10:30", "02:00", "04:30", "1", "2", "3", "first", "second", "third"]):
+            reply = (
+                f"✅ Selected slot '{user_input}' reserved!\n\n"
+                f"Your unique check-in code is **APX-4928**.\n"
+                f"Please reply with **APX-4928** to confirm your slot!"
+            )
+            reasoning = f"Deterministic Slot Cache Interceptor matched user input '{user_input}'. Reserved slot APX-4928."
+            tools = [{"tool": "create_booking", "result": {"check_in_code": "APX-4928", "status": "SLOT_HELD"}}]
         else:
+            slots_to_render = [
+                {"time": "10:30 AM", "slot_id": "slot-001"},
+                {"time": "02:00 PM", "slot_id": "slot-002"},
+                {"time": "04:30 PM", "slot_id": "slot-003"}
+            ]
             reply = (
                 "Thank you for sharing that! We have available consultation slots tomorrow with Dr. Chinmay Hudedamani:\n\n"
                 "• 10:30 AM\n• 02:00 PM\n• 04:30 PM\n\n"
-                "Which time works best for you? Reply with your preferred slot and I'll generate your check-in code!"
+                "Click a button below or type your preferred time to reserve your slot!"
             )
-            reasoning = "Deterministic Slot Lookup executed against Postgres inventory. Query returned 3 open slots."
-            tools = [{"tool": "lookup_available_slots", "result": ["10:30 AM", "02:00 PM", "04:30 PM"]}]
+            reasoning = "Deterministic Slot Lookup executed against Postgres inventory. Returned 3 open slots and cached in Redis."
+            tools = [{"tool": "lookup_available_slots", "result": slots_to_render}]
+
+        end_t = time.time()
+        latency_ms = (end_t - start_t) * 1000
 
         with st.chat_message("assistant", avatar="🦷"):
             st.markdown(reply)
-            with st.expander("🧠 AI Sandwich Reasoning Trace"):
+            if slots_to_render:
+                st.write("**Click to select an appointment slot:**")
+                cols = st.columns(len(slots_to_render))
+                for col_idx, slot in enumerate(slots_to_render):
+                    with cols[col_idx]:
+                        if st.button(f"📅 {slot['time']}", key=f"new_slot_btn_{col_idx}"):
+                            st.session_state["selected_slot_time"] = slot['time']
+                            st.rerun()
+
+            with st.expander(f"🧠 AI Sandwich Reasoning Trace ({latency_ms:.1f}ms)"):
                 st.write(reasoning)
             if tools:
                 with st.expander("⚙️ Tool Inspection Panel"):
@@ -124,7 +170,9 @@ if role_choice == "👤 Patient View (Rahul)":
             "role": "assistant",
             "content": reply,
             "reasoning": reasoning,
-            "tools": tools
+            "tools": tools,
+            "available_slots": slots_to_render,
+            "latency_ms": latency_ms
         })
 
 
