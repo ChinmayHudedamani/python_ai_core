@@ -1,87 +1,104 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# Copus AI / APEX AI — Micro-Hold UPI Deposit Manager Engine
+# Copus AI / APEX AI — Production Redis-Backed Micro-Hold Deposit Engine
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+import secrets
+import json
+from dataclasses import dataclass, asdict
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Optional, Dict, Any
 
 
-@dataclass(slots=True)
+class DepositStatus(str, Enum):
+    PENDING = "PENDING_PAYMENT"
+    CONFIRMED = "CONFIRMED"
+    EXPIRED = "EXPIRED"
+
+
+@dataclass(slots=True, frozen=True)
 class HoldDepositRecord:
-    """Memory-optimized slots-backed container for micro-hold deposit tracking."""
+    """Memory-optimized frozen slots dataclass for deposit tracking."""
     appointment_id: str
-    status: str  # PENDING, CONFIRMED, EXPIRED
-    deposit_amount_inr: int
-    upi_payment_link: str
-    created_at: str
-    expires_at: str
-    ttl_seconds: int = 600
+    amount_inr: int
+    upi_uri: str
+    status: DepositStatus
+    expires_at_iso: str  # ISO 8601 UTC string for clean serialization
 
     def is_expired(self) -> bool:
         """Returns True if UTC expiry time has passed."""
-        expiry_dt = datetime.fromisoformat(self.expires_at)
-        return datetime.now() > expiry_dt
+        expiry_dt = datetime.fromisoformat(self.expires_at_iso)
+        return datetime.now(timezone.utc) > expiry_dt
 
 
 class MicroHoldDepositEngine:
-    """Micro-hold deposit engine for surgical bookings requiring UPI pre-authorization."""
+    """Production Redis-backed Micro-Hold Deposit Manager with high-entropy security."""
 
-    def __init__(self):
-        self._hold_registry: Dict[str, HoldDepositRecord] = {}
+    HOLD_EXPIRY_MINUTES: int = 10
+    DEFAULT_DEPOSIT_INR: int = 200
 
-    def create_hold(self, appointment_id: str, amount: int = 200) -> HoldDepositRecord:
-        """Generates a 10-minute (600s) micro-hold deposit with tokenized UPI URI."""
-        now = datetime.now()
-        expires_at = now + timedelta(minutes=10)
-        upi_link = f"upi://pay?pa=kasthuri@upi&am={amount}&tn=Hold-{appointment_id}"
+    def __init__(self, redis_client=None) -> None:
+        self._redis = redis_client
+        self._local_registry: Dict[str, HoldDepositRecord] = {}
+
+    def create_hold(
+        self, appointment_id: str, amount: int = DEFAULT_DEPOSIT_INR
+    ) -> HoldDepositRecord:
+        """Generates a high-entropy (128-bit) 10-minute micro-deposit hold."""
+        # High entropy token (128-bit security margin)
+        token = secrets.token_hex(16).upper()
+        upi_uri = f"upi://pay?pa=kasthuri@upi&am={amount}&tn=Hold-{token}"
+        
+        # Strict UTC timezone enforcement
+        now_utc = datetime.now(timezone.utc)
+        expires_at = now_utc + timedelta(minutes=self.HOLD_EXPIRY_MINUTES)
 
         record = HoldDepositRecord(
             appointment_id=appointment_id,
-            status="PENDING",
-            deposit_amount_inr=amount,
-            upi_payment_link=upi_link,
-            created_at=now.isoformat(),
-            expires_at=expires_at.isoformat(),
-            ttl_seconds=600
+            amount_inr=amount,
+            upi_uri=upi_uri,
+            status=DepositStatus.PENDING,
+            expires_at_iso=expires_at.isoformat()
         )
-        self._hold_registry[appointment_id] = record
+
+        # Store in Redis if client present, fallback to local storage
+        if self._redis:
+            self._redis.setex(
+                f"hold:{appointment_id}",
+                self.HOLD_EXPIRY_MINUTES * 60,
+                json.dumps(asdict(record))
+            )
+        else:
+            self._local_registry[appointment_id] = record
+
         return record
 
     def verify_payment(self, appointment_id: str) -> bool:
-        """Validates deposit state, transitioning PENDING -> CONFIRMED or EXPIRED."""
-        record = self._hold_registry.get(appointment_id)
-        if not record:
+        """Verifies payment state against Redis or local storage."""
+        if self._redis:
+            data = self._redis.get(f"hold:{appointment_id}")
+            if not data:
+                return False
+            record_dict = json.loads(data)
+            expires_at = datetime.fromisoformat(record_dict["expires_at_iso"])
+            if datetime.now(timezone.utc) > expires_at:
+                return False
+            record_dict["status"] = DepositStatus.CONFIRMED.value
+            self._redis.set(f"hold:{appointment_id}", json.dumps(record_dict))
+            return True
+
+        record = self._local_registry.get(appointment_id)
+        if not record or record.is_expired():
             return False
 
-        if record.is_expired():
-            record = HoldDepositRecord(
-                appointment_id=record.appointment_id,
-                status="EXPIRED",
-                deposit_amount_inr=record.deposit_amount_inr,
-                upi_payment_link=record.upi_payment_link,
-                created_at=record.created_at,
-                expires_at=record.expires_at,
-                ttl_seconds=0
-            )
-            self._hold_registry[appointment_id] = record
-            return False
-
-        # Transition to CONFIRMED
-        confirmed_record = HoldDepositRecord(
+        confirmed = HoldDepositRecord(
             appointment_id=record.appointment_id,
-            status="CONFIRMED",
-            deposit_amount_inr=record.deposit_amount_inr,
-            upi_payment_link=record.upi_payment_link,
-            created_at=record.created_at,
-            expires_at=record.expires_at,
-            ttl_seconds=record.ttl_seconds
+            amount_inr=record.amount_inr,
+            upi_uri=record.upi_uri,
+            status=DepositStatus.CONFIRMED,
+            expires_at_iso=record.expires_at_iso
         )
-        self._hold_registry[appointment_id] = confirmed_record
+        self._local_registry[appointment_id] = confirmed
         return True
-
-    def get_hold_record(self, appointment_id: str) -> Optional[HoldDepositRecord]:
-        """Retrieves active hold deposit record."""
-        return self._hold_registry.get(appointment_id)
 
 
 # Helper Function for Backward Compatibility
@@ -90,16 +107,16 @@ def generate_hold_deposit(appointment_id: str, amount: int = 200) -> Dict[str, A
     rec = engine.create_hold(appointment_id, amount)
     return {
         "appointment_id": rec.appointment_id,
-        "status": rec.status,
-        "deposit_amount_inr": rec.deposit_amount_inr,
-        "upi_payment_link": rec.upi_payment_link,
-        "created_at": rec.created_at,
-        "expires_at": rec.expires_at,
-        "ttl_seconds": rec.ttl_seconds,
+        "status": rec.status.value,
+        "deposit_amount_inr": rec.amount_inr,
+        "upi_payment_link": rec.upi_uri,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": rec.expires_at_iso,
+        "ttl_seconds": 600,
         "message": (
-            f"⚠️ *SURGICAL SLOT HOLD REQUIRED*: Micro-deposit of ₹{rec.deposit_amount_inr} "
+            f"⚠️ *SURGICAL SLOT HOLD REQUIRED*: Micro-deposit of ₹{rec.amount_inr} "
             f"is required to lock slot {rec.appointment_id}.\n"
-            f"💳 Pay via UPI: {rec.upi_payment_link}\n"
+            f"💳 Pay via UPI: {rec.upi_uri}\n"
             f"⏰ Hold expires in 10 minutes. Unpaid slots auto-release!"
         )
     }

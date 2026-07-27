@@ -11,6 +11,7 @@ from app.services.session.tier2_strategy import Tier2Strategy
 from app.services.session.tier3_strategy import Tier3Strategy
 from app.services.tier_config import SaaSPlanTier
 from app.services.session_manager import InputSanitizationPipeline, SecurityViolationException, StructuredJsonLogger
+from app.services.security import IngressSanitizer
 
 logger = logging.getLogger("APEX_SESSION_CONTEXT")
 
@@ -55,8 +56,9 @@ class SessionContextManager:
             )
 
         try:
-            # Step 1: OWASP Security Ingress Sanitization
-            clean_text = InputSanitizationPipeline.sanitize(raw_input)
+            # Step 1: OWASP Security Ingress Sanitization & Unicode Normalization
+            normalized_input = IngressSanitizer.sanitize_choice(raw_input)
+            clean_text = InputSanitizationPipeline.sanitize(normalized_input)
         except SecurityViolationException as e:
             self.telemetry.log_event("SECURITY_VIOLATION_BLOCKED", session.session_id, {"raw_input": raw_input})
             return CommandResult(
