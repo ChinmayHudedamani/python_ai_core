@@ -1,18 +1,28 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Hybrid Slot Expiry Manager & Async Audit Logger
+# APEX AI Code-Based Booking Engine & Expiry Manager
 
 import uuid
+import secrets
 import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import AsyncSessionLocal
 from app.models.slot import Slot, SlotStatus
 from app.models.booking import Booking, BookingStatus
+from app.models.patient import Patient
 from app.models.audit_log import AuditLog
 
 logger = logging.getLogger("APEX_AI_BOOKING_ENGINE")
+
+
+def generate_check_in_code() -> str:
+    """Generates a 6-character unique alphanumeric check-in code (e.g. APX-4928)."""
+    random_num = secrets.randbelow(9000) + 1000
+    return f"APX-{random_num}"
 
 
 async def log_audit_event_async(
@@ -37,76 +47,170 @@ async def log_audit_event_async(
             )
             session.add(audit)
             await session.commit()
-            logger.info(f"✅ Audit Log written: {entity_name} {entity_id} -> {to_state}")
     except Exception as e:
-        logger.error(f"❌ Failed to write audit log asynchronously: {e}")
+        logger.error(f"❌ Failed to write audit log: {e}")
 
 
-async def release_slot_after_timeout(
+async def create_booking(
+    db: AsyncSession,
+    patient_id: uuid.UUID,
     slot_id: uuid.UUID,
-    hold_duration_seconds: int = 300,
-    phone_number: Optional[str] = None
-) -> None:
-    """Async background task that sleeps 300s (5 min) and releases unconfirmed slots."""
-    logger.info(f"⏳ Spawned 5-minute slot release timer for Slot {slot_id} ({hold_duration_seconds}s)")
-    await asyncio.sleep(hold_duration_seconds)
+    procedure_name: str = "General Consultation"
+) -> Dict[str, Any]:
+    """Reserves a slot as SLOT_HELD and generates a unique check-in confirmation code."""
+    # Verify slot availability
+    slot_stmt = select(Slot).where(Slot.id == slot_id).with_for_update()
+    slot_res = await db.execute(slot_stmt)
+    slot = slot_res.scalar_one_or_none()
 
-    try:
-        async with AsyncSessionLocal() as session:
-            stmt = select(Slot).where(Slot.id == slot_id)
-            result = await session.execute(stmt)
-            slot = result.scalar_one_or_none()
+    if not slot or slot.status != SlotStatus.AVAILABLE:
+        return {"success": False, "error": "Requested appointment slot is no longer available."}
 
-            if not slot:
-                logger.warning(f"Slot {slot_id} not found during timeout evaluation.")
-                return
+    # Generate unique check-in code
+    check_in_code = generate_check_in_code()
 
-            if slot.status == SlotStatus.HELD:
-                # Check associated booking
-                booking_stmt = select(Booking).where(Booking.slot_id == slot_id)
-                booking_res = await session.execute(booking_stmt)
-                booking = booking_res.scalar_one_or_none()
+    # Update slot status
+    slot.status = SlotStatus.HELD
 
-                # If booking exists and is unpaid, release slot
-                if not booking or booking.status in [BookingStatus.SLOT_HELD, BookingStatus.PAYMENT_PENDING]:
-                    slot.status = SlotStatus.AVAILABLE
-                    slot.held_until = None
-                    await session.commit()
+    # Create Booking row
+    booking = Booking(
+        patient_id=patient_id,
+        slot_id=slot_id,
+        procedure_name=procedure_name,
+        status=BookingStatus.SLOT_HELD,
+        check_in_code=check_in_code,
+        is_code_verified=False
+    )
+    db.add(booking)
+    await db.commit()
+    await db.refresh(booking)
 
-                    logger.info(f"🔓 Slot {slot_id} automatically released back to AVAILABLE inventory.")
+    await log_audit_event_async(
+        entity_name="Booking",
+        entity_id=booking.id,
+        trigger_event_id="SLOT_RESERVED_CODE_GENERATED",
+        from_state=None,
+        to_state="SLOT_HELD",
+        payload={"check_in_code": check_in_code, "slot_id": str(slot_id)}
+    )
 
-                    # Log Audit Event
-                    await log_audit_event_async(
-                        entity_name="Slot",
-                        entity_id=slot_id,
-                        trigger_event_id="SLOT_EXPIRY_TIMEOUT_RELEASE",
-                        from_state="HELD",
-                        to_state="AVAILABLE",
-                        payload={"phone_number": phone_number, "reason": "5_minute_unpaid_timeout"}
-                    )
-
-                    # Trigger WhatsApp Nudge Notification
-                    if phone_number:
-                        nudge_msg = (
-                            "Your 5-minute hold on this appointment slot has expired. "
-                            "Would you like me to find another convenient time for your consultation?"
-                        )
-                        logger.info(f"📲 WhatsApp Nudge sent to {phone_number}: '{nudge_msg}'")
-
-    except Exception as e:
-        logger.error(f"❌ Exception in slot release timer for {slot_id}: {e}")
+    return {
+        "success": True,
+        "booking_id": str(booking.id),
+        "check_in_code": check_in_code,
+        "date": str(slot.date),
+        "time": slot.time.strftime("%I:%M %p"),
+        "doctor": slot.doctor_name
+    }
 
 
-def schedule_slot_release(
-    slot_id: uuid.UUID,
-    hold_duration_seconds: int = 300,
-    phone_number: Optional[str] = None
-) -> asyncio.Task:
-    """Fires a background task to release the slot after timeout."""
-    return asyncio.create_task(
-        release_slot_after_timeout(
-            slot_id=slot_id,
-            hold_duration_seconds=hold_duration_seconds,
-            phone_number=phone_number
+async def confirm_booking_with_code(
+    db: AsyncSession,
+    code: str,
+    phone_number: str
+) -> Dict[str, Any]:
+    """Confirms booking when patient repeats their unique check-in code."""
+    clean_code = code.strip().upper()
+    if not clean_code:
+        return {"success": False, "error": "Confirmation code cannot be empty."}
+
+    # Query booking matching code
+    stmt = (
+        select(Booking)
+        .join(Patient, Booking.patient_id == Patient.id)
+        .where(
+            and_(
+                Booking.check_in_code == clean_code,
+                Patient.phone_number == phone_number
+            )
         )
     )
+    result = await db.execute(stmt)
+    booking = result.scalar_one_or_none()
+
+    if not booking:
+        return {
+            "success": False,
+            "error": f"No active booking found matching code '{clean_code}' for phone {phone_number}."
+        }
+
+    if booking.status == BookingStatus.CONFIRMED:
+        return {
+            "success": True,
+            "message": f"Booking with code '{clean_code}' is already confirmed!",
+            "check_in_code": clean_code
+        }
+
+    from_state = booking.status.value
+    booking.status = BookingStatus.CONFIRMED
+    booking.is_code_verified = True
+
+    # Update associated Slot to BOOKED
+    slot_stmt = select(Slot).where(Slot.id == booking.slot_id)
+    slot_res = await db.execute(slot_stmt)
+    slot = slot_res.scalar_one_or_none()
+    if slot:
+        slot.status = SlotStatus.BOOKED
+
+    await db.commit()
+
+    await log_audit_event_async(
+        entity_name="Booking",
+        entity_id=booking.id,
+        trigger_event_id="CODE_VERIFIED_BOOKING_CONFIRMED",
+        from_state=from_state,
+        to_state="CONFIRMED",
+        payload={"check_in_code": clean_code, "phone": phone_number}
+    )
+
+    return {
+        "success": True,
+        "message": f"Appointment successfully confirmed with code '{clean_code}'!",
+        "booking_id": str(booking.id),
+        "check_in_code": clean_code
+    }
+
+
+async def cancel_booking(
+    db: AsyncSession,
+    code: str,
+    phone_number: Optional[str] = None
+) -> Dict[str, Any]:
+    """Cancels booking matching confirmation code and frees slot back to AVAILABLE."""
+    clean_code = code.strip().upper()
+    if not clean_code:
+        return {"success": False, "error": "Confirmation code cannot be empty."}
+
+    stmt = select(Booking).where(Booking.check_in_code == clean_code)
+    result = await db.execute(stmt)
+    booking = result.scalar_one_or_none()
+
+    if not booking:
+        return {"success": False, "error": f"No booking found matching code '{clean_code}'."}
+
+    from_state = booking.status.value
+    booking.status = BookingStatus.CANCELLED
+
+    # Reset slot to AVAILABLE
+    slot_stmt = select(Slot).where(Slot.id == booking.slot_id)
+    slot_res = await db.execute(slot_stmt)
+    slot = slot_res.scalar_one_or_none()
+    if slot:
+        slot.status = SlotStatus.AVAILABLE
+
+    await db.commit()
+
+    await log_audit_event_async(
+        entity_name="Booking",
+        entity_id=booking.id,
+        trigger_event_id="BOOKING_CANCELLED_BY_PATIENT",
+        from_state=from_state,
+        to_state="CANCELLED",
+        payload={"check_in_code": clean_code}
+    )
+
+    return {
+        "success": True,
+        "message": f"Booking with code '{clean_code}' has been cancelled and the slot released.",
+        "check_in_code": clean_code
+    }

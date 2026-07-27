@@ -47,10 +47,10 @@ class TestPhase1Infrastructure(unittest.TestCase):
 
     def test_02_currency_decimal_integrity(self):
         print("\n--- [TEST 2]: Decimal Currency Integrity ---")
-        booking = Booking(amount_paid=Decimal("500.00"))
-        self.assertIsInstance(booking.amount_paid, Decimal)
-        self.assertEqual(booking.amount_paid, Decimal("500.00"))
-        print("✅ PASSED: Booking amount_paid uses strict Decimal type.")
+        doc = DoctorProfile(name="Dr. Test", consultation_fee=Decimal("700.00"))
+        self.assertIsInstance(doc.consultation_fee, Decimal)
+        self.assertEqual(doc.consultation_fee, Decimal("700.00"))
+        print("✅ PASSED: DoctorProfile consultation_fee uses strict Decimal type.")
 
     def test_03_sqlite_kb_queries(self):
         print("\n--- [TEST 3]: SQLite Relational Knowledge Base Queries ---")
