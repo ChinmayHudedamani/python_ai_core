@@ -101,9 +101,12 @@ async def create_booking(
         symptoms_reported=patient_symptoms,
         expected_revenue=revenue
     )
-    db.add(booking)
-    await db.commit()
-    await db.refresh(booking)
+    try:
+        db.add(booking)
+        await db.commit()
+    except Exception as e:
+        await db.rollback()
+        return {"success": False, "error": "Requested appointment slot is no longer available."}
 
     await log_audit_event_async(
         entity_name="Booking",

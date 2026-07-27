@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Doctor Command Center - Admin Tool Registry & Financial Ledger Services
+# APEX AI Doctor Command Center - Admin Tool Registry, Ledgers & Proactive Rescheduling
 
 import logging
 from decimal import Decimal
@@ -10,8 +10,10 @@ from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.booking import Booking, BookingStatus
-from app.models.slot import Slot
+from app.models.slot import Slot, SlotStatus
 from app.models.patient import Patient
+from app.models.audit_log import AuditLog
+from app.services.whatsapp_client import WhatsAppClient
 
 logger = logging.getLogger("APEX_AI_ADMIN_TOOLS")
 
@@ -27,6 +29,12 @@ class DailyLedgerInput(BaseModel):
 class RevenueReportInput(BaseModel):
     start_date: str = Field(description="Start date for revenue report in YYYY-MM-DD format.")
     end_date: str = Field(description="End date for revenue report in YYYY-MM-DD format.")
+
+
+class RescheduleCancelInput(BaseModel):
+    appointment_identifier: str = Field(description="The appointment check-in code (e.g. APX-4928) or booking UUID to modify.")
+    reason: str = Field(description="Clinical reason for cancellation or rescheduling.")
+    action_type: str = Field(default="RESCHEDULE", description="Action type: 'CANCEL' or 'RESCHEDULE'.")
 
 
 # ---------------------------------------------------------
@@ -139,4 +147,97 @@ async def get_revenue_report(db: AsyncSession, start_date: str, end_date: str) -
         "confirmed_appointments": total_count,
         "total_expected_revenue": f"₹{total_revenue:,.2f}",
         "raw_revenue_amount": str(total_revenue)
+    }
+
+
+@AdminToolsRegistry.register(name="reschedule_or_cancel_appointment", input_schema=RescheduleCancelInput)
+async def reschedule_or_cancel_appointment(
+    db: AsyncSession,
+    appointment_identifier: str,
+    reason: str,
+    action_type: str = "RESCHEDULE"
+) -> Dict[str, Any]:
+    """Doctor override tool to cancel or proactively reschedule an appointment."""
+    clean_id = appointment_identifier.strip()
+    
+    # Query booking matching code or ID
+    stmt = (
+        select(Booking, Slot, Patient)
+        .join(Slot, Booking.slot_id == Slot.id)
+        .join(Patient, Booking.patient_id == Patient.id)
+        .where(
+            (Booking.check_in_code == clean_id.upper()) | (Booking.id.cast(func.text) == clean_id)
+        )
+    )
+    result = await db.execute(stmt)
+    row = result.first()
+
+    if not row:
+        return {"success": False, "error": f"No active appointment found matching identifier '{clean_id}'."}
+
+    booking, slot, patient = row
+    from_state = booking.status.value
+
+    # Update booking status to CANCELLED and reset slot
+    booking.status = BookingStatus.CANCELLED
+    slot.status = SlotStatus.AVAILABLE
+
+    suggested_slots = []
+
+    if action_type.upper() == "RESCHEDULE":
+        # Find next 2 available open slots
+        open_stmt = (
+            select(Slot)
+            .where(and_(Slot.status == SlotStatus.AVAILABLE, Slot.date >= date.today()))
+            .order_by(Slot.date, Slot.time)
+            .limit(2)
+        )
+        open_res = await db.execute(open_stmt)
+        next_slots = open_res.scalars().all()
+
+        suggested_slots = [
+            f"{s.date.strftime('%Y-%m-%d')} at {s.time.strftime('%I:%M %p')}"
+            for s in next_slots
+        ]
+
+        slot_str = " or ".join(suggested_slots) if suggested_slots else "the upcoming dates next week"
+        proactive_msg = (
+            f"Hi {patient.name or 'there'}, Dr. Vikram Sharma needs to reschedule your appointment "
+            f"(Code: {booking.check_in_code}) due to {reason}. "
+            f"We have open slots on {slot_str}. Would you like to switch to one of these?"
+        )
+    else:
+        proactive_msg = (
+            f"Hi {patient.name or 'there'}, your appointment (Code: {booking.check_in_code}) "
+            f"has been cancelled due to {reason}. Please contact us if you wish to rebook."
+        )
+
+    # Dispatch proactive WhatsApp notification
+    client = WhatsAppClient()
+    await client.send_text_message(to_phone=patient.phone_number, message=proactive_msg)
+
+    # Write Audit Log
+    audit = AuditLog(
+        entity_name="Booking",
+        entity_id=booking.id,
+        trigger_event_id="DOCTOR_EMERGENCY_OVERRIDE_RESCHEDULE",
+        from_state=from_state,
+        to_state="CANCELLED",
+        payload={
+            "reason": reason,
+            "action_type": action_type,
+            "suggested_slots": suggested_slots,
+            "patient_phone": patient.phone_number
+        }
+    )
+    db.add(audit)
+    await db.commit()
+
+    return {
+        "success": True,
+        "message": f"Appointment {booking.check_in_code} updated to CANCELLED. Proactive notification sent.",
+        "patient_phone": patient.phone_number,
+        "action_type": action_type,
+        "suggested_alternative_slots": suggested_slots,
+        "proactive_message_sent": proactive_msg
     }

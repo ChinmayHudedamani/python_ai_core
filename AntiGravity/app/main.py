@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.sqlite_db import init_sqlite_db
-from app.api.webhooks import router as webhooks_router
 from app.api.whatsapp import router as whatsapp_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -33,7 +32,6 @@ app = FastAPI(
 )
 
 # Register API Routers
-app.include_router(webhooks_router)
 app.include_router(whatsapp_router)
 
 
