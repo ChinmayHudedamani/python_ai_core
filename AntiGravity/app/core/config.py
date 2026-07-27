@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "APEX AI Dental Assistant"
     ENVIRONMENT: str = "production"
 
+    GEMINI_API_KEY: str = ""
+    DEFAULT_LLM_MODEL: str = "gemini-2.5-flash"
+
     POSTGRES_USER: str = "apex_user"
     POSTGRES_PASSWORD: str = "apex_secure_password"
     POSTGRES_HOST: str = "localhost"

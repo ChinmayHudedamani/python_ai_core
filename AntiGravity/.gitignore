@@ -1,16 +1,22 @@
-*.exe
-*.lnk
-*.ps1
+# Python
 __pycache__/
-*.pyc
-processed_sids.txt
-config/twilio_credentials.json
-config/system_config.json
-.env
+*.py[cod]
+*$py.class
 .venv/
-OneDrive/
-Sentra/
-../OneDrive/
-conversations/
-*.pdf
-*.log
+env/
+venv/
+ENV/
+
+# Environment variables & secrets
+.env
+*.env
+
+# SQLite Databases
+*.db
+clinic_kb.db
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
