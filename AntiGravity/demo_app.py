@@ -138,7 +138,7 @@ elif role_choice == "👨‍⚕️ Doctor View (Dr. Vikram Sharma)":
 
     st.success("🔐 Authorized Doctor Session Active for Dr. Vikram Sharma (Lead Endodontist)")
 
-    tab1, tab2, tab3 = st.tabs(["📊 Daily Schedule & Ledgers", "💰 Expected Revenue Report", "🚨 Proactive Rescheduling"])
+    tab1, tab2, tab3 = st.tabs(["📊 Daily Schedule & Ledgers", "💰 Expected Revenue Report", "🚨 Dynamic Rescheduling Tool"])
 
     with tab1:
         st.subheader("📋 Daily Schedule Ledger")
@@ -154,9 +154,18 @@ elif role_choice == "👨‍⚕️ Doctor View (Dr. Vikram Sharma)":
     with tab3:
         st.subheader("🚨 Emergency Rescheduling Tool")
         appt_id = st.text_input("Appointment Check-In Code", "APX-4928")
-        reason = st.text_input("Cancellation / Reschedule Reason", "Emergency micro-surgery required")
+        custom_reason = st.text_input(
+            "Enter custom reason for cancellation/reschedule:",
+            placeholder="e.g., Emergency surgery in Operation Theatre"
+        )
+        action_type = st.selectbox("Action Type", ["RESCHEDULE", "CANCEL"])
+
         if st.button("Trigger Proactive Patient Reschedule"):
-            st.warning(f"🚨 Appointment {appt_id} cancelled. Proactive WhatsApp notification sent to patient with next open slots!")
+            if not custom_reason.strip():
+                st.error("⚠️ Please enter a specific custom reason for the cancellation or reschedule.")
+            else:
+                st.warning(f"🚨 Appointment {appt_id} updated ({action_type}). Proactive WhatsApp notification sent to patient with custom reason: '{custom_reason}'!")
+                st.info(f"📲 Sent Template: 'Hi Rahul! Regrettably, Dr. Sharma needs to reschedule your appointment due to: {custom_reason}. We have an alternative slot open at 2026-07-28 at 10:30 AM or 2026-07-28 at 02:00 PM. Would you like to confirm this slot or choose another?'")
 
 
 # ---------------------------------------------------------

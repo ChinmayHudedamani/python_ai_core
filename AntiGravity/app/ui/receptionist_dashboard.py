@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 def render_receptionist_dashboard():
     """Renders the Clinic Front-Desk Receptionist Command Dashboard."""
     st.markdown("## 🏥 APEX Dental — Receptionist Command Dashboard")
-    st.caption("Live Front-Desk Calendar Ledger, Manual Check-In Overrides & HITL Escalation Feed")
+    st.caption("Live Front-Desk Calendar Ledger, Manual Check-In Overrides & Dynamic Rescheduling")
 
     st.divider()
 
@@ -80,13 +80,29 @@ def render_receptionist_dashboard():
                         st.success(f"✅ Patient {item['patient']} (Code: {item['code']}) checked in successfully!")
 
     with col2:
-        st.subheader("⚡ Manual Code Override")
+        st.subheader("⚡ Manual Code Override & Check-In")
         manual_code = st.text_input("Enter Check-In Code", placeholder="APX-4928").upper()
         if st.button("Verify & Check-In"):
             if manual_code:
                 st.success(f"✅ Verified Code '{manual_code}'! Status updated to CHECKED_IN.")
             else:
                 st.warning("Please enter a valid check-in code.")
+
+        st.divider()
+
+        st.subheader("🚨 Dynamic Reschedule / Cancel Override")
+        override_code = st.text_input("Appointment Code for Reschedule", placeholder="APX-8102")
+        custom_reason = st.text_input(
+            "Enter custom reason for cancellation/reschedule:",
+            placeholder="e.g., Emergency surgery in Operation Theatre"
+        )
+        action_opt = st.selectbox("Action Override Type", ["RESCHEDULE", "CANCEL"])
+
+        if st.button("Execute Reschedule / Cancel Override"):
+            if not override_code.strip() or not custom_reason.strip():
+                st.error("⚠️ Please provide both the appointment code and custom reason.")
+            else:
+                st.warning(f"🚨 Executed override on {override_code}! WhatsApp notice sent with reason: '{custom_reason}'.")
 
         st.divider()
 

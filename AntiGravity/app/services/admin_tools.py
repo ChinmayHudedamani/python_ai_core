@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Doctor Command Center - Admin Tool Registry, Ledgers & Proactive Rescheduling
+# APEX AI Doctor Command Center - Admin Tool Registry, Ledgers & Dynamic Custom Rescheduling
 
 import logging
 from decimal import Decimal
@@ -33,7 +33,10 @@ class RevenueReportInput(BaseModel):
 
 class RescheduleCancelInput(BaseModel):
     appointment_identifier: str = Field(description="The appointment check-in code (e.g. APX-4928) or booking UUID to modify.")
-    reason: str = Field(description="Clinical reason for cancellation or rescheduling.")
+    custom_reason: str = Field(
+        ...,
+        description="The specific, custom reason provided by the doctor or clinic admin for this cancellation or reschedule (e.g., 'Emergency surgery', 'Doctor running late', 'Personal family emergency'). Do not generalize."
+    )
     action_type: str = Field(default="RESCHEDULE", description="Action type: 'CANCEL' or 'RESCHEDULE'.")
 
 
@@ -154,10 +157,10 @@ async def get_revenue_report(db: AsyncSession, start_date: str, end_date: str) -
 async def reschedule_or_cancel_appointment(
     db: AsyncSession,
     appointment_identifier: str,
-    reason: str,
+    custom_reason: str,
     action_type: str = "RESCHEDULE"
 ) -> Dict[str, Any]:
-    """Doctor override tool to cancel or proactively reschedule an appointment."""
+    """Doctor override tool to cancel or proactively reschedule an appointment using a dynamic custom reason."""
     clean_id = appointment_identifier.strip()
     
     # Query booking matching code or ID
@@ -183,6 +186,7 @@ async def reschedule_or_cancel_appointment(
     slot.status = SlotStatus.AVAILABLE
 
     suggested_slots = []
+    patient_name = patient.name or "there"
 
     if action_type.upper() == "RESCHEDULE":
         # Find next 2 available open slots
@@ -202,14 +206,14 @@ async def reschedule_or_cancel_appointment(
 
         slot_str = " or ".join(suggested_slots) if suggested_slots else "the upcoming dates next week"
         proactive_msg = (
-            f"Hi {patient.name or 'there'}, Dr. Vikram Sharma needs to reschedule your appointment "
-            f"(Code: {booking.check_in_code}) due to {reason}. "
-            f"We have open slots on {slot_str}. Would you like to switch to one of these?"
+            f"Hi {patient_name}! Regrettably, Dr. Sharma needs to reschedule your appointment "
+            f"due to: {custom_reason}. We have an alternative slot open at {slot_str}. "
+            f"Would you like to confirm this slot or choose another?"
         )
     else:
         proactive_msg = (
-            f"Hi {patient.name or 'there'}, your appointment (Code: {booking.check_in_code}) "
-            f"has been cancelled due to {reason}. Please contact us if you wish to rebook."
+            f"Hi {patient_name}! Regrettably, your appointment (Code: {booking.check_in_code}) "
+            f"has been cancelled due to: {custom_reason}. Please contact our reception if you wish to rebook."
         )
 
     # Dispatch proactive WhatsApp notification
@@ -224,7 +228,7 @@ async def reschedule_or_cancel_appointment(
         from_state=from_state,
         to_state="CANCELLED",
         payload={
-            "reason": reason,
+            "custom_reason": custom_reason,
             "action_type": action_type,
             "suggested_slots": suggested_slots,
             "patient_phone": patient.phone_number
@@ -235,8 +239,9 @@ async def reschedule_or_cancel_appointment(
 
     return {
         "success": True,
-        "message": f"Appointment {booking.check_in_code} updated to CANCELLED. Proactive notification sent.",
+        "message": f"Appointment {booking.check_in_code} updated to CANCELLED with custom reason. Proactive notification sent.",
         "patient_phone": patient.phone_number,
+        "custom_reason": custom_reason,
         "action_type": action_type,
         "suggested_alternative_slots": suggested_slots,
         "proactive_message_sent": proactive_msg
