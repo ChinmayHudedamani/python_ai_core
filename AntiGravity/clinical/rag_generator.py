@@ -135,7 +135,40 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
     name_greeting = f", {patient_name}" if patient_name else ""
     query_clean = raw_notes.strip().lower()
 
-    # 0a. APEX AI Warm Greeting & Name Inquiry
+    # 0a. AI Identity Disclosure Handler
+    if any(kw in query_clean for kw in ["are you ai", "are you a bot", "are you real", "are you human", "is this ai", "are you an ai"]):
+        return {
+            "whatsapp_response": (
+                f"I am APEX AI, the official virtual clinical assistant for Apex Dental Center & Implant Institute{name_greeting}. 🌿\n\n"
+                f"I'm here to answer your treatment questions and coordinate your visit with Dr. Chinmay Hudedamani! How can I help you today?"
+            )
+        }
+
+    # 0b. Prompt Injection / Jailbreak Refusal
+    if any(kw in query_clean for kw in ["ignore previous instructions", "pretend you are a doctor", "system prompt", "bypass security", "jailbreak"]):
+        return {
+            "whatsapp_response": (
+                "I am APEX AI, the clinical assistant for Apex Dental Center. I cannot fulfill requests outside my clinical scope.\n\n"
+                "How can I help you with our dental treatments or scheduling a consultation?"
+            )
+        }
+
+    # 0c. Medical Emergency Hard Stop Trigger (Section 2)
+    emergency_triggers = [
+        "uncontrolled bleeding", "heavy bleeding", "profuse bleeding", "facial swelling", "swollen face",
+        "difficulty breathing", "difficulty swallowing", "knocked out tooth", "broken tooth accident",
+        "unbearable pain", "worst pain", "cant sleep pain", "high fever dental", "trauma tooth"
+    ]
+    if any(kw in query_clean for kw in emergency_triggers):
+        return {
+            "whatsapp_response": (
+                "This sounds like it may need urgent attention. Please call us right now at +91-9988776655 — "
+                "if you can't reach us and it's severe (heavy bleeding, breathing difficulty, facial swelling), "
+                "please go to the nearest emergency room. I've also flagged this to our clinical desk for an immediate callback."
+            )
+        }
+
+    # 0d. APEX AI Warm Greeting & Name Inquiry
     if query_clean in ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "hi mai", "hello mai", "hi apex", "hello apex", "hi apex ai"]:
         if patient_name:
             return {
@@ -145,13 +178,13 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             "whatsapp_response": "Hey there! 👋 I'm APEX AI, your clinical assistant from Apex Dental Center & Implant Institute, Koramangala. 🌿\n\nI'm here to guide you, answer your health questions, and connect you to care when needed.\n\nTo start, may I know your name?"
         }
 
-    # 0b. Direct Gratitude & Goodbye Detection
+    # 0e. Direct Gratitude & Goodbye Detection
     if any(w in query_clean for w in ["thank you", "thanks", "thank u", "thx", "thankyou", "thanks a lot", "thank you so much", "bye", "goodbye", "ok thanks", "okay thanks", "dhanyawad", "dhanyavad", "shukriya", "shukriyaa"]):
         return {
             "whatsapp_response": f"You're very welcome{name_greeting}! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
 
-    # 0c. Health Concern Inquiry Handler
+    # 0f. Health Concern Inquiry Handler
     if any(kw in query_clean for kw in ["health concern", "health concerns", "health issue", "health issues", "health problem", "symptom", "symptoms", "dental concern"]):
         return {
             "whatsapp_response": (
@@ -160,7 +193,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             )
         }
 
-    # 0d. Treatment Options List Handler
+    # 0g. Treatment Options List Handler
     if any(kw in query_clean for kw in ["treatment options", "treatments", "check treatment options", "available treatments", "list of treatments", "treatment list", "services", "procedures"]):
         return {
             "whatsapp_response": (
@@ -176,7 +209,35 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             )
         }
 
-    # 0e. Clinic Reception Callback Handler
+    # 0h. Insurance & Mediclaim Policy Handler
+    if any(kw in query_clean for kw in ["insurance", "mediclaim", "reimbursement", "claim"]):
+        return {
+            "whatsapp_response": (
+                f"We support major dental insurance reimbursements and cashless tie-ups{name_greeting}. "
+                f"Our front desk will provide an itemized tax invoice and claim assistance upon check-in.\n\n"
+                f"Would you like to book a consultation slot for tomorrow?"
+            )
+        }
+
+    # 0i. Post-Op / Aftercare Care Handler
+    if any(kw in query_clean for kw in ["aftercare", "post op", "post-op", "after rct", "after extraction", "after cleaning"]):
+        return {
+            "whatsapp_response": (
+                f"For post-treatment care{name_greeting}: avoid hot or crunchy foods for 24 hours, take any prescribed oral rinses as instructed, and refrain from using straws.\n\n"
+                f"If you experience unusual swelling or discomfort, please call our clinic desk immediately at +91-9988776655!"
+            )
+        }
+
+    # 0j. Patient Complaint & Dissatisfaction Handler
+    if any(kw in query_clean for kw in ["complaint", "dissatisfied", "bad experience", "unhappy", "manager"]):
+        return {
+            "whatsapp_response": (
+                f"I am very sorry to hear about your experience{name_greeting}. I have logged your feedback directly for senior management review at Apex Dental Center.\n\n"
+                f"Our patient relations lead will call you personally to address your concerns."
+            )
+        }
+
+    # 0k. Clinic Reception Callback Handler
     if any(kw in query_clean for kw in ["callback", "call me", "reception", "request callback", "call back", "receptionist"]):
         return {
             "whatsapp_response": (
@@ -186,7 +247,7 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             )
         }
 
-    # 0f. Comprehensive Acceptance / Affirmative Keywords Handler (Sure, Why Not, Yeah, Sounds Good, Go Ahead, etc.)
+    # 0l. Comprehensive Acceptance / Affirmative Keywords Handler
     acceptance_keywords = [
         "sure", "why not", "yeah", "yep", "yup", "definitely", "absolutely", "of course", "ok", "okay",
         "fine", "alright", "sounds good", "sounds great", "book it", "go ahead", "yes please", "please do",
