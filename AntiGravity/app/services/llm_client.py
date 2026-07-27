@@ -1,45 +1,47 @@
-"""Official Google GenAI Client Wrapper for Gemini 2.5 Flash / Pro Integration."""
+# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
+# Official Gemini MIDGO Structured Output Client Wrapper
 
 import os
 import logging
-from typing import Optional, List, Any
 from google import genai
 from google.genai import types
 
-from app.core.config import settings
+from app.services.schemas import MIDGODentalResponse
 
-logger = logging.getLogger("APEX_AI_GEMINI_CLIENT")
+logger = logging.getLogger("APEX_AI_MIDGO_CLIENT")
 
 
-class GeminiClientWrapper:
-    """Official SDK Wrapper for Google GenAI Models."""
+class GeminiMIDGOClient:
+    """Official SDK Structured Output Handler for Gemini 2.5 Flash MIDGO Architecture."""
 
     def __init__(self):
-        api_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         self.client = genai.Client(api_key=api_key)
-        self.model = settings.DEFAULT_LLM_MODEL or "gemini-2.5-flash"
+        self.model = os.getenv("DEFAULT_LLM_MODEL", "gemini-2.5-flash")
 
-    async def generate_response(
-        self,
-        system_prompt: str,
-        user_message: str,
-        tools: Optional[List[Any]] = None
-    ) -> str:
-        """Generates async response using Google GenAI SDK."""
-        config_params = {
-            "system_instruction": system_prompt,
-            "temperature": 0.3,
-        }
-        if tools:
-            config_params["tools"] = tools
-
+    def process_turn(self, system_prompt: str, user_message: str) -> MIDGODentalResponse:
+        """Executes structured JSON content generation enforcing MIDGODentalResponse Pydantic schema."""
         try:
-            response = await self.client.aio.models.generate_content(
+            response = self.client.models.generate_content(
                 model=self.model,
                 contents=user_message,
-                config=types.GenerateContentConfig(**config_params)
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                    response_schema=MIDGODentalResponse,
+                    temperature=0.3,
+                ),
             )
-            return response.text or ""
+            return MIDGODentalResponse.model_validate_json(response.text)
         except Exception as e:
-            logger.error(f"Gemini API generation error: {e}")
-            return "I am experiencing a slight delay. Let me connect you to our front desk receptionist who can assist you right away!"
+            logger.error(f"MIDGO turn processing error: {e}")
+            return MIDGODentalResponse(
+                extracted_name="",
+                extracted_symptom_or_reason="",
+                classified_intent="FAQ_INQUIRY",
+                patient_reply="I understand! Let me connect you to our front desk receptionist at Apex Dental Koramangala who can assist you right away!"
+            )
+
+
+# Class alias for backward compatibility
+GeminiClientWrapper = GeminiMIDGOClient
