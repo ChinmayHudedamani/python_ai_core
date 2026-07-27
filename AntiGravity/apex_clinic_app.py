@@ -1,9 +1,14 @@
 import os
 import json
 import streamlit as st
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
+
+from app.core.config import settings
+
+load_dotenv()
 
 # ==========================================
 # 1. PAGE CONFIGURATION & STYLING
@@ -41,8 +46,9 @@ class MIDGODentalResponse(BaseModel):
 # ==========================================
 class GeminiMIDGOClient:
     def __init__(self):
-        self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.model = os.getenv("DEFAULT_LLM_MODEL", "gemini-2.5-flash")
+        api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
+        self.client = genai.Client(api_key=api_key)
+        self.model = os.getenv("DEFAULT_LLM_MODEL") or settings.DEFAULT_LLM_MODEL or "gemini-2.5-flash"
 
     def process_turn(self, system_prompt: str, user_message: str) -> MIDGODentalResponse:
         response = self.client.models.generate_content(
@@ -168,7 +174,7 @@ if user_input := st.chat_input("Type your message here..."):
         st.session_state.messages.append({"role": "assistant", "content": reply_text})
 
     except Exception as e:
-        error_msg = f"⚠️ System notice: Encountered an exception while processing your request. Please ensure your `GEMINI_API_KEY` is configured correctly in `.env`."
+        error_msg = f"⚠️ System notice: Encountered an exception while processing your request ({e}). Please ensure your `GEMINI_API_KEY` is configured correctly in `.env`."
         with st.chat_message("assistant", avatar="🤖"):
             st.markdown(error_msg)
         st.session_state.messages.append({"role": "assistant", "content": error_msg})

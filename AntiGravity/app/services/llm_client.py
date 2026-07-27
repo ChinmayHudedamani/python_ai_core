@@ -3,11 +3,14 @@
 
 import os
 import logging
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from app.core.config import settings
 from app.services.schemas import MIDGODentalResponse
 
+load_dotenv()
 logger = logging.getLogger("APEX_AI_MIDGO_CLIENT")
 
 
@@ -15,9 +18,9 @@ class GeminiMIDGOClient:
     """Official SDK Structured Output Handler for Gemini 2.5 Flash MIDGO Architecture."""
 
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
         self.client = genai.Client(api_key=api_key)
-        self.model = os.getenv("DEFAULT_LLM_MODEL", "gemini-2.5-flash")
+        self.model = os.getenv("DEFAULT_LLM_MODEL") or settings.DEFAULT_LLM_MODEL or "gemini-2.5-flash"
 
     def process_turn(self, system_prompt: str, user_message: str) -> MIDGODentalResponse:
         """Executes structured JSON content generation enforcing MIDGODentalResponse Pydantic schema."""
