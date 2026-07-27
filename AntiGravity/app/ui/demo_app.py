@@ -24,44 +24,53 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- AUTHENTIC WHATSAPP WEB CSS STYLING ---
+# --- AUTHENTIC WHATSAPP WEB CSS STYLING (FORCED LIGHT MODE & HIGH CONTRAST) ---
 WHATSAPP_CSS = """
 <style>
-    /* Main Layout Styling */
-    .stApp {
-        background-color: #d1d7db;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    /* WhatsApp Chat Screen Wrapper */
-    .wa-chat-container {
-        max-width: 650px;
-        margin: 0 auto;
-        background-color: #efeae2;
-        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-        background-size: 20px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        overflow: hidden;
-        border: 1px solid #d1d7db;
+    /* Force Light Mode Color Palette Across All Elements */
+    :root {
+        --background-color: #efeae2 !important;
+        --secondary-background-color: #ffffff !important;
+        --text-color: #111b21 !important;
     }
 
-    /* WhatsApp Header */
+    html, body, [data-testid="stAppViewContainer"], .stApp {
+        background-color: #efeae2 !important;
+        color: #111b21 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    }
+
+    /* Force all text in st.markdown to be dark black/grey */
+    p, span, div, h1, h2, h3, h4, h5, h6, label {
+        color: #111b21 !important;
+    }
+
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff !important;
+        border-right: 1px solid #d1d7db !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label {
+        color: #111b21 !important;
+    }
+
+    /* WhatsApp Header Bar */
     .wa-header {
-        background-color: #075e54;
-        color: #ffffff;
+        background-color: #075e54 !important;
+        color: #ffffff !important;
         padding: 14px 18px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid #128c7e;
         border-radius: 8px 8px 0 0;
+        margin-bottom: 12px;
     }
     .wa-avatar {
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        background-color: #ffffff;
+        background-color: #ffffff !important;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -76,63 +85,69 @@ WHATSAPP_CSS = """
         font-size: 16px;
         font-weight: 700;
         margin: 0;
-        color: #ffffff;
+        color: #ffffff !important;
     }
     .wa-status {
         font-size: 12px;
-        color: #25d366;
+        color: #25d366 !important;
         margin: 0;
         font-weight: 500;
     }
     .wa-verified-badge {
-        color: #34b7f1;
+        color: #34b7f1 !important;
         font-size: 14px;
         margin-left: 4px;
     }
 
     /* WhatsApp Message Bubbles */
     .wa-msg-user {
-        background-color: #d9fdd3;
-        color: #111b21;
-        padding: 10px 14px;
+        background-color: #d9fdd3 !important;
+        color: #111b21 !important;
+        padding: 12px 16px;
         border-radius: 8px 8px 0px 8px;
         max-width: 75%;
         margin-left: auto;
         margin-top: 8px;
         margin-bottom: 8px;
-        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.12);
-        font-size: 14.5px;
+        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.15);
+        font-size: 15px;
         line-height: 1.45;
         position: relative;
         word-wrap: break-word;
     }
+    .wa-msg-user * {
+        color: #111b21 !important;
+    }
     
     .wa-msg-bot {
-        background-color: #ffffff;
-        color: #111b21;
-        padding: 10px 14px;
+        background-color: #ffffff !important;
+        color: #111b21 !important;
+        padding: 12px 16px;
         border-radius: 8px 8px 8px 0px;
         max-width: 80%;
         margin-right: auto;
         margin-top: 8px;
         margin-bottom: 8px;
-        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.12);
-        font-size: 14.5px;
+        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.15);
+        font-size: 15px;
         line-height: 1.45;
         position: relative;
         word-wrap: break-word;
     }
+    .wa-msg-bot * {
+        color: #111b21 !important;
+    }
 
     .wa-timestamp {
-        font-size: 10.5px;
-        color: #667781;
+        font-size: 11px;
+        color: #667781 !important;
         float: right;
         margin-top: 4px;
         margin-left: 8px;
     }
 
     .wa-ticks {
-        color: #53bdeb;
+        color: #53bdeb !important;
         font-weight: bold;
         font-size: 12px;
         margin-left: 2px;
@@ -142,53 +157,62 @@ WHATSAPP_CSS = """
     .stButton > button {
         background-color: #ffffff !important;
         color: #00a884 !important;
-        border: 1px solid #e9edef !important;
+        border: 1px solid #c0c7d1 !important;
         border-radius: 8px !important;
         font-weight: 600 !important;
         font-size: 14px !important;
-        padding: 10px 16px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        padding: 12px 18px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
         transition: all 0.2s ease !important;
         width: 100% !important;
         text-align: center !important;
     }
 
     .stButton > button:hover {
-        background-color: #f0f2f5 !important;
+        background-color: #e7f7f3 !important;
         border-color: #00a884 !important;
         color: #075e54 !important;
     }
 
     /* Admin Cards */
     .lock-card {
-        background: #ffffff;
+        background: #ffffff !important;
         border-left: 6px solid #ff9800;
         border-radius: 8px;
         padding: 20px;
         margin: 15px 0;
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        color: #e65100;
+        color: #e65100 !important;
+    }
+    .lock-card * {
+        color: #e65100 !important;
     }
     .beta-card {
-        background: #fff8e1;
+        background: #fff8e1 !important;
         border-left: 6px solid #f57c00;
         border-radius: 8px;
         padding: 12px 16px;
         margin-bottom: 16px;
-        color: #e65100;
+        color: #e65100 !important;
+    }
+    .beta-card * {
+        color: #e65100 !important;
     }
     .production-card {
-        background: #eef4ff;
+        background: #eef4ff !important;
         border-left: 6px solid #0F52BA;
         border-radius: 8px;
         padding: 12px 16px;
         margin-bottom: 16px;
-        color: #0d47a1;
+        color: #0d47a1 !important;
+    }
+    .production-card * {
+        color: #0d47a1 !important;
     }
     .security-badge {
-        background: #e8f5e9;
+        background: #e8f5e9 !important;
         border: 1px solid #66bb6a;
-        color: #1b5e20;
+        color: #1b5e20 !important;
         border-radius: 6px;
         padding: 6px 12px;
         font-size: 12px;
@@ -338,7 +362,7 @@ with tab_patient:
                     <div class="wa-status">online • Official Business Account</div>
                 </div>
             </div>
-            <div style="font-size: 13px; color: #b5e4d4;">{st.session_state.active_tier.value}</div>
+            <div style="font-size: 13px; color: #ffffff;">{st.session_state.active_tier.value}</div>
         </div>
         """,
         unsafe_allow_html=True
