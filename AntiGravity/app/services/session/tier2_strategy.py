@@ -2,66 +2,135 @@
 # APEX AI / Copus AI — Tier 2 Pro Strategy Handler
 
 import random
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 
 from app.services.session.models import PatientSession, CommandResult, ActionType, PriorityLevel
-from app.services.session.tier1_strategy import Tier1Strategy
+from app.services.session.base_strategy import AbstractTierStrategy
 from app.services.tier_config import SaaSPlanTier
-from app.services.deposit_engine import generate_hold_deposit
+from app.services.deposit_engine import MicroHoldDepositEngine
 
 
-class Tier2Strategy(Tier1Strategy):
-    """Tier 2 Pro Strategy: Revenue & Schedule Guard with Live Slots, OTP & Surgical Priority."""
+class Tier2Strategy(AbstractTierStrategy):
+    """Tier 2 Pro Strategy: Revenue & Schedule Guard with Live Slots, OTP, Surgical Priority & Micro-Holds."""
 
     def __init__(self):
-        super().__init__()
-        self.tier = SaaSPlanTier.TIER_2
+        super().__init__(SaaSPlanTier.TIER_2)
+        self.deposit_engine = MicroHoldDepositEngine()
 
     def _build_dispatcher_map(self) -> Dict[str, Callable[[PatientSession, str], CommandResult]]:
-        base_map = super()._build_dispatcher_map()
-        base_map.update({
-            "4. 📅 Book Appointment (Live Slots)": self._handle_live_booking,
+        """Polymorphic Dispatcher Map providing $O(1)$ constant-time lookup execution."""
+        return {
+            "1. Doctor Details": self._handle_doctor_details,
+            "2. Clinic Timings & Location": self._handle_timings_location,
+            "3. Cost Ranges & Pricing Sheet": self._handle_cost_ranges,
+            "4. 📅 Book Appointment (Live Slots)": self._handle_booking_flow,
             "5. 🔄 Reschedule / Cancel Appointment": self._handle_reschedule,
-            "7. 🚨 Emergency Triage": self._handle_emergency_triage
-        })
-        return base_map
+            "6. Patient Reviews": self._handle_reviews,
+            "7. 🚨 Emergency Triage": self._handle_emergency_triage,
+            "8. Exit Session": self._handle_exit
+        }
 
-    # --- Dispatcher Handler Overrides & Extensions ---
+    # --- Dispatcher Handler Methods ---
 
-    def _handle_live_booking(self, session: PatientSession, option_text: str) -> CommandResult:
+    def _handle_doctor_details(self, session: PatientSession, option_text: str) -> CommandResult:
+        body = (
+            "👨‍⚕️ *Lead Surgeon & Specialist*: Dr. Chinmay Hudedamani (MDS, Oral & Maxillofacial Surgery)\n"
+            "• 12+ Years Clinical Excellence\n"
+            "• Specialized in Microscopic RCT & Permanent Dental Implants"
+        )
+        return self._handle_informational_option(session, option_text, body)
+
+    def _handle_timings_location(self, session: PatientSession, option_text: str) -> CommandResult:
+        body = (
+            "📍 *LOCATION & TIMINGS*:\n"
+            "• Address: 5th Phase, Yelahanka New Town, Bengaluru (near Major Sandeep Unnikrishnan Road)\n"
+            "• Operating Hours: Mon-Sat 09:00 AM - 08:30 PM | Sun 10:00 AM - 02:00 PM\n"
+            "🚗 Free Basement Valet Parking Available!"
+        )
+        return self._handle_informational_option(session, option_text, body)
+
+    def _handle_cost_ranges(self, session: PatientSession, option_text: str) -> CommandResult:
+        body = (
+            "💰 *ESTIMATED COST RANGES*:\n"
+            "• General Consultation: ₹700\n"
+            "• Microscopic Root Canal (RCT): ₹4,500 – ₹7,500\n"
+            "• Dental Implants: ₹25,000 – ₹45,000"
+        )
+        return self._handle_informational_option(session, option_text, body)
+
+    def _handle_reviews(self, session: PatientSession, option_text: str) -> CommandResult:
+        body = (
+            "⭐ *PATIENT REVIEWS & RATINGS*:\n"
+            "• Google Rating: 4.9 / 5.0 (1,200+ Verified Patient Reviews)\n"
+            "• 'Dr. Chinmay is incredibly gentle and painless!' — Ananya R."
+        )
+        return self._handle_informational_option(session, option_text, body)
+
+    def _handle_booking_flow(self, session: PatientSession, option_text: str) -> CommandResult:
+        """Triggers live slot choices and requires OTP verification."""
         if not session.is_authenticated:
-            # Generate OTP
             otp = f"{random.randint(1000, 9999)}"
             session.otp_code = otp
             return CommandResult(
                 success=True,
                 message=f"🔐 *MOBILE VERIFICATION REQUIRED*: Verification code **{otp}** sent to {session.phone_number}. Enter OTP to unlock live slots!",
                 action_type=ActionType.TRANSACTIONAL,
-                payload={"otp": otp, "step": "OTP_SENT"}
+                payload={"otp": otp, "step": "OTP_SENT", "requires_otp": True}
             )
 
-        # Generate Check-In Code & Lock Slot
-        code_num = random.randint(1000, 9999)
-        check_in_code = f"APX-{code_num}"
-        session.check_in_code = check_in_code
-
-        # Check surgical micro-hold deposit trigger
-        deposit_payload = generate_hold_deposit(check_in_code, amount=200)
-
-        msg = (
-            f"✅ *LIVE CONSULTATION SLOT LOCKED*:\n"
-            f"• Patient Phone: {session.phone_number}\n"
-            f"• Doctor: Dr. Chinmay Hudedamani\n"
-            f"• Slot: Tomorrow at 10:30 AM\n"
-            f"• Check-In Code: **{check_in_code}**\n\n"
-            f"{deposit_payload['message']}"
+        # Slot conflict resolution with Surgical Priority
+        return self.resolve_slot_conflict(
+            appointment_id=f"APX-{random.randint(1000, 9999)}",
+            requesting_priority=PriorityLevel.GENERAL_CONSULTATION,
+            session=session
         )
+
+    def resolve_slot_conflict(
+        self,
+        appointment_id: str,
+        requesting_priority: PriorityLevel = PriorityLevel.GENERAL_CONSULTATION,
+        session: Optional[PatientSession] = None
+    ) -> CommandResult:
+        """Executes Surgical Priority Resolution:
+        - OPERATION_SURGERY / SURGICAL_PRIORITY supersedes GENERAL_CONSULTATION.
+        - Generates 6-character check-in code (APX-XXXX) and 10-min UPI micro-hold deposit.
+        """
+        code = appointment_id if appointment_id.startswith("APX-") else f"APX-{random.randint(1000, 9999)}"
+        if session:
+            session.check_in_code = code
+
+        hold_record = self.deposit_engine.create_hold(code, amount=200)
+
+        if requesting_priority == PriorityLevel.SURGICAL_PRIORITY:
+            msg = (
+                f"🚨 *SURGICAL PRIORITY SLOT LOCKED*:\n"
+                f"• Check-In Code: **{code}**\n"
+                f"• Clinical Priority: SURGICAL PRIORITY (Supersedes General Consult)\n"
+                f"• Micro-Deposit Required: ₹{hold_record.deposit_amount_inr}\n"
+                f"💳 UPI Link: {hold_record.upi_payment_link}\n"
+                f"⏰ Expires in 10 minutes (at {hold_record.expires_at[:19]})."
+            )
+        else:
+            msg = (
+                f"✅ *LIVE CONSULTATION SLOT LOCKED*:\n"
+                f"• Doctor: Dr. Chinmay Hudedamani\n"
+                f"• Slot: Tomorrow at 10:30 AM\n"
+                f"• Check-In Code: **{code}**\n\n"
+                f"⚠️ *SLOT HOLD REQUIRED*: Micro-deposit of ₹{hold_record.deposit_amount_inr} "
+                f"is required to confirm.\n"
+                f"💳 Pay via UPI: {hold_record.upi_payment_link}\n"
+                f"⏰ Hold expires in 10 minutes."
+            )
 
         return CommandResult(
             success=True,
             message=msg,
             action_type=ActionType.TRANSACTIONAL,
-            payload={"check_in_code": check_in_code, "deposit": deposit_payload}
+            payload={
+                "check_in_code": code,
+                "priority": requesting_priority.value,
+                "hold_record": hold_record
+            }
         )
 
     def _handle_reschedule(self, session: PatientSession, option_text: str) -> CommandResult:
@@ -81,13 +150,21 @@ class Tier2Strategy(Tier1Strategy):
 
     def _handle_emergency_triage(self, session: PatientSession, option_text: str) -> CommandResult:
         msg = (
-            "🚨 *PRIORITY EMERGENCY TRIAGE*:\n"
-            "If you are experiencing acute pain or swelling, our Surgical Priority Engine has reserved an emergency slot at 11:30 AM with Dr. Chinmay.\n"
+            "🚨 *24/7 EMERGENCY TRIAGE*\n"
+            "If you are experiencing acute pain or bleeding, our Surgical Priority Engine has unblocked an immediate emergency slot.\n"
             "Call +919876543210 to confirm immediate arrival!"
         )
         return CommandResult(
             success=True,
             message=msg,
             action_type=ActionType.EMERGENCY,
-            payload={"priority": PriorityLevel.SURGICAL_PRIORITY.value}
+            payload={"priority": PriorityLevel.ACUTE_EMERGENCY.value}
+        )
+
+    def _handle_exit(self, session: PatientSession, option_text: str) -> CommandResult:
+        session.is_active = False
+        return CommandResult(
+            success=True,
+            message="👋 Thank you for contacting APEX Dental. Session closed.",
+            action_type=ActionType.NAVIGATION
         )

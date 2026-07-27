@@ -31,6 +31,15 @@ class SessionContextManager:
         """Resolves tier strategy via $O(1)$ Factory Registry lookup."""
         return self._strategy_registry.get(tier, self._strategy_registry[SaaSPlanTier.TIER_1])
 
+    def set_tier(self, session: PatientSession, target_tier: SaaSPlanTier) -> SaaSPlanTier:
+        """Enables seamless live tier switching without losing session state or phone identification."""
+        session.active_tier = target_tier
+        self.telemetry.log_event("TIER_SWITCHED", session.session_id, {
+            "target_tier": target_tier.value,
+            "phone_number": session.phone_number
+        })
+        return session.active_tier
+
     def get_available_menu(self, session: PatientSession) -> List[str]:
         """Returns filtered available menu for the active session and tier."""
         strategy = self.get_strategy(session.active_tier)
