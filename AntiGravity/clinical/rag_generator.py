@@ -151,7 +151,42 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             "whatsapp_response": f"You're very welcome{name_greeting}! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
 
-    # 0c. Comprehensive Acceptance / Affirmative Keywords Handler (Sure, Why Not, Yeah, Sounds Good, Go Ahead, etc.)
+    # 0c. Health Concern Inquiry Handler
+    if any(kw in query_clean for kw in ["health concern", "health concerns", "health issue", "health issues", "health problem", "symptom", "symptoms", "dental concern"]):
+        return {
+            "whatsapp_response": (
+                f"What is your specific health concern or symptom{name_greeting} (such as toothache, bleeding gums, chipped tooth, or sensitivity)? 😊\n\n"
+                f"Would you like me to book a consultation slot with a specialist doctor in this field, or request a quick callback from our clinic reception desk?"
+            )
+        }
+
+    # 0d. Treatment Options List Handler
+    if any(kw in query_clean for kw in ["treatment options", "treatments", "check treatment options", "available treatments", "list of treatments", "treatment list", "services", "procedures"]):
+        return {
+            "whatsapp_response": (
+                f"Here is the list of modern dental treatments available at Apex Dental Center & Implant Institute{name_greeting}: 🦷\n\n"
+                f"1. 💎 Invisalign Clear Aligners (Orthodontics & Teeth Straightening)\n"
+                f"2. 🦷 3D Guided Dental Implants (Permanent Tooth Replacement)\n"
+                f"3. ⚡ Single-Visit Laser Root Canal Treatment (Painless RCT)\n"
+                f"4. ✨ Laser Teeth Whitening & Smile Makeovers\n"
+                f"5. 🛡️ Tooth Fillings & Cosmetic Bonding\n"
+                f"6. 🦷 Wisdom Tooth Extraction & Oral Surgery\n"
+                f"7. 🪥 Ultrasonic Scaling & Deep Teeth Cleaning\n\n"
+                f"Which treatment would you like more details or pricing on? Or would you like to check available consultation slots for tomorrow?"
+            )
+        }
+
+    # 0e. Clinic Reception Callback Handler
+    if any(kw in query_clean for kw in ["callback", "call me", "reception", "request callback", "call back", "receptionist"]):
+        return {
+            "whatsapp_response": (
+                f"Understood{name_greeting}! I have registered a priority callback request with our reception team at Apex Dental Center. 📞\n\n"
+                f"Our clinic receptionist will call your registered phone number shortly.\n\n"
+                f"Would you also like me to reserve a consultation slot for you tomorrow with Dr. Chinmay Hudedamani?"
+            )
+        }
+
+    # 0f. Comprehensive Acceptance / Affirmative Keywords Handler (Sure, Why Not, Yeah, Sounds Good, Go Ahead, etc.)
     acceptance_keywords = [
         "sure", "why not", "yeah", "yep", "yup", "definitely", "absolutely", "of course", "ok", "okay",
         "fine", "alright", "sounds good", "sounds great", "book it", "go ahead", "yes please", "please do",

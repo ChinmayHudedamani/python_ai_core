@@ -1,42 +1,42 @@
 {
   "STRATEGY_INFORM_PRICE_EMI": {
-    "price_query": 0.9104,
-    "doctor_query": 0.9004,
-    "timing_query": 0.9717,
+    "price_query": 0.9996,
+    "doctor_query": 0.972,
+    "timing_query": 0.9993,
     "missing_name": 0.2,
     "missing_phone": 0.2,
-    "default": 0.9004
+    "default": 0.9302
   },
   "STRATEGY_HIGHLIGHT_DOCTOR": {
-    "price_query": 0.9412,
-    "doctor_query": 0.9004,
-    "timing_query": 0.8627,
+    "price_query": 0.9996,
+    "doctor_query": 0.9996,
+    "timing_query": 0.9468,
     "missing_name": 0.2,
     "missing_phone": 0.2,
-    "default": 0.9009
+    "default": 0.9233
   },
   "STRATEGY_CHECK_TIMING": {
-    "price_query": 0.9281,
-    "doctor_query": 0.8932,
+    "price_query": 0.9996,
+    "doctor_query": 0.9855,
     "timing_query": 0.9996,
     "missing_name": 0.2,
     "missing_phone": 0.2,
-    "default": 0.9004
+    "default": 0.9149
   },
   "STRATEGY_COLLECT_NAME": {
-    "price_query": 0.9199,
-    "doctor_query": 0.8925,
-    "timing_query": 0.9189,
+    "price_query": 0.9996,
+    "doctor_query": 0.9932,
+    "timing_query": 0.9814,
     "missing_name": 0.9,
     "missing_phone": 0.2,
-    "default": 0.9004
+    "default": 0.9996
   },
   "STRATEGY_COLLECT_PHONE": {
     "price_query": 0.9996,
-    "doctor_query": 0.8844,
-    "timing_query": 0.9343,
+    "doctor_query": 0.9807,
+    "timing_query": 0.9745,
     "missing_name": 0.2,
     "missing_phone": 0.9,
-    "default": 0.9004
+    "default": 0.938
   }
 }

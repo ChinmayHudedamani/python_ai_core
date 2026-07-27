@@ -55,8 +55,25 @@ class CentaurCoreEngine:
         # Name Provided Step: When patient responds with their name
         has_pending_link = sender_phone in self._pending_payment_links or sender_phone in self._verified_patients
         has_name_kw = any(w in clean_msg for w in ["my name is", "i am", "this is", "name:"])
-        is_generic_word = clean_msg in ["hi", "hello", "hey", "hi mai", "hello mai", "good morning", "good afternoon", "good evening", "namaste", "hi there", "hello there", "help", "1", "yes", "confirm", "confirm booking", "book slot", "paid", "payment done", "done", "appointments", "financial update", "something", "info", "details"]
-        is_name_only = not phone_match and not is_generic_word and not re.search(r"\d", raw_notes) and (has_name_kw or (len(raw_notes.split()) in [1, 2, 3] and all(w.isalpha() for w in raw_notes.split() if w)))
+
+        # Clinical Inquiry Terms that MUST NEVER be interpreted as patient names
+        inquiry_kws = [
+            "health concern", "health concerns", "health issue", "treatment options", "check treatment options",
+            "treatments", "treatment", "price", "pricing", "cost", "rates", "doctor", "dentist", "specialist",
+            "symptom", "symptoms", "concern", "concerns", "option", "options", "callback", "reception", "call me",
+            "appointment", "appointments", "slot", "slots", "schedule", "timing", "timings", "hi", "hello", "hey",
+            "good morning", "good afternoon", "good evening", "1", "yes", "confirm", "paid", "done", "financial",
+            "services", "procedures", "invisalign", "implants", "root canal", "rct", "whitening", "cleaning",
+            "something", "anything", "everything", "nothing", "details", "info", "information", "help", "support",
+            "query", "question", "questions"
+        ]
+        is_inquiry_or_intent = any(
+            clean_msg == kw or clean_msg.startswith(kw + " ") or clean_msg.endswith(" " + kw) or f" {kw} " in f" {clean_msg} "
+            for kw in inquiry_kws
+        )
+
+        # Patient Name is ONLY extracted if stored_name is empty AND msg is not a clinical query
+        is_name_only = not phone_match and not stored_name and not is_inquiry_or_intent and not re.search(r"\d", raw_notes) and (has_name_kw or (len(raw_notes.split()) in [1, 2, 3] and all(w.isalpha() for w in raw_notes.split() if w)))
 
         if is_name_only:
             extracted_name = raw_notes.strip().title()
@@ -80,7 +97,7 @@ class CentaurCoreEngine:
         dummy_num_match = re.search(r"\b([0-5]\d{9}|(\d)\2{9}|1234567890)\b", raw_notes)
         is_time_expression = any(w in clean_msg.split() for w in ["tm", "tmrw", "tomorrow", "today", "morning", "afternoon", "evening", "am", "pm", "slot", "slots", "baje"]) or bool(re.search(r"\b(1[0-2]|[1-9])(?::[0-5]\d|\s+[0-5]\d)?\s*(am|pm|tm|tomorrow)?\b", clean_msg))
 
-        if not phone_match and not is_generic_word and not is_time_expression and (short_num_match or dummy_num_match):
+        if not phone_match and not is_inquiry_or_intent and not is_time_expression and (short_num_match or dummy_num_match):
             invalid_digits = (short_num_match or dummy_num_match).group(0)
             return {
                 "status": "INVALID_PHONE_NUMBER",
