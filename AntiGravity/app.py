@@ -1,8 +1,10 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX Dental Center AI Concierge — Yelahanka Node v0.2 (TrueLark MIDGO Architecture)
+# APEX Dental Center AI Concierge — Yelahanka Node v0.2
+# Architecture: TrueLark MIDGO + Deterministic FSG Bounded Branching (M1 - M5 Macro-States)
 
 import os
 import json
+import random
 import streamlit as st
 from dotenv import load_dotenv
 from google import genai
@@ -11,13 +13,14 @@ from pydantic import BaseModel, Field
 
 from app.core.config import settings
 
+# Load Environment Variables
 load_dotenv()
 
 # ==========================================
 # 1. PAGE CONFIGURATION & STYLING
 # ==========================================
 st.set_page_config(
-    page_title="Apex Dental Yelahanka — AI Concierge v0.2",
+    page_title="Apex Dental Yelahanka Node v0.2 — AI Concierge",
     page_icon="🦷",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -26,8 +29,8 @@ st.set_page_config(
 st.markdown("""
     <style>
     .stChatFloatingInputContainer {bottom: 20px;}
-    .quick-btn-container {margin-bottom: 15px;}
     .metric-card {background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;}
+    .state-badge {background-color: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-weight: bold;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -61,9 +64,9 @@ class MIDGODentalResponse(BaseModel):
 # ==========================================
 class GeminiMIDGOClient:
     def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY") or settings.GEMINI_API_KEY
+        api_key = os.getenv("GEMINI_API_KEY") or getattr(settings, "GEMINI_API_KEY", None)
         self.client = genai.Client(api_key=api_key)
-        self.model = os.getenv("DEFAULT_LLM_MODEL") or settings.DEFAULT_LLM_MODEL or "gemini-2.5-flash"
+        self.model = os.getenv("DEFAULT_LLM_MODEL") or getattr(settings, "DEFAULT_LLM_MODEL", "gemini-2.5-flash")
 
     def process_turn(self, system_prompt: str, user_message: str) -> MIDGODentalResponse:
         try:
@@ -87,15 +90,37 @@ class GeminiMIDGOClient:
             )
 
 # ==========================================
-# 4. SESSION & STATE ENGINE
+# 4. DETERMINISTIC FINITE STATE GRAPH (FSG) M1 - M5
 # ==========================================
+MACRO_STATES = {
+    "M1_INTAKE": "M1: Patient Intake & Symptom Triage",
+    "M2_FAQ_DETOUR": "M2: Tangent / FAQ Inquiry Resolution",
+    "M3_IDENTIFICATION": "M3: Patient Name Collection",
+    "M4_SLOT_SELECTION": "M4: Slot Selection & Availability",
+    "M5_BOOKING_CONFIRMED": "M5: Appointment Locked (APX Code Generated)"
+}
+
+def update_macro_state(db: dict) -> str:
+    """Computes the current Finite State Graph (FSG) Macro-State."""
+    if db["slot_confirmed"]:
+        return "M5_BOOKING_CONFIRMED"
+    elif db["name"] and db["symptom"]:
+        return "M4_SLOT_SELECTION"
+    elif db["symptom"] and not db["name"]:
+        return "M3_IDENTIFICATION"
+    else:
+        return "M1_INTAKE"
+
+# Initialize Session Memory
 if "session_db" not in st.session_state:
     st.session_state.session_db = {
+        "macro_state": "M1_INTAKE",
         "name": "",
         "symptom": "",
         "node_location": "Yelahanka Node v0.2",
         "slot_confirmed": False,
-        "confirmed_slot": None
+        "confirmed_slot": None,
+        "check_in_code": None
     }
 
 if "messages" not in st.session_state:
@@ -109,16 +134,22 @@ if "messages" not in st.session_state:
     }]
 
 # ==========================================
-# 5. SIDEBAR: LIVE TELEMETRY & STATE INSPECTOR
+# 5. SIDEBAR: LIVE TELEMETRY & FSG STATE INSPECTOR
 # ==========================================
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/dental-braces.png", width=64)
     st.title("Apex AI Ops Hub")
     st.caption("Yelahanka Node v0.2 | TrueLark MIDGO Architecture")
     st.markdown("---")
-    st.subheader("🔍 Live MIDGO State DB")
     
-    # Real-time inspection of backend memory
+    # Current Macro-State Badge
+    current_macro = update_macro_state(st.session_state.session_db)
+    st.session_state.session_db["macro_state"] = current_macro
+    st.markdown(f"**Active FSG State:** <span class='state-badge'>{current_macro}</span>", unsafe_allow_html=True)
+    st.caption(MACRO_STATES[current_macro])
+    
+    st.markdown("---")
+    st.subheader("🔍 Live MIDGO Memory DB")
     st.json(st.session_state.session_db)
     
     st.markdown("---")
@@ -126,16 +157,19 @@ with st.sidebar:
     st.write("• **Branch**: Yelahanka 5th Phase")
     st.write("• **Landmark**: Major Sandeep Unnikrishnan Rd")
     st.write("• **Valet Parking**: Available (Free Basement)")
-    st.write("• **Head Surgeon**: Dr. Chinmay Hudedamani")
+    st.write("• **Head Surgeon**: Dr. Chinmay Hudedamani (MDS)")
+    st.write("• **Hours**: Mon-Sat 09:00 AM - 08:30 PM | Sun 10:00 AM - 02:00 PM")
 
     st.markdown("---")
     if st.button("🔄 Reset Patient Session"):
         st.session_state.session_db = {
+            "macro_state": "M1_INTAKE",
             "name": "",
             "symptom": "",
             "node_location": "Yelahanka Node v0.2",
             "slot_confirmed": False,
-            "confirmed_slot": None
+            "confirmed_slot": None,
+            "check_in_code": None
         }
         st.session_state.messages = [{
             "role": "assistant",
@@ -147,7 +181,7 @@ with st.sidebar:
 # 6. MAIN CHAT INTERFACE & MIDGO EXECUTION
 # ==========================================
 st.title("🦷 Apex Dental Center — Yelahanka Node v0.2")
-st.caption("Powered by Gemini 2.5 Flash & TrueLark MIDGO Framework")
+st.caption("Powered by Gemini 2.5 Flash & TrueLark MIDGO FSG Engine")
 
 # Render chat history
 for msg in st.session_state.messages:
@@ -180,19 +214,20 @@ chat_text = st.chat_input("Type your message here...")
 user_input = selected_faq or chat_text
 
 if user_input:
-    # Append user message
     st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user", avatar="👤"):
         st.markdown(user_input)
 
-    # Build system prompt with current state injection & Yelahanka Node Rules
     current_state = st.session_state.session_db
+    
+    # Build System Instruction with Active FSG Macro-State Injection
     system_prompt = f"""
     You are 'Apex Assistant', the highly empathetic AI receptionist at Apex Dental Center & Implant Institute, Yelahanka Node v0.2. 
     Your ultimate goal is to triage the symptom, gather the patient's name, and book an appointment slot. 
     Never give up on this goal, but never sound mechanical or pushy.
 
-    CURRENT SYSTEM KNOWLEDGE OF THIS PATIENT:
+    CURRENT FINITE STATE GRAPH (FSG) MACRO-STATE: {current_state['macro_state']}
+    CURRENT PATIENT MEMORY:
     - Name: "{current_state['name'] or 'Unknown'}"
     - Symptom/Reason: "{current_state['symptom'] or 'Unknown'}"
     - Slot Confirmed: {current_state['slot_confirmed']}
@@ -211,31 +246,41 @@ if user_input:
     4. Keep your `patient_reply` concise (under 3 sentences) so it reads well.
     """
 
-    # Process through Gemini MIDGO Client
     try:
         ai_client = GeminiMIDGOClient()
         result: MIDGODentalResponse = ai_client.process_turn(system_prompt, user_input)
 
-        # Silent Backend State Synchronization
-        if result.extracted_name:
+        # Silent Backend State Extraction & Synchronization
+        if result.extracted_name and result.extracted_name.lower() not in ["unknown", "none"]:
             current_state["name"] = result.extracted_name
-        if result.extracted_symptom_or_reason:
+        if result.extracted_symptom_or_reason and result.extracted_symptom_or_reason.lower() not in ["unknown", "none"]:
             current_state["symptom"] = result.extracted_symptom_or_reason
 
         reply_text = result.patient_reply
 
-        # Handle slot selection flow if core data is present
+        # Handle FSG State Transitions for Slot Selection & Lock
         if current_state["name"] and current_state["symptom"] and not current_state["slot_confirmed"]:
-            if "10:30" in user_input or "2:00" in user_input or "4:30" in user_input or "yes" in user_input.lower():
+            if any(t in user_input.lower() for t in ["10:30", "2:00", "4:30", "yes", "sure", "confirm", "10", "2", "4"]):
+                code_num = random.randint(1000, 9999)
+                check_in_code = f"APX-{code_num}"
                 current_state["slot_confirmed"] = True
                 current_state["confirmed_slot"] = user_input
-                reply_text = f"✅ Fantastic! Your appointment is locked in for {user_input} with Dr. Chinmay Hudedamani. Check-in code is APX-4928. We'll see you at Yelahanka Node!"
+                current_state["check_in_code"] = check_in_code
+                reply_text = (
+                    f"✅ Fantastic, {current_state['name']}! Your appointment is locked in for {user_input} "
+                    f"with Dr. Chinmay Hudedamani at Yelahanka Node v0.2. "
+                    f"Your check-in code is **{check_in_code}**. We look forward to seeing you!"
+                )
             else:
-                reply_text += " We have available consultation slots tomorrow at Yelahanka with Dr. Chinmay Hudedamani: • 10:30 AM • 02:00 PM • 04:30 PM. Which works best?"
+                reply_text += (
+                    f" We have open consultation slots tomorrow at Yelahanka Node for {current_state['name']}: "
+                    "• 10:30 AM • 02:00 PM • 04:30 PM. Which time works best for you?"
+                )
 
+        # Update Final FSG State after processing
+        current_state["macro_state"] = update_macro_state(current_state)
         st.session_state.session_db = current_state
 
-        # Display Assistant Response
         with st.chat_message("assistant", avatar="🤖"):
             st.markdown(reply_text)
         
