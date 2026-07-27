@@ -4,11 +4,12 @@
 import os
 import logging
 import phonenumbers
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.tools import PatientToolsRegistry
 from app.services.admin_tools import AdminToolsRegistry
+from app.services.llm_client import GeminiClientWrapper
 
 logger = logging.getLogger("APEX_AI_RBAC_ROUTER")
 
@@ -80,3 +81,25 @@ async def dispatch_tool_execution(
         }
 
     return await bound_registry.execute(name=tool_name, db=db, kwargs=kwargs)
+
+
+async def process_user_message_with_gemini(
+    inbound_phone: str,
+    user_message: str,
+    db: Optional[AsyncSession] = None
+) -> Dict[str, Any]:
+    """Routes message to bound system persona and invokes Gemini 2.5 Flash SDK generation."""
+    system_prompt, _, role = get_agent_context(inbound_phone)
+    client = GeminiClientWrapper()
+
+    reply_text = await client.generate_response(
+        system_prompt=system_prompt,
+        user_message=user_message
+    )
+
+    return {
+        "role": role,
+        "phone": inbound_phone,
+        "response": reply_text,
+        "model": client.model
+    }
