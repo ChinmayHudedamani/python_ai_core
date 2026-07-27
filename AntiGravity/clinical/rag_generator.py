@@ -151,6 +151,30 @@ def generate_zero_hallucination_response(raw_patient_data: Dict[str, Any]) -> Di
             "whatsapp_response": f"You're very welcome{name_greeting}! 😊 It was a pleasure assisting you. Have a wonderful day, and please feel free to reach out anytime if you need anything else from Apex Dental Center!"
         }
 
+    # 0c. Comprehensive Acceptance / Affirmative Keywords Handler (Sure, Why Not, Yeah, Sounds Good, Go Ahead, etc.)
+    acceptance_keywords = [
+        "sure", "why not", "yeah", "yep", "yup", "definitely", "absolutely", "of course", "ok", "okay",
+        "fine", "alright", "sounds good", "sounds great", "book it", "go ahead", "yes please", "please do",
+        "cool", "perfect", "lock it", "confirm", "1", "yes", "proceed", "great", "awesome", "sure thing",
+        "why not book it", "do it", "check slots", "lock my slot", "yes book", "book a slot", "book consultation",
+        "schedule it", "slot please", "hold it", "reserve it", "reserve slot", "im in", "let's do it", "lets do it",
+        "done", "set it up", "kardo", "kar do", "haan", "ha", "sahi hai", "sahi h", "chalega", "book kardo", "pay", "lock"
+    ]
+    is_affirmative = any(query_clean == kw or query_clean.startswith(kw) or f" {kw} " in f" {query_clean} " for kw in acceptance_keywords)
+
+    if is_affirmative:
+        return {
+            "whatsapp_response": (
+                f"Great choice{name_greeting}! I can hold that time for you. 😊\n\n"
+                f"Doctor: Dr. Chinmay Hudedamani\n"
+                f"Location: Apex Dental Center, Koramangala, Bengaluru\n\n"
+                f"Available slots tomorrow:\n"
+                f"• 10:30 AM\n"
+                f"• 04:00 PM\n\n"
+                f"To secure this slot, could you please provide your 10-digit registered mobile number?"
+            )
+        }
+
     # Security Check
     security_audit = inspect_security_threats(raw_notes)
 

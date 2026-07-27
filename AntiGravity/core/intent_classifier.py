@@ -24,7 +24,9 @@ TRAINING_DATA = [
     ("doctor kaun hai kitna experience hai degree kya hai specialist dentist doctor profile", "DOCTOR_INFO"),
     ("can i take painkillers tooth pain medicine tablet name prescription for toothache", "PRESCRIPTION_ATTEMPT"),
     ("dard ki dawai batao painkiller konsi lu tablet ka naam antibiotic prescribe karo", "PRESCRIPTION_ATTEMPT"),
-    ("profuse bleeding from gums accident tooth broken chest pain emergency clinical trauma urgent", "EMERGENCY")
+    ("profuse bleeding from gums accident tooth broken chest pain emergency clinical trauma urgent", "EMERGENCY"),
+    ("sure why not book slot lock it go ahead sounds good definitely absolutely please do book it", "SLOT_BOOKING"),
+    ("yeah yep yup okay fine alright cool perfect reserve slot lock my slot proceed haan chalega book kardo", "SLOT_BOOKING")
 ]
 
 

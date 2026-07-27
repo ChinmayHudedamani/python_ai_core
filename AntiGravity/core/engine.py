@@ -147,9 +147,18 @@ class CentaurCoreEngine:
 
         has_pending = sender_phone in self._pending_payment_links or patient_phone in self._pending_payment_links
 
-        # 0a. Check Payment Confirmation ("paid", "1", "yes", "done", "confirm") when payment link is pending OR msg is explicit paid
+        # 0a. Check Payment Confirmation & Acceptance Keywords
+        acceptance_kws = [
+            "1", "yes", "confirm", "confirm booking", "book slot", "book a slot", "book appointment", "book consultation",
+            "sure", "why not", "yeah", "yep", "yup", "definitely", "absolutely", "of course", "ok", "okay", "fine", "alright",
+            "sounds good", "sounds great", "book it", "go ahead", "yes please", "please do", "cool", "perfect", "lock it",
+            "lock my slot", "lock slot", "proceed", "great", "awesome", "sure thing", "why not book it", "do it", "check slots",
+            "schedule it", "slot please", "hold it", "reserve it", "reserve slot", "im in", "let's do it", "lets do it", "done",
+            "set it up", "kardo", "kar do", "haan", "ha", "sahi hai", "sahi h", "chalega", "book kardo", "pay", "lock"
+        ]
         is_paid_msg = clean_msg in ["paid", "payment done", "payment completed", "done", "txn"]
-        is_confirm_when_pending = has_pending and clean_msg in ["1", "yes", "confirm", "confirm booking", "lock", "pay"]
+        is_acceptance_msg = any(clean_msg == kw or clean_msg.startswith(kw) or f" {kw} " in f" {clean_msg} " for kw in acceptance_kws)
+        is_confirm_when_pending = has_pending and (is_paid_msg or is_acceptance_msg)
 
         if is_paid_msg or is_confirm_when_pending:
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
@@ -208,8 +217,19 @@ class CentaurCoreEngine:
                 "ledger_result": ledger_res
             }
 
-        # 0b. Check Initial Booking Request ("1", "yes", "confirm", "book slot")
-        if clean_msg in ["1", "yes", "confirm", "confirm booking", "book slot"]:
+        # 0b. Check Initial Booking / Acceptance Request ("sure", "why not", "book slot", "1", "yeah", "10 30 tm")
+        if is_acceptance_msg or is_time_expression:
+            is_phone_known = (patient_phone != "+91-9988776655" and len(re.sub(r"\D", "", patient_phone)) >= 10 and sender_phone in self._verified_patients)
+            if not is_phone_known and not phone_match:
+                return {
+                    "status": "ACCEPTANCE_MOBILE_REQUIRED",
+                    "exec_ms": round((time.time() - start_ts) * 1000, 2),
+                    "whatsapp_response": (
+                        f"Great choice! I can hold that time slot for you with Dr. Chinmay Hudedamani at Apex Dental Center. 😊\n\n"
+                        f"Please reply with your 10-digit registered mobile number (e.g., '{patient_name} - 7338350871' or '7338350871') so we can issue your appointment OTP & booking details!"
+                    )
+                }
+
             slot_id, is_locked, lock_msg = self.lock_mgr.reserve_slot(patient_phone, "GENERAL", 10, 0)
             if not is_locked:
                 return {
@@ -221,7 +241,10 @@ class CentaurCoreEngine:
             self._pending_payment_links.add(sender_phone)
             self._pending_payment_links.add(patient_phone)
             pay_reply = (
-                f"To confirm your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
+                f"Thank you! Booking registered for:\n"
+                f"👤 Patient Name: {patient_name}\n"
+                f"📞 Contact Phone: {patient_phone}\n\n"
+                f"To lock your consultation with Dr. Chinmay Hudedamani, please complete the ₹500 consultation fee payment using the secure link below:\n\n"
                 f"💳 Payment Link: {pay_url}\n"
                 f"📌 Consultation Fee: ₹500 (Includes intraoral examination & 3D scan planning)\n"
                 f"⌛ Slot Reference: {slot_id} (Held for 10 minutes)\n\n"
