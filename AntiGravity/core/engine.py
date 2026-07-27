@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Dr. Chinmay Hudedamani. All Rights Reserved.
-# APEX AI / Centaur OS - Proprietary Core Clinical AI Engine.
+# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
+# APEX AI / Centaur OS - Proprietary Core Clinical AI Engine created by Chinmay Hudedamani.
 
 import os
 import time

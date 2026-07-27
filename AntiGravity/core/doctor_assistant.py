@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
+# APEX AI / Centaur OS - Executive Dashboard created by Chinmay Hudedamani.
+
 import os
 import sys
 import datetime
@@ -147,9 +150,9 @@ def process_doctor_executive_query(query_text: str, doctor_phone: str = "+91-733
 
     # 5. Default Executive Greeting / Overview
     response = (
-        f"👨‍⚕️ *WELCOME DR. CHINMAY HUDEDAMANI!*\n"
+        f"👨‍💻 *WELCOME CHINMAY HUDEDAMANI (CREATOR & PATENT OWNER)!*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"I am your Centaur OS AI Executive Assistant.\n\n"
+        f"I am your Centaur OS / APEX AI Executive Assistant.\n\n"
         f"📊 *LIVE CLINIC STATS OVERVIEW:*\n"
         f"• 👥 Total Booked Patients: *{total_count}*\n"
         f"• 💳 Total Revenue Collected: *₹{total_revenue:,}*\n"
@@ -157,6 +160,7 @@ def process_doctor_executive_query(query_text: str, doctor_phone: str = "+91-733
         f"💡 *Commands you can ask me:* \n"
         f"• Type *'financial update'* — for revenue & bank credit statement.\n"
         f"• Type *'appointments'* — for today's patient schedule.\n"
+        f"• Type *'how many patients has the bot conversed with'* — for conversed leads.\n"
         f"• Type *'send report'* — to generate and send PDF summary.\n"
         f"• Type *'search [name/phone]'* — to lookup patient records."
     )

@@ -1,5 +1,5 @@
-# Copyright (c) 2026 Dr. Chinmay Hudedamani. All Rights Reserved.
-# APEX AI - Proprietary Clinical AI Assistant & Automated RAG Engine.
+# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
+# APEX AI - Proprietary Clinical AI Assistant & Automated RAG Engine created by Chinmay Hudedamani.
 
 import json
 import os

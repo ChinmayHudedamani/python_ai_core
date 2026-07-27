@@ -13,17 +13,18 @@ def dispatch_demo_links(doctor_phone: str = "+91-7338350871") -> dict:
     wa_engine = MetaWhatsAppCloudEngine()
 
     demo_msg = (
-        "👨‍⚕️ *CENTAUR OS — DEMO LINKS & DOCTOR ASSISTANT DASHBOARD*\n"
+        "👨‍💻 *APEX AI / CENTAUR OS — DEMO LINKS & EXECUTIVE DASHBOARD*\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "Hello Dr. Chinmay! Your Centaur OS AI System is 100% ready for clinical demo.\n\n"
+        "Hello Chinmay (Creator & Patent Owner)! Your APEX AI System is 100% ready for clinical demo.\n\n"
         "📱 *Patient WhatsApp Interactive Web Simulator:*\n"
         "• Production Cloud: https://centaur-bot.onrender.com/demo\n"
         "• Local Server: http://127.0.0.1:5000/demo\n\n"
-        "👨‍⚕️ *Doctor AI Assistant WhatsApp Commands (Reply directly to this chat):*\n"
+        "👨‍💻 *Executive WhatsApp Commands (Reply directly to this chat):*\n"
         "1. Type *'financial update'* — View revenue & bank credit status.\n"
         "2. Type *'appointments'* — View today's patient schedule.\n"
         "3. Type *'how many patients has the bot conversed with'* — View live conversed leads.\n"
         "4. Type *'send report'* — Receive daily PDF ledger report.\n\n"
+        "🔒 *Intellectual Property:* Patent & Created by Chinmay Hudedamani\n"
         "🔒 *System Status:* Neon PostgreSQL Synced | 1,000 RL Benchmark 100% Passed"
     )
 
