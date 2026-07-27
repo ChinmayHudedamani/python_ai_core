@@ -1,81 +1,104 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
 # APEX AI / Copus AI — Tier 3 Enterprise Strategy Handler
 
+import secrets
 import random
-from typing import Dict, Callable
+from typing import List, Set, Dict, Callable, Final
 
-from app.services.session.models import PatientSession, CommandResult, ActionType, PriorityLevel, ProcedureType
-from app.services.session.tier2_strategy import Tier2Strategy
+from app.services.session.models import PatientSession, CommandResult, ActionType, PriorityLevel
+from app.services.session.base_strategy import AbstractTierStrategy
 from app.services.tier_config import SaaSPlanTier
-from app.services.care_card_service import send_post_care_card
+from app.services.care_card_service import CareCardService, ProcedureCategory
 
 
-class Tier3Strategy(Tier2Strategy):
-    """Tier 3 Enterprise Strategy: Apollo/Fortis-Grade Concierge with Pre-Triage, TPA Desk, & Branch Routing."""
+class Tier3Strategy(AbstractTierStrategy):
+    """Tier 3 Enterprise Strategy: Apollo/Fortis-Grade Concierge with Multi-Branch, Pre-Triage, & TPA Desk."""
 
-    def __init__(self):
-        super().__init__()
-        self.tier = SaaSPlanTier.TIER_3
+    MASTER_MENU: Final[List[str]] = [
+        "🏥 1. Select Clinic Branch & Specialist",
+        "🩺 2. Guided Clinical Pre-Triage",
+        "💳 3. Cashless TPA Insurance Desk",
+        "📋 4. Post-Care & Recall Rules",
+        "📅 5. Interactive Slot Booking (Priority Engine)",
+        "⭐ 6. Reviews & Feedback",
+        "❌ 7. Exit Session",
+    ]
+
+    INFORMATIONAL_OPTIONS: Final[Set[str]] = {
+        "🏥 1. Select Clinic Branch & Specialist",
+        "💳 3. Cashless TPA Insurance Desk",
+        "📋 4. Post-Care & Recall Rules",
+        "⭐ 6. Reviews & Feedback",
+    }
+
+    def __init__(self) -> None:
+        super().__init__(SaaSPlanTier.TIER_3)
 
     def _build_dispatcher_map(self) -> Dict[str, Callable[[PatientSession, str], CommandResult]]:
+        """Polymorphic Dispatcher Map providing $O(1)$ constant-time lookup execution."""
         return {
             "🏥 1. Select Clinic Branch & Specialist": self._handle_branch_specialist,
             "🩺 2. Guided Clinical Pre-Triage": self._handle_pre_triage,
-            "💳 3. Cashless TPA Insurance Desk": self._handle_tpa_insurance,
+            "💳 3. Cashless TPA Insurance Desk": self._handle_tpa_desk,
             "📋 4. Post-Care & Recall Rules": self._handle_post_care,
-            "📅 5. Interactive Slot Booking (Priority Engine)": self._handle_enterprise_booking,
-            "⭐ 6. Reviews & Feedback": self._handle_reviews_enterprise,
-            "❌ 7. Exit Session": self._handle_exit_enterprise
+            "📅 5. Interactive Slot Booking (Priority Engine)": self._handle_booking,
+            "⭐ 6. Reviews & Feedback": self._handle_reviews,
+            "❌ 7. Exit Session": self._handle_exit,
         }
 
-    # --- Dispatcher Handler Overrides ---
+    def get_menu(self, session: PatientSession) -> List[str]:
+        return [item for item in self.MASTER_MENU if item not in session.hidden_options]
+
+    def get_available_menu(self, session: PatientSession) -> List[str]:
+        return self.get_menu(session)
+
+    def process_selection(self, session: PatientSession, option_text: str) -> CommandResult:
+        return self.process_option(session, option_text)
+
+    # --- Choice Dispatch Handlers ---
 
     def _handle_branch_specialist(self, session: PatientSession, option_text: str) -> CommandResult:
-        msg = (
-            "🏥 *MULTI-BRANCH & SPECIALIST ROUTER*:\n"
-            "• Active Branch: Yelahanka Node v0.2 (5th Phase)\n"
-            "• Lead Surgeon: Dr. Chinmay Hudedamani (MDS, Oral Surgery & Implants)\n"
-            "• Alternate Branch: Koramangala Main Branch (80 Feet Road)\n\n"
-            "Select specialty: 1. Implantology | 2. Micro-RCT | 3. Clear Aligners"
+        body = (
+            "🏥 *APEX Network Locations & Specialists*:\n"
+            "1. **Yelahanka Main Branch**: Dr. Chinmay Hudedamani (Maxillofacial Surgeon)\n"
+            "2. **Koramangala Node**: Dr. Ananya Sharma (Orthodontist & Aligner Specialist)\n"
+            "3. **Indiranagar Branch**: Dr. Rajesh V. (Pediatric Dentist)"
         )
-        return CommandResult(
-            success=True,
-            message=msg,
-            action_type=ActionType.TRANSACTIONAL,
-            payload={"branches": ["Yelahanka Node v0.2", "Koramangala Main Branch"]}
-        )
+        return self._handle_informational_option(session, option_text, body)
 
     def _handle_pre_triage(self, session: PatientSession, option_text: str) -> CommandResult:
         code_num = random.randint(1000, 9999)
         code = f"APX-EMERGENCY-{code_num}"
         session.check_in_code = code
 
-        msg = (
-            "🩺 *GUIDED CLINICAL PRE-TRIAGE tree*:\n"
-            "• Symptom Severity: Acute Pain / Facial Swelling detected\n"
-            "• Clinical Priority: LEVEL-1 SURGICAL PRIORITY\n"
-            "• Priority Check-In Code: **{code}**\n\n"
-            "🚨 Immediate priority slot unblocked at 11:30 AM with Dr. Chinmay!"
-        ).format(code=code)
-
+        triage_tree = (
+            "🩺 *Guided Clinical Triage*:\n"
+            "Please select the severity of your symptom:\n"
+            "1. 🚨 **Severe Pain / Facial Swelling / Trauma** (Auto-Issues Emergency Priority Code)\n"
+            "2. 🟠 **Moderate Toothache / Sensitivity** (Priority 24-48h Slot)\n"
+            "3. 🟢 **Cosmetic / Alignment Check** (Standard Evaluation Slot)\n\n"
+            f"Assigned Emergency Code: **{code}**"
+        )
         return CommandResult(
             success=True,
-            message=msg,
+            message=triage_tree,
             action_type=ActionType.EMERGENCY,
-            payload={"check_in_code": code, "priority": PriorityLevel.ACUTE_EMERGENCY.value}
+            payload={"flow": "PRE_TRIAGE_STEP_1", "check_in_code": code}
         )
 
-    def _handle_tpa_insurance(self, session: PatientSession, option_text: str) -> CommandResult:
+    def _handle_tpa_desk(self, session: PatientSession, option_text: str) -> CommandResult:
         body = (
-            "💳 *CASHLESS TPA INSURANCE DESK*:\n"
-            "• Empaneled Insurers: Star Health, HDFC ERGO, ICICI Lombard, Max Bupa\n"
-            "• Estimated Co-Pay: 0% to 15% for pre-approved surgeries\n"
-            "📸 *Please upload a clear photo of your Insurance Policy Card or Health ID.*"
+            "💳 *Cashless TPA Insurance Desk*:\n"
+            "Partner Insurers: **Star Health**, **HDFC ERGO**, **ICICI Lombard**, **Max Bupa**.\n\n"
+            "📄 *Pre-Approval Steps*:\n"
+            "1. Upload a clear photo of your Insurance Policy Card.\n"
+            "2. Our TPA desk estimates your co-pay (Avg: 70%–100% cashless coverage).\n"
+            "3. Pre-approval processed in 2–4 hours."
         )
         return self._handle_informational_option(session, option_text, body)
 
     def _handle_post_care(self, session: PatientSession, option_text: str) -> CommandResult:
-        care_card = send_post_care_card(session.phone_number, procedure_type="EXTRACTION")
+        care_card = CareCardService.generate_care_card(ProcedureCategory.EXTRACTION, patient_name=session.phone_number)
         session.hidden_options.add(option_text)
         return CommandResult(
             success=True,
@@ -83,20 +106,33 @@ class Tier3Strategy(Tier2Strategy):
             action_type=ActionType.INFORMATIONAL
         )
 
-    def _handle_enterprise_booking(self, session: PatientSession, option_text: str) -> CommandResult:
-        return self._handle_live_booking(session, option_text)
+    def _handle_booking(self, session: PatientSession, option_text: str) -> CommandResult:
+        code = f"APX-ENT-{secrets.token_hex(2).upper()}"
+        session.check_in_code = code
+        msg = (
+            f"📅 *Enterprise Slot Reservation Active*\n"
+            f"Surgical Priority Lock Engaged.\n"
+            f"Assigned Check-In Code: `{code}`"
+        )
+        return CommandResult(
+            success=True,
+            message=msg,
+            action_type=ActionType.TRANSACTIONAL,
+            payload={"check_in_code": code}
+        )
 
-    def _handle_reviews_enterprise(self, session: PatientSession, option_text: str) -> CommandResult:
+    def _handle_reviews(self, session: PatientSession, option_text: str) -> CommandResult:
         body = (
-            "⭐ *ENTERPRISE PATIENT VERIFIED REVIEWS*:\n"
-            "• 4.98 / 5.0 Star Rating across 2,400+ TPA & Surgical Patient Reviews"
+            "⭐ *Enterprise Network Reviews*:\n"
+            "Rated **4.95/5** across 2,000+ branch visits.\n"
+            "\"TPA insurance pre-approval was completely seamless!\" — Suresh M."
         )
         return self._handle_informational_option(session, option_text, body)
 
-    def _handle_exit_enterprise(self, session: PatientSession, option_text: str) -> CommandResult:
+    def _handle_exit(self, session: PatientSession, option_text: str) -> CommandResult:
         session.is_active = False
         return CommandResult(
             success=True,
-            message="👋 Thank you for contacting APEX Enterprise Concierge. Session closed.",
+            message="👋 Thank you for using APEX AI Enterprise Concierge.",
             action_type=ActionType.NAVIGATION
         )

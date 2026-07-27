@@ -1,75 +1,94 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# Copus AI / APEX AI — Post-Consultation Digital Care Card Generator
+# APEX AI / Copus AI — Post-Consultation Digital Care Card & Retention Recall Engine
 
-from typing import Dict, Any
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, Final, Optional
 
-CARE_GUIDELINES: Dict[str, Dict[str, Any]] = {
-    "EXTRACTION": {
-        "title": "🦷 Tooth Extraction Post-Op Care Card",
-        "dos": [
-            "Bite firmly on clean gauze for 45 minutes post-procedure.",
-            "Apply ice pack externally to cheek (15 mins on / 15 mins off).",
-            "Stick to soft, cold foods (ice cream, yogurt, cold soup) for 24 hours."
-        ],
-        "donts": [
-            "Do NOT spit, rinse vigorously, or use a drinking straw for 24 hours.",
-            "Do NOT consume hot beverages, alcohol, or smoke for 48 hours."
-        ]
-    },
-    "ROOT_CANAL": {
-        "title": "🔬 Microscopic Root Canal Care Card",
-        "dos": [
-            "Take prescribed anti-inflammatory medication as instructed by Dr. Chinmay.",
-            "Rinse gently with warm salt water 24 hours after treatment.",
-            "Chew on the opposite side until final permanent crown placement."
-        ],
-        "donts": [
-            "Do NOT chew hard objects (ice, hard candy) on the treated tooth.",
-            "Do NOT skip your final crown fitting appointment!"
-        ]
-    },
-    "ALIGNERS": {
-        "title": "✨ Clear Aligners Care Card",
-        "dos": [
-            "Wear aligners for 20-22 hours daily for optimal movement.",
-            "Clean aligners with lukewarm water and soft toothbrush daily.",
-            "Store aligners safely in protective case when eating."
-        ],
-        "donts": [
-            "Do NOT drink hot tea/coffee or sugary drinks with aligners in place.",
-            "Do NOT use harsh toothpaste or hot water to sanitize aligners."
-        ]
-    },
-    "GENERAL": {
-        "title": "🌿 General Dental Routine Care Card",
-        "dos": [
-            "Brush twice daily with fluoridated toothpaste.",
-            "Floss daily between all interdental spaces.",
-            "Schedule regular 6-month check-ups & professional cleaning."
-        ],
-        "donts": [
-            "Do NOT use teeth to open packages or bottle caps.",
-            "Do NOT ignore early signs of bleeding gums or sensitivity."
-        ]
+
+class ProcedureCategory(str, Enum):
+    EXTRACTION = "EXTRACTION_SURGERY"
+    ROOT_CANAL = "ROOT_CANAL_TREATMENT"
+    ALIGNERS = "CLEAR_ALIGNERS"
+    GENERAL_CLEANING = "SCALING_CLEANING"
+
+
+@dataclass(slots=True, frozen=True)
+class DigitalCareCard:
+    """Memory-optimized frozen slots dataclass for post-op care guidelines."""
+    procedure: ProcedureCategory
+    title: str
+    do_rules: str
+    dont_rules: str
+    emergency_symptoms: str
+    recall_days: int
+
+
+class CareCardService:
+    """Post-Consultation Digital Care Card & Retention Recall Engine."""
+
+    _CARE_REGISTRY: Final[Dict[ProcedureCategory, DigitalCareCard]] = {
+        ProcedureCategory.EXTRACTION: DigitalCareCard(
+            procedure=ProcedureCategory.EXTRACTION,
+            title="🩸 Surgical Extraction Recovery Instructions",
+            do_rules="• Keep firm gauze pressure for 45 minutes.\n• Eat cold, soft foods (ice cream, yogurt).\n• Take prescribed medications on time.",
+            dont_rules="• Do NOT spit, smoke, or drink through a straw for 24 hours.\n• Avoid hot or spicy liquid meals.",
+            emergency_symptoms="Uncontrolled bleeding after 2 hours or severe facial swelling.",
+            recall_days=7  # Suture removal / review
+        ),
+        ProcedureCategory.ROOT_CANAL: DigitalCareCard(
+            procedure=ProcedureCategory.ROOT_CANAL,
+            title="🦷 Root Canal Post-Treatment Guidelines",
+            do_rules="• Chew on the opposite side until final crown placement.\n• Maintain strict brushing and salt-water rinses after 24h.",
+            dont_rules="• Do NOT bite hard or sticky foods on the treated tooth.",
+            emergency_symptoms="Severe throbbing pain or temporary filling fracture.",
+            recall_days=5  # Permanent crown fitting
+        ),
+        ProcedureCategory.ALIGNERS: DigitalCareCard(
+            procedure=ProcedureCategory.ALIGNERS,
+            title="😬 Clear Aligner Wear & Hygiene Guidelines",
+            do_rules="• Wear aligner trays for 20–22 hours daily.\n• Rinse aligners with cool water before re-inserting.",
+            dont_rules="• Never clean aligners with hot water or harsh soaps.",
+            emergency_symptoms="Tray cracking or attachment detachment.",
+            recall_days=14  # Next tray swap
+        ),
+        ProcedureCategory.GENERAL_CLEANING: DigitalCareCard(
+            procedure=ProcedureCategory.GENERAL_CLEANING,
+            title="✨ Professional Scaling & Hygiene Care Card",
+            do_rules="• Rinse with warm salt water for 48 hours.\n• Use a soft-bristled toothbrush and fluoride toothpaste.",
+            dont_rules="• Avoid extremely hot, cold, or acidic food for 24 hours.",
+            emergency_symptoms="Persistent bleeding or severe gum sensitivity.",
+            recall_days=180  # 6-Month routine recall
+        )
     }
-}
+
+    @classmethod
+    def generate_care_card(
+        cls, procedure: ProcedureCategory, patient_name: str = "Patient"
+    ) -> str:
+        """Renders formatted WhatsApp care instructions."""
+        card = cls._CARE_REGISTRY.get(procedure)
+        if not card:
+            return f"📋 Care instructions for {patient_name}: Maintain standard oral hygiene and contact the desk for queries."
+
+        return (
+            f"📋 *{card.title}*\n"
+            f"Patient: *{patient_name}*\n\n"
+            f"✅ *DO'S*:\n{card.do_rules}\n\n"
+            f"🚫 *DON'TS*:\n{card.dont_rules}\n\n"
+            f"🚨 *WHEN TO CALL US*: {card.emergency_symptoms}\n"
+            f"📞 *Emergency Line*: +91-9876543210\n\n"
+            f"🔔 *Automated Review Scheduled*: In {card.recall_days} days."
+        )
 
 
-def send_post_care_card(patient_phone: str, procedure_type: str = "GENERAL") -> str:
-    """Generates structured digital post-care guidelines with emergency contact and recall link."""
-    key = procedure_type.upper()
-    data = CARE_GUIDELINES.get(key, CARE_GUIDELINES["GENERAL"])
-
-    dos_str = "\n".join([f"  ✅ {item}" for item in data["dos"]])
-    donts_str = "\n".join([f"  ❌ {item}" for item in data["donts"]])
-
-    card = (
-        f"📋 *{data['title']}*\n"
-        f"Recipient: {patient_phone}\n\n"
-        f"*RECOMMENDED DO'S*:\n{dos_str}\n\n"
-        f"*IMPORTANT DON'TS*:\n{donts_str}\n\n"
-        f"🚨 *24/7 Emergency Line*: Call +91-7338350871\n"
-        f"📅 *Schedule Next Recall*: https://kasthuridental.com/recall?phone={patient_phone}"
-    )
-
-    return card
+# Backward compatibility helper
+def send_post_care_card(patient_phone: str, procedure_type: str = "EXTRACTION") -> str:
+    category_map = {
+        "EXTRACTION": ProcedureCategory.EXTRACTION,
+        "ROOT_CANAL": ProcedureCategory.ROOT_CANAL,
+        "ALIGNERS": ProcedureCategory.ALIGNERS,
+        "GENERAL": ProcedureCategory.GENERAL_CLEANING
+    }
+    cat = category_map.get(procedure_type.upper(), ProcedureCategory.GENERAL_CLEANING)
+    return CareCardService.generate_care_card(cat, patient_name=patient_phone)
