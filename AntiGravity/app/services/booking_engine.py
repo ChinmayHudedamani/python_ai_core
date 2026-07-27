@@ -1,41 +1,38 @@
-# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Code-Based Booking Engine with Symptom Capture & Revenue Calculations
+"""Code-Based Confirmation Engine, slot reservations, and check-in verifications."""
 
 import uuid
-import secrets
-import decimal
-import asyncio
+import random
+import string
 import logging
-from decimal import Decimal
-from datetime import datetime, timezone
-from typing import Optional, Dict, Any
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import AsyncSessionLocal
-from app.models.slot import Slot, SlotStatus
 from app.models.booking import Booking, BookingStatus
+from app.models.slot import Slot, SlotStatus
 from app.models.patient import Patient
 from app.models.audit_log import AuditLog
+from app.core.database import AsyncSessionLocal
 
 logger = logging.getLogger("APEX_AI_BOOKING_ENGINE")
 
 
 def generate_check_in_code() -> str:
-    """Generates a 6-character unique alphanumeric check-in code (e.g. APX-4928)."""
-    random_num = secrets.randbelow(9000) + 1000
-    return f"APX-{random_num}"
+    """Generates unique 6-character check-in code formatted as APX-XXXX."""
+    digits = "".join(random.choices(string.digits, k=4))
+    return f"APX-{digits}"
 
 
 async def log_audit_event_async(
     entity_name: str,
     entity_id: uuid.UUID,
     trigger_event_id: str,
-    from_state: Optional[str],
+    from_state: str,
     to_state: str,
     payload: Optional[Dict[str, Any]] = None
-) -> None:
-    """Non-blocking fire-and-forget task inserting an AuditLog row into Postgres."""
+):
+    """Asynchronously logs state mutations into Postgres AuditLog."""
     try:
         async with AsyncSessionLocal() as session:
             audit = AuditLog(
@@ -44,13 +41,12 @@ async def log_audit_event_async(
                 trigger_event_id=trigger_event_id,
                 from_state=from_state,
                 to_state=to_state,
-                payload=payload,
-                timestamp=datetime.now(timezone.utc)
+                payload=payload or {}
             )
             session.add(audit)
             await session.commit()
     except Exception as e:
-        logger.error(f"❌ Failed to write audit log: {e}")
+        logger.error(f"Failed to write audit log: {e}")
 
 
 async def create_booking(
@@ -58,48 +54,28 @@ async def create_booking(
     patient_id: uuid.UUID,
     slot_id: uuid.UUID,
     patient_symptoms: str,
-    procedure_name: str = "General Consultation",
-    custom_revenue: Optional[Decimal] = None
+    procedure_name: str = "General Consultation"
 ) -> Dict[str, Any]:
-    """Reserves a slot as SLOT_HELD, captures symptoms, and calculates expected procedure revenue."""
-    # Verify slot availability
-    slot_stmt = select(Slot).where(Slot.id == slot_id).with_for_update()
-    slot_res = await db.execute(slot_stmt)
-    slot = slot_res.scalar_one_or_none()
+    """Reserves slot, updates status to SLOT_HELD, and returns unique check-in code."""
+    stmt = select(Slot).where(Slot.id == slot_id).with_for_update()
+    result = await db.execute(stmt)
+    slot = result.scalar_one_or_none()
 
     if not slot or slot.status != SlotStatus.AVAILABLE:
         return {"success": False, "error": "Requested appointment slot is no longer available."}
 
-    # Estimate procedure revenue
-    if custom_revenue is not None:
-        revenue = custom_revenue
-    elif "Root Canal" in procedure_name or "RCT" in procedure_name:
-        revenue = Decimal("4500.00")
-    elif "Implant" in procedure_name:
-        revenue = Decimal("25000.00")
-    elif "Aligner" in procedure_name or "Invisalign" in procedure_name:
-        revenue = Decimal("140000.00")
-    elif "Extraction" in procedure_name or "Surgery" in procedure_name:
-        revenue = Decimal("4000.00")
-    else:
-        revenue = Decimal("700.00")
-
-    # Generate unique check-in code
-    check_in_code = generate_check_in_code()
-
-    # Update slot status
     slot.status = SlotStatus.HELD
+    code = generate_check_in_code()
 
-    # Create Booking row with symptoms & revenue
     booking = Booking(
+        slot_id=slot.id,
         patient_id=patient_id,
-        slot_id=slot_id,
-        procedure_name=procedure_name,
         status=BookingStatus.SLOT_HELD,
-        check_in_code=check_in_code,
+        check_in_code=code,
         is_code_verified=False,
+        procedure_name=procedure_name,
         symptoms_reported=patient_symptoms,
-        expected_revenue=revenue
+        expected_revenue=slot.consultation_fee or 500.00
     )
     try:
         db.add(booking)
@@ -111,26 +87,18 @@ async def create_booking(
     await log_audit_event_async(
         entity_name="Booking",
         entity_id=booking.id,
-        trigger_event_id="SLOT_RESERVED_SYMPTOMS_CAPTURED",
-        from_state=None,
+        trigger_event_id="SLOT_HELD_RESERVATION",
+        from_state="NONE",
         to_state="SLOT_HELD",
-        payload={
-            "check_in_code": check_in_code,
-            "slot_id": str(slot_id),
-            "symptoms": patient_symptoms,
-            "expected_revenue": str(revenue)
-        }
+        payload={"check_in_code": code, "slot_id": str(slot.id)}
     )
 
     return {
         "success": True,
         "booking_id": str(booking.id),
-        "check_in_code": check_in_code,
-        "date": str(slot.date),
-        "time": slot.time.strftime("%I:%M %p"),
-        "doctor": slot.doctor_name,
-        "symptoms": patient_symptoms,
-        "expected_revenue": str(revenue)
+        "check_in_code": code,
+        "status": "SLOT_HELD",
+        "message": f"Slot reserved! Please reply with code {code} to confirm your appointment."
     }
 
 
@@ -139,108 +107,77 @@ async def confirm_booking_with_code(
     code: str,
     phone_number: str
 ) -> Dict[str, Any]:
-    """Confirms booking when patient repeats their unique check-in code."""
+    """Validates check-in code and updates booking status to CONFIRMED."""
     clean_code = code.strip().upper()
-    if not clean_code:
-        return {"success": False, "error": "Confirmation code cannot be empty."}
-
-    # Query booking matching code
     stmt = (
-        select(Booking)
-        .join(Patient, Booking.patient_id == Patient.id)
-        .where(
-            and_(
-                Booking.check_in_code == clean_code,
-                Patient.phone_number == phone_number
-            )
-        )
+        select(Booking, Slot)
+        .join(Slot, Booking.slot_id == Slot.id)
+        .where(and_(Booking.check_in_code == clean_code, Booking.status == BookingStatus.SLOT_HELD))
     )
     result = await db.execute(stmt)
-    booking = result.scalar_one_or_none()
+    row = result.first()
 
-    if not booking:
-        return {
-            "success": False,
-            "error": f"No active booking found matching code '{clean_code}' for phone {phone_number}."
-        }
+    if not row:
+        return {"success": False, "error": f"Invalid or expired check-in code '{clean_code}'."}
 
-    if booking.status == BookingStatus.CONFIRMED:
-        return {
-            "success": True,
-            "message": f"Booking with code '{clean_code}' is already confirmed!",
-            "check_in_code": clean_code
-        }
-
-    from_state = booking.status.value
+    booking, slot = row
     booking.status = BookingStatus.CONFIRMED
     booking.is_code_verified = True
-
-    # Update associated Slot to BOOKED
-    slot_stmt = select(Slot).where(Slot.id == booking.slot_id)
-    slot_res = await db.execute(slot_stmt)
-    slot = slot_res.scalar_one_or_none()
-    if slot:
-        slot.status = SlotStatus.BOOKED
+    slot.status = SlotStatus.BOOKED
 
     await db.commit()
 
     await log_audit_event_async(
         entity_name="Booking",
         entity_id=booking.id,
-        trigger_event_id="CODE_VERIFIED_BOOKING_CONFIRMED",
-        from_state=from_state,
+        trigger_event_id="CHECK_IN_CODE_CONFIRMED",
+        from_state="SLOT_HELD",
         to_state="CONFIRMED",
-        payload={"check_in_code": clean_code, "phone": phone_number}
+        payload={"code": clean_code}
     )
 
     return {
         "success": True,
-        "message": f"Appointment successfully confirmed with code '{clean_code}'!",
         "booking_id": str(booking.id),
-        "check_in_code": clean_code
+        "check_in_code": clean_code,
+        "status": "CONFIRMED",
+        "message": f"Appointment confirmed! Check-in code {clean_code} verified."
     }
 
 
-async def cancel_booking(
-    db: AsyncSession,
-    code: str,
-    phone_number: Optional[str] = None
-) -> Dict[str, Any]:
-    """Cancels booking matching confirmation code and frees slot back to AVAILABLE."""
+async def cancel_booking(db: AsyncSession, code: str) -> Dict[str, Any]:
+    """Cancels booking and releases held slot."""
     clean_code = code.strip().upper()
-    if not clean_code:
-        return {"success": False, "error": "Confirmation code cannot be empty."}
-
-    stmt = select(Booking).where(Booking.check_in_code == clean_code)
+    stmt = (
+        select(Booking, Slot)
+        .join(Slot, Booking.slot_id == Slot.id)
+        .where(Booking.check_in_code == clean_code)
+    )
     result = await db.execute(stmt)
-    booking = result.scalar_one_or_none()
+    row = result.first()
 
-    if not booking:
-        return {"success": False, "error": f"No booking found matching code '{clean_code}'."}
+    if not row:
+        return {"success": False, "error": f"No booking found with code '{clean_code}'."}
 
+    booking, slot = row
     from_state = booking.status.value
     booking.status = BookingStatus.CANCELLED
-
-    # Reset slot to AVAILABLE
-    slot_stmt = select(Slot).where(Slot.id == booking.slot_id)
-    slot_res = await db.execute(slot_stmt)
-    slot = slot_res.scalar_one_or_none()
-    if slot:
-        slot.status = SlotStatus.AVAILABLE
+    slot.status = SlotStatus.AVAILABLE
 
     await db.commit()
 
     await log_audit_event_async(
         entity_name="Booking",
         entity_id=booking.id,
-        trigger_event_id="BOOKING_CANCELLED_BY_PATIENT",
+        trigger_event_id="USER_CANCELLED_BOOKING",
         from_state=from_state,
         to_state="CANCELLED",
-        payload={"check_in_code": clean_code}
+        payload={"code": clean_code}
     )
 
     return {
         "success": True,
-        "message": f"Booking with code '{clean_code}' has been cancelled and the slot released.",
-        "check_in_code": clean_code
+        "check_in_code": clean_code,
+        "status": "CANCELLED",
+        "message": f"Booking {clean_code} cancelled and slot released."
     }

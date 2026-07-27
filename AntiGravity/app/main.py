@@ -1,13 +1,12 @@
-# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI FastAPI Async Application Entrypoint
+"""FastAPI Application Entrypoint."""
 
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from app.config import settings
-from app.sqlite_db import init_sqlite_db
+from app.core.config import settings
+from app.core.sqlite_db import init_sqlite_db
 from app.api.whatsapp import router as whatsapp_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -16,12 +15,12 @@ logger = logging.getLogger("APEX_AI_MAIN")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application Startup & Shutdown Lifespan Manager."""
-    logger.info("🚀 Initializing APEX AI Dental Assistant Service...")
+    """Application startup and shutdown lifespan manager."""
+    logger.info("Initializing APEX AI Dental Assistant Service...")
     init_sqlite_db()
-    logger.info("✅ SQLite Relational Knowledge Base initialized.")
+    logger.info("SQLite Relational Knowledge Base initialized.")
     yield
-    logger.info("🛑 Shutting down APEX AI Service.")
+    logger.info("Shutting down APEX AI Service.")
 
 
 app = FastAPI(
@@ -31,14 +30,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Register API Routers
 app.include_router(whatsapp_router)
 
 
 @app.get("/", tags=["Health"])
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """System Health & Readiness Endpoint."""
+    """System health and readiness check endpoint."""
     return JSONResponse(
         status_code=200,
         content={

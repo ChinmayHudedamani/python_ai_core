@@ -1,99 +1,125 @@
-# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Multilingual SQLite Knowledge Base Seed Script
+"""SQLite Knowledge Base Seed Script."""
 
-import json
 import sys
-import io
+import logging
 from pathlib import Path
 from decimal import Decimal
-from typing import Optional
+from sqlmodel import Session, SQLModel, select
 
-# Ensure project root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sqlmodel import SQLModel, Field, create_engine, Session, select
+from app.core.sqlite_db import sqlite_engine
 from app.models.kb import (
-    ClinicProfile, DoctorProfile, ProcedureCatalog,
-    ClinicFAQ, ClinicalTriageRule, CallbackLead
+    ClinicProfile,
+    DoctorProfile,
+    ProcedureCatalog,
+    ClinicFAQ,
+    ClinicalTriageRule
 )
 
-# Force UTF-8 stdout encoding
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("SEED_KB")
 
-DB_FILE = "clinic_kb.db"
-engine = create_engine(f"sqlite:///{DB_FILE}", echo=False)
 
-def seed_database():
-    print("🌱 Seeding SQLite Multilingual Relational Knowledge Base (clinic_kb.db)...")
-    SQLModel.metadata.drop_all(engine)
-    SQLModel.metadata.create_all(engine)
-    
-    with Session(engine) as session:
-        session.add(ClinicProfile(
-            name="APEX Dental & Maxillofacial Centre",
-            address="102, 1st Floor, Indiranagar Double Road, Above HDFC Bank, Indiranagar, Bengaluru, Karnataka 560038",
-            landmark="Opposite Metro Pillar 42, Above HDFC Bank",
-            parking_info="Free dedicated basement parking available for patients (Valet service available on weekdays).",
-            operating_hours=json.dumps({"Monday_to_Saturday": "09:30 AM - 08:30 PM", "Sunday": "10:00 AM - 02:00 PM (Prior Appt Only)"}),
-            online_consult_available=True,
-            accepted_payments="UPI (GPay/PhonePe), Credit/Debit Cards, Cash, No-Cost EMI via Bajaj Finserv"
-        ))
+def seed_knowledge_base():
+    """Populates SQLite database with clinic metadata, procedure catalog, and triage rules."""
+    logger.info("Seeding SQLite Relational Knowledge Base (clinic_kb.db)...")
+    SQLModel.metadata.create_all(sqlite_engine)
 
-        session.add_all([
-            DoctorProfile(name="Dr. Vikram Sharma", title="Lead Endodontist & Micro-Surgeon", qualifications="BDS, MDS (Endodontics)", experience_years=14, bio="Specialist in single-sitting painless root canals.", specialties=json.dumps(["Root Canal Treatment", "Painless RCT", "Dental Trauma"]), consultation_fee=Decimal("700.00"), available_days="Monday, Tuesday, Thursday, Friday, Saturday"),
-            DoctorProfile(name="Dr. Rajesh Nair", title="Consultant Implantologist & Oral Surgeon", qualifications="BDS, MDS (Oral & Maxillofacial Surgery)", experience_years=16, bio="Pioneer in immediate loading dental implants.", specialties=json.dumps(["Dental Implants", "Wisdom Tooth Surgery", "Full Mouth Reconstruction"]), consultation_fee=Decimal("1000.00"), available_days="Monday, Wednesday, Thursday, Saturday")
-        ])
+    with Session(sqlite_engine) as session:
+        # Check if already seeded
+        existing = session.exec(select(ClinicProfile)).first()
+        if existing:
+            logger.info("Knowledge Base already contains data. Skipping re-seed.")
+            return
 
-        session.add_all([
-            ProcedureCatalog(name="Microscopic Single-Sitting Root Canal (RCT)", category="Endodontics", price_min=Decimal("4500.00"), price_max=Decimal("8500.00"), duration_minutes=60, is_surgical=False, prerequisites="Digital IOPA or OPG X-Ray required (₹300 - ₹500).", warranty_terms="N/A"),
-            ProcedureCatalog(name="Korean/Swiss Dental Implant", category="Implantology", price_min=Decimal("25000.00"), price_max=Decimal("60000.00"), duration_minutes=90, is_surgical=True, prerequisites="CBCT 3D Bone Scan (₹2,500) mandatory prior to surgery.", warranty_terms="Lifetime Warranty on Titanium Implant Fixture"),
-            ProcedureCatalog(name="Invisalign® Clear Aligners", category="Orthodontics", price_min=Decimal("140000.00"), price_max=Decimal("275000.00"), duration_minutes=45, is_surgical=False, prerequisites="3D iTero Digital Intraoral Scan required.", warranty_terms="Includes up to 3 refinement sets within 5 years"),
-            ProcedureCatalog(name="Surgical Wisdom Tooth Extraction", category="Oral Surgery", price_min=Decimal("4000.00"), price_max=Decimal("9500.00"), duration_minutes=60, is_surgical=True, prerequisites="Mandatory IOPA/OPG X-ray. Post-op soft diet required for 48 hours.", warranty_terms="N/A")
-        ])
+        clinic = ClinicProfile(
+            clinic_name="Apex Dental Center & Implant Institute",
+            address="104, 80 Feet Road, 4th Block, Koramangala, Bengaluru, Karnataka 560034",
+            primary_phone="+91-9988776655",
+            emergency_phone="+91-9988776655",
+            operating_hours="Monday - Saturday: 09:00 AM - 08:30 PM | Sunday: 10:00 AM - 02:00 PM",
+            accepted_insurance=["HDFC ERGO", "Star Health", "Max Bupa", "ICICI Lombard", "Navi General"]
+        )
+        session.add(clinic)
 
-        # ---------------------------------------------------------
-        # Multilingual Triage Rules (English, Hinglish, Devanagari Hindi)
-        # ---------------------------------------------------------
-        triage_rules = []
+        doc1 = DoctorProfile(
+            doctor_name="Dr. Chinmay Hudedamani",
+            specialization="Implantologist & Oral Surgeon",
+            qualification="BDS, MDS (Oral & Maxillofacial Surgery)",
+            experience_years=14,
+            available_days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            consultation_fee=Decimal("700.00")
+        )
+        doc2 = DoctorProfile(
+            doctor_name="Dr. Rajesh Nair",
+            specialization="Endodontist (Root Canal Specialist)",
+            qualification="BDS, MDS (Conservative Dentistry & Endodontics)",
+            experience_years=11,
+            available_days=["Monday", "Wednesday", "Friday", "Saturday"],
+            consultation_fee=Decimal("600.00")
+        )
+        session.add(doc1)
+        session.add(doc2)
 
-        # 1. Critical Emergency Rules (Level 1)
-        critical_keywords = [
-            "knocked out tooth", "knocked out", "tooth fell out", "tooth knocked out",
-            "heavy bleeding", "uncontrolled bleeding", "profuse bleeding", "bleeding wont stop",
-            "swelling extending to neck", "facial swelling breathing", "jaw fracture", "dental trauma",
-            "khoon nahi ruk raha", "daant toot gaya", "khoon nikal raha hai", "daant nikal gaya",
-            "daant nikal gaya accident me", "khoon nahi rok raha", "sujan gale tak", "sujan badh rahi hai",
-            "saans lene me takleef", "खून नहीं रुक रहा", "दांत टूट गया", "दांत निकल गया है एक्सीडेंट में",
-            "दांत निकल गया", "बहुत खून बह रहा है", "सूजन गले तक फैल गई है", "सांस लेने में तकलीफ"
+        procedures = [
+            ProcedureCatalog(
+                procedure_name="Microscopic Single-Sitting Root Canal (RCT)",
+                category="Endodontics",
+                estimated_duration_minutes=45,
+                price_min=Decimal("4500.00"),
+                price_max=Decimal("7500.00"),
+                pre_op_instructions="Eat a light meal before appointment. Continue routine blood pressure medications.",
+                post_op_instructions="Avoid chewing on the treated side until numbness wears off. Take prescribed analgesics."
+            ),
+            ProcedureCatalog(
+                procedure_name="Dental Implant Placement (Nobel Biocare / Straumann)",
+                category="Implantology",
+                estimated_duration_minutes=60,
+                price_min=Decimal("25000.00"),
+                price_max=Decimal("45000.00"),
+                pre_op_instructions="Complete CBCT 3D Scan prior to surgery. Antibiotic prophylaxis as advised.",
+                post_op_instructions="Apply ice pack externally for 20 mins on/off. Soft cold diet for 48 hours."
+            ),
+            ProcedureCatalog(
+                procedure_name="Invisalign® Clear Aligners Consultation",
+                category="Orthodontics",
+                estimated_duration_minutes=30,
+                price_min=Decimal("60000.00"),
+                price_max=Decimal("150000.00"),
+                pre_op_instructions="No special preparation required.",
+                post_op_instructions="Wear aligners 22 hours daily. Clean with soft toothbrush and cold water."
+            )
         ]
+        for p in procedures:
+            session.add(p)
 
-        for kw in critical_keywords:
-            triage_rules.append(ClinicalTriageRule(
-                symptom_keyword=kw,
+        triage_rules = [
+            ClinicalTriageRule(
+                keyword="knocked out tooth",
+                category="TRAUMA",
                 urgency_level="CRITICAL_EMERGENCY",
-                first_aid_instructions="Place the knocked-out tooth in cold milk or saliva—do NOT scrub the root! Bite down firmly on a clean gauze pad if bleeding. Bypass standard booking and call our emergency desk immediately at +91-9988776655."
-            ))
-
-        # 2. Same-Day Urgent Rules (Level 2)
-        urgent_keywords = [
-            "unbearable pain", "severe toothache", "throbbing pain preventing sleep", "cant sleep pain",
-            "extreme sensitivity", "worst pain", "excruciating pain",
-            "bohot dard", "neend nahi aa rahi", "raat bhar dard", "bohot tez dard", "sehan nahi ho raha",
-            "dard ki wajah se neend nahi aa rahi", "daant me tez kasak", "tez dard",
-            "बहुत दर्द", "रात भर दर्द", "नींद नहीं आ रही", "सहन नहीं हो रहा", "बहुत तेज दर्द", "दांत में असहनीय दर्द"
+                first_aid_instructions="Store tooth in cold milk or saline immediately! Do NOT touch the root! Reach clinic within 60 mins!"
+            ),
+            ClinicalTriageRule(
+                keyword="khoon nikal raha hai",
+                category="BLEEDING",
+                urgency_level="CRITICAL_EMERGENCY",
+                first_aid_instructions="Apply firm pressure with clean gauze or tea bag for 30 minutes. Keep head elevated!"
+            ),
+            ClinicalTriageRule(
+                keyword="दांत निकल गया",
+                category="TRAUMA",
+                urgency_level="CRITICAL_EMERGENCY",
+                first_aid_instructions="दांत को दूध में रखें। तुरंत 60 मिनट के अंदर क्लिनिक आएं!"
+            )
         ]
+        for tr in triage_rules:
+            session.add(tr)
 
-        for kw in urgent_keywords:
-            triage_rules.append(ClinicalTriageRule(
-                symptom_keyword=kw,
-                urgency_level="SAME_DAY_URGENT",
-                first_aid_instructions="Avoid chewing on the affected side and refrain from hot/cold food. Take an over-the-counter pain reliever if not contraindicated. Let's find you an immediate same-day slot."
-            ))
-
-        session.add_all(triage_rules)
         session.commit()
-        print(f"✅ SQLite Knowledge Base successfully seeded with {len(triage_rules)} Multilingual Triage Rules!")
+        logger.info("SQLite Knowledge Base successfully seeded!")
+
 
 if __name__ == "__main__":
-    seed_database()
+    seed_knowledge_base()
