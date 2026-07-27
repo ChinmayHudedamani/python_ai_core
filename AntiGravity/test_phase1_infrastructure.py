@@ -37,8 +37,13 @@ class TestPhase1Infrastructure(unittest.TestCase):
     def test_02_decimal_currency_integrity(self):
         print("\n--- [TEST 2]: Decimal Currency Integrity ---")
         doc = DoctorProfile(
-            doctor_name="Dr. Test",
-            specialization="Surgeon",
+            name="Dr. Test",
+            title="Surgeon",
+            qualifications="BDS",
+            experience_years=10,
+            bio="Bio",
+            specialties="Surgery",
+            available_days="Mon",
             consultation_fee=Decimal("700.50")
         )
         self.assertIsInstance(doc.consultation_fee, Decimal)
@@ -50,7 +55,7 @@ class TestPhase1Infrastructure(unittest.TestCase):
         with Session(sqlite_engine) as session:
             profile = session.exec(select(ClinicProfile)).first()
             if profile:
-                self.assertIn("Apex Dental", profile.clinic_name)
+                self.assertIn("Apex Dental", profile.name)
         print("✅ PASSED: All relational Knowledge Base queries executed successfully.")
 
 
