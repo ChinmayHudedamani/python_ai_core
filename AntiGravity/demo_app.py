@@ -36,7 +36,7 @@ st.sidebar.markdown("### 🛡️ System Guardrails & Architecture")
 st.sidebar.write("• **Architecture**: AI Sandwich")
 st.sidebar.write("• **Database**: SQLite SQLModel KB & Postgres Models")
 st.sidebar.write("• **State**: Redis Hashes (45-min TTL, 6-turn sliding window)")
-st.sidebar.write("• **Context Injection**: Universal Short-Text Augmenter")
+st.sidebar.write("• **Conversational Flow**: Flexible Human-Like Dialogue Router")
 st.sidebar.write("• **Circuit Breaker**: 4.0s Maximum Timeout")
 st.sidebar.write("• **Safety**: Zero-hallucination medical safety hard-stop")
 
@@ -100,7 +100,6 @@ if role_choice == "👤 Patient View (Rahul)":
     if raw_user_input:
         start_t = time.time()
         
-        # Contextual Input Augmentation for short text
         mock_session_state = {
             "last_intent": "SELECTING_SLOT",
             "last_topic": "Root Canal",
@@ -122,16 +121,30 @@ if role_choice == "👤 Patient View (Rahul)":
             "context_badge": context_badge
         })
 
-        # Pre-Guardrail Sanitization
         sanitized = sanitize_input(user_input)
-        
-        # Triage Engine Check
         triage_engine = TriageEngine()
         triage_res = triage_engine.evaluate_message(user_input)
 
         slots_to_render = []
+        lower_raw = raw_user_input.lower()
 
-        if sanitized.get("is_flagged"):
+        # Side Inquiries Check (Medications, Painkillers, Directions, Parking)
+        if any(w in lower_raw for w in ["tablet", "tablets", "medicine", "medication", "painkiller", "paracetamol", "brufen"]):
+            reply = (
+                "I understand you're looking for relief! 🌿 However, for your safety, specific medication or painkillers "
+                "can only be prescribed directly by Dr. Sharma or Dr. Nair after a proper clinical evaluation.\n\n"
+                "In the meantime, you can rinse gently with warm salt water. Would you like me to book your consultation slot for tomorrow?"
+            )
+            reasoning = "Side Inquiry Intercepted: Medication request flagged. Enforced Legal Safety Rule (No prescribing without clinical evaluation)."
+            tools = []
+        elif any(w in lower_raw for w in ["parking", "valet", "direction", "address", "location"]):
+            reply = (
+                "We are located at 104, 80 Feet Road, 4th Block, Koramangala (near Sony World Signal). 🚗\n\n"
+                "Yes, we have free basement valet parking available for all patients! Would you like to pick a time slot for your visit?"
+            )
+            reasoning = "Side Inquiry Intercepted: Location/Parking question answered from SQLite Knowledge Base."
+            tools = [{"tool": "ClinicProfile.get_metadata", "result": {"parking": "Free basement valet parking available"}}]
+        elif sanitized.get("is_flagged"):
             reply = "I am trained to assist with clinical appointments and dental inquiries. How can I help you today?"
             reasoning = f"🚨 Prompt Injection Flagged: {sanitized.get('flag_reason')}"
             tools = []
@@ -145,7 +158,7 @@ if role_choice == "👤 Patient View (Rahul)":
             reply = f"✅ Thank you! Your appointment has been confirmed with check-in code '{code}'. We look forward to seeing you at Apex Dental!"
             reasoning = f"Check-in confirmation code '{code}' verified against Postgres DB."
             tools = [{"tool": "confirm_booking_with_code", "input": {"code": code}}]
-        elif any(t in user_input.lower() for t in ["10:30", "02:00", "04:30", "1", "2", "3", "first", "second", "third", "yes", "confirm", "pending"]):
+        elif any(t in user_input.lower() for t in ["10:30", "02:00", "04:30", "1", "2", "3", "first", "second", "third", "yes, confirm"]):
             reply = (
                 f"✅ Selected slot reserved!\n\n"
                 f"Your unique check-in code is **APX-4928**.\n"
@@ -170,7 +183,7 @@ if role_choice == "👤 Patient View (Rahul)":
         end_t = time.time()
         latency_ms = (end_t - start_t) * 1000
 
-        with st.chat_message("assistant", avatar="!("{reply}")):
+        with st.chat_message("assistant", avatar="🦷"):
             st.markdown(reply)
             if slots_to_render:
                 st.write("**Click to select an appointment slot:**")

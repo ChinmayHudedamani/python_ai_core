@@ -8,6 +8,7 @@ logger = logging.getLogger("APEX_AI_NORMALIZERS")
 
 AFFIRMATIVE_WORDS = {"yes", "sure", "okay", "ok", "yep", "yeah", "haan", "chalega", "confirm", "done", "book"}
 PRICING_WORDS = {"price", "pricing", "cost", "how much", "rate", "fees"}
+SIDE_INQUIRY_WORDS = {"tablet", "tablets", "medicine", "medication", "painkiller", "direction", "location", "address", "parking"}
 
 
 def augment_short_text(user_text: str, session_state: Dict[str, str]) -> Dict[str, Any]:
@@ -22,6 +23,11 @@ def augment_short_text(user_text: str, session_state: Dict[str, str]) -> Dict[st
         return {"was_augmented": False, "original_text": raw_text, "augmented_text": raw_text}
 
     lower_text = raw_text.lower().replace("?", "").strip()
+
+    # If input contains a side inquiry (tablets, directions, parking), pass through without slot interception
+    if any(w in lower_text for w in SIDE_INQUIRY_WORDS):
+        return {"was_augmented": False, "original_text": raw_text, "augmented_text": raw_text}
+
     last_intent = session_state.get("last_intent", session_state.get("pinned_current_intent", "GENERAL_INQUIRY"))
     last_topic = session_state.get("last_topic", "General Consultation")
 
