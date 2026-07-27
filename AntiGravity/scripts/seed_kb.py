@@ -1,3 +1,6 @@
+# Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
+# APEX AI Multilingual SQLite Knowledge Base Seed Script
+
 import json
 import sys
 import io
@@ -15,20 +18,18 @@ from app.models.kb import (
 )
 
 # Force UTF-8 stdout encoding
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 DB_FILE = "clinic_kb.db"
 engine = create_engine(f"sqlite:///{DB_FILE}", echo=False)
 
-
 def seed_database():
-    print("🌱 Seeding SQLite Relational Knowledge Base (clinic_kb.db)...")
+    print("🌱 Seeding SQLite Multilingual Relational Knowledge Base (clinic_kb.db)...")
+    SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+    
     with Session(engine) as session:
-        if session.exec(select(ClinicProfile)).first():
-            print("ℹ️ Database already seeded. Skipping.")
-            return
-
         session.add(ClinicProfile(
             name="APEX Dental & Maxillofacial Centre",
             address="102, 1st Floor, Indiranagar Double Road, Above HDFC Bank, Indiranagar, Bengaluru, Karnataka 560038",
@@ -51,16 +52,48 @@ def seed_database():
             ProcedureCatalog(name="Surgical Wisdom Tooth Extraction", category="Oral Surgery", price_min=Decimal("4000.00"), price_max=Decimal("9500.00"), duration_minutes=60, is_surgical=True, prerequisites="Mandatory IOPA/OPG X-ray. Post-op soft diet required for 48 hours.", warranty_terms="N/A")
         ])
 
-        session.add_all([
-            ClinicalTriageRule(symptom_keyword="knocked out tooth", urgency_level="CRITICAL_EMERGENCY", first_aid_instructions="Place the knocked-out tooth in a small container of cold milk or saliva—do NOT scrub the root! Bypass standard booking and alert doctor immediately."),
-            ClinicalTriageRule(symptom_keyword="uncontrolled bleeding", urgency_level="CRITICAL_EMERGENCY", first_aid_instructions="Bite down firmly on a clean gauze pad. Alert emergency desk immediately."),
-            ClinicalTriageRule(symptom_keyword="swelling extending to neck", urgency_level="CRITICAL_EMERGENCY", first_aid_instructions="Head to the clinic immediately. Severe space infections require urgent attention."),
-            ClinicalTriageRule(symptom_keyword="throbbing pain preventing sleep", urgency_level="SAME_DAY_URGENT", first_aid_instructions="Take an over-the-counter pain reliever if not contraindicated. Let's find you an immediate slot.")
-        ])
+        # ---------------------------------------------------------
+        # Multilingual Triage Rules (English, Hinglish, Devanagari Hindi)
+        # ---------------------------------------------------------
+        triage_rules = []
 
+        # 1. Critical Emergency Rules (Level 1)
+        critical_keywords = [
+            "knocked out tooth", "knocked out", "tooth fell out", "tooth knocked out",
+            "heavy bleeding", "uncontrolled bleeding", "profuse bleeding", "bleeding wont stop",
+            "swelling extending to neck", "facial swelling breathing", "jaw fracture", "dental trauma",
+            "khoon nahi ruk raha", "daant toot gaya", "khoon nikal raha hai", "daant nikal gaya",
+            "daant nikal gaya accident me", "khoon nahi rok raha", "sujan gale tak", "sujan badh rahi hai",
+            "saans lene me takleef", "खून नहीं रुक रहा", "दांत टूट गया", "दांत निकल गया है एक्सीडेंट में",
+            "दांत निकल गया", "बहुत खून बह रहा है", "सूजन गले तक फैल गई है", "सांस लेने में तकलीफ"
+        ]
+
+        for kw in critical_keywords:
+            triage_rules.append(ClinicalTriageRule(
+                symptom_keyword=kw,
+                urgency_level="CRITICAL_EMERGENCY",
+                first_aid_instructions="Place the knocked-out tooth in cold milk or saliva—do NOT scrub the root! Bite down firmly on a clean gauze pad if bleeding. Bypass standard booking and call our emergency desk immediately at +91-9988776655."
+            ))
+
+        # 2. Same-Day Urgent Rules (Level 2)
+        urgent_keywords = [
+            "unbearable pain", "severe toothache", "throbbing pain preventing sleep", "cant sleep pain",
+            "extreme sensitivity", "worst pain", "excruciating pain",
+            "bohot dard", "neend nahi aa rahi", "raat bhar dard", "bohot tez dard", "sehan nahi ho raha",
+            "dard ki wajah se neend nahi aa rahi", "daant me tez kasak", "tez dard",
+            "बहुत दर्द", "रात भर दर्द", "नींद नहीं आ रही", "सहन नहीं हो रहा", "बहुत तेज दर्द", "दांत में असहनीय दर्द"
+        ]
+
+        for kw in urgent_keywords:
+            triage_rules.append(ClinicalTriageRule(
+                symptom_keyword=kw,
+                urgency_level="SAME_DAY_URGENT",
+                first_aid_instructions="Avoid chewing on the affected side and refrain from hot/cold food. Take an over-the-counter pain reliever if not contraindicated. Let's find you an immediate same-day slot."
+            ))
+
+        session.add_all(triage_rules)
         session.commit()
-        print("✅ SQLite Knowledge Base successfully populated!")
-
+        print(f"✅ SQLite Knowledge Base successfully seeded with {len(triage_rules)} Multilingual Triage Rules!")
 
 if __name__ == "__main__":
     seed_database()
