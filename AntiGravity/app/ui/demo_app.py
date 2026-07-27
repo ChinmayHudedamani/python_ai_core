@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI / Copus AI — Enterprise Dual-Portal & Resilient Concierge Frontend Application
+# APEX AI / Copus AI — Authentic WhatsApp Web UI & Dual-Portal Concierge
 
 import streamlit as st
 import sys
@@ -18,22 +18,150 @@ from app.utils.time_utils import get_current_ist, format_ist_time
 
 # Page Configuration
 st.set_page_config(
-    page_title="APEX AI — Clinic Concierge Hub",
-    page_icon="🩺",
+    page_title="Kasthuri Dental Clinic — WhatsApp Concierge",
+    page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Premium Glassmorphism & High-Contrast CSS
-CUSTOM_CSS = """
+# --- AUTHENTIC WHATSAPP WEB CSS STYLING ---
+WHATSAPP_CSS = """
 <style>
+    /* Main Layout Styling */
     .stApp {
-        background-color: #f4f6f8;
+        background-color: #d1d7db;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
+    
+    /* WhatsApp Chat Screen Wrapper */
+    .wa-chat-container {
+        max-width: 650px;
+        margin: 0 auto;
+        background-color: #efeae2;
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 20px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        border: 1px solid #d1d7db;
+    }
+
+    /* WhatsApp Header */
+    .wa-header {
+        background-color: #075e54;
+        color: #ffffff;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #128c7e;
+        border-radius: 8px 8px 0 0;
+    }
+    .wa-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-right: 12px;
+        float: left;
+    }
+    .wa-title-box {
+        float: left;
+    }
+    .wa-clinic-name {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0;
+        color: #ffffff;
+    }
+    .wa-status {
+        font-size: 12px;
+        color: #25d366;
+        margin: 0;
+        font-weight: 500;
+    }
+    .wa-verified-badge {
+        color: #34b7f1;
+        font-size: 14px;
+        margin-left: 4px;
+    }
+
+    /* WhatsApp Message Bubbles */
+    .wa-msg-user {
+        background-color: #d9fdd3;
+        color: #111b21;
+        padding: 10px 14px;
+        border-radius: 8px 8px 0px 8px;
+        max-width: 75%;
+        margin-left: auto;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.12);
+        font-size: 14.5px;
+        line-height: 1.45;
+        position: relative;
+        word-wrap: break-word;
+    }
+    
+    .wa-msg-bot {
+        background-color: #ffffff;
+        color: #111b21;
+        padding: 10px 14px;
+        border-radius: 8px 8px 8px 0px;
+        max-width: 80%;
+        margin-right: auto;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 2px rgba(11, 20, 26, 0.12);
+        font-size: 14.5px;
+        line-height: 1.45;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .wa-timestamp {
+        font-size: 10.5px;
+        color: #667781;
+        float: right;
+        margin-top: 4px;
+        margin-left: 8px;
+    }
+
+    .wa-ticks {
+        color: #53bdeb;
+        font-weight: bold;
+        font-size: 12px;
+        margin-left: 2px;
+    }
+
+    /* Meta WhatsApp Interactive Buttons */
+    .stButton > button {
+        background-color: #ffffff !important;
+        color: #00a884 !important;
+        border: 1px solid #e9edef !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        padding: 10px 16px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.2s ease !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    .stButton > button:hover {
+        background-color: #f0f2f5 !important;
+        border-color: #00a884 !important;
+        color: #075e54 !important;
+    }
+
+    /* Admin Cards */
     .lock-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(8px);
+        background: #ffffff;
         border-left: 6px solid #ff9800;
         border-radius: 8px;
         padding: 20px;
@@ -42,23 +170,19 @@ CUSTOM_CSS = """
         color: #e65100;
     }
     .beta-card {
-        background: rgba(255, 248, 225, 0.95);
-        backdrop-filter: blur(8px);
+        background: #fff8e1;
         border-left: 6px solid #f57c00;
         border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(245, 124, 0, 0.1);
+        padding: 12px 16px;
+        margin-bottom: 16px;
         color: #e65100;
     }
     .production-card {
-        background: rgba(235, 243, 255, 0.95);
-        backdrop-filter: blur(8px);
+        background: #eef4ff;
         border-left: 6px solid #0F52BA;
         border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(15, 82, 186, 0.1);
+        padding: 12px 16px;
+        margin-bottom: 16px;
         color: #0d47a1;
     }
     .security-badge {
@@ -67,20 +191,15 @@ CUSTOM_CSS = """
         color: #1b5e20;
         border-radius: 6px;
         padding: 6px 12px;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         display: inline-block;
         margin-right: 6px;
         margin-bottom: 6px;
     }
-    div[data-testid="stMetricValue"] {
-        font-size: 24px;
-        font-weight: 700;
-        color: #0F52BA;
-    }
 </style>
 """
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+st.markdown(WHATSAPP_CSS, unsafe_allow_html=True)
 
 # --- Session State Initialization ---
 if "user_phone" not in st.session_state:
@@ -94,7 +213,7 @@ if "session_manager" not in st.session_state:
 
 if "session_state_obj" not in st.session_state:
     st.session_state.session_state_obj = PatientSession(
-        session_id="SESS_WEB_9912",
+        session_id="SESS_WA_9912",
         phone_number=st.session_state.user_phone,
         active_tier=st.session_state.active_tier
     )
@@ -102,7 +221,11 @@ if "session_state_obj" not in st.session_state:
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        {"sender": "assistant", "text": "Hello! I am Copus, the Kasthuri Dental Clinic AI assistant. How may I help you today?"}
+        {
+            "sender": "assistant",
+            "text": "👋 Welcome to Kasthuri Dental Clinic!\nI am Copus, your 24/7 AI Dental Assistant.\n\nHow may we assist you today?",
+            "time": "09:00 AM"
+        }
     ]
 
 if "reception_cache" not in st.session_state:
@@ -119,10 +242,9 @@ if "rate_limiter" not in st.session_state:
 sandwich_engine = AISandwichEngine(st.session_state.session_manager)
 
 # --- SIDEBAR ADMIN CONTROLLER ---
-st.sidebar.image("https://img.icons8.com/color/96/dental-braces.png", width=64)
-st.sidebar.title("🛠️ APEX SaaS Admin Panel")
+st.sidebar.markdown("## ⚙️ SaaS Admin Controls")
 selected_tier_str = st.sidebar.selectbox(
-    "Active SaaS Plan Tier",
+    "Active SaaS Subscription Plan",
     options=[t.value for t in SaaSPlanTier],
     format_func=lambda x: {
         SaaSPlanTier.TIER_1.value: "🟢 Tier 1: Essential (Menu Bot)",
@@ -141,24 +263,27 @@ if new_tier != st.session_state.active_tier:
     st.session_state.session_manager.set_tier(st.session_state.session_state_obj, new_tier)
     st.rerun()
 
-if st.sidebar.button("🔄 Reset Patient Session", use_container_width=True):
+if st.sidebar.button("🔄 Reset WhatsApp Chat Session", use_container_width=True):
     st.session_state.session_state_obj.reset_hidden_options()
     st.session_state.session_state_obj.is_active = True
     st.session_state.session_state_obj.is_authenticated = False
     st.session_state.session_state_obj.check_in_code = None
     st.session_state.chat_history = [
-        {"sender": "assistant", "text": "Hello! I am Copus, the Kasthuri Dental Clinic AI assistant. How may I help you today?"}
+        {
+            "sender": "assistant",
+            "text": "👋 Welcome to Kasthuri Dental Clinic!\nI am Copus, your 24/7 AI Dental Assistant.\n\nHow may we assist you today?",
+            "time": "09:00 AM"
+        }
     ]
     st.rerun()
 
-# Security & Concurrency Status Inspector
 st.sidebar.divider()
-st.sidebar.subheader("🛡️ Security & Concurrency Status")
+st.sidebar.subheader("🛡️ Enterprise Security Badges")
 st.sidebar.markdown(
     """
-    <div style="font-size: 12px; line-height: 1.8;">
+    <div>
         <span class="security-badge">🔒 Distributed Mutex Active</span><br/>
-        <span class="security-badge">🛡️ HMAC Verifier Enforced</span><br/>
+        <span class="security-badge">🛡️ HMAC SHA-256 Verified</span><br/>
         <span class="security-badge">⚡ Max Token Bound: 128 chars</span><br/>
         <span class="security-badge">⏱️ Timezone: Asia/Kolkata (IST)</span>
     </div>
@@ -166,31 +291,28 @@ st.sidebar.markdown(
     unsafe_allow_html=True
 )
 
-with st.sidebar.expander("🔍 Session Inspector"):
+with st.sidebar.expander("🔍 Session State Inspector"):
     st.write(f"**Phone**: {st.session_state.user_phone}")
-    st.write(f"**Active Tier**: {st.session_state.active_tier.value}")
-    st.write(f"**Hidden Options**: {list(st.session_state.session_state_obj.hidden_options)}")
-    st.write(f"**Current IST**: {format_ist_time(get_current_ist())}")
+    st.write(f"**Tier**: {st.session_state.active_tier.value}")
+    st.write(f"**Hidden Items**: {list(st.session_state.session_state_obj.hidden_options)}")
 
 # --- MAIN LAYOUT TABS ---
 tab_patient, tab_doctor, tab_reception = st.tabs([
-    "💬 Patient WhatsApp View",
+    "💬 WhatsApp Patient Interface",
     "👨‍⚕️ Doctor Command Center",
     "👩‍💼 Receptionist Dashboard"
 ])
 
 # ==========================================
-# TAB 1: PATIENT WHATSAPP SIMULATOR
+# TAB 1: AUTHENTIC WHATSAPP WEB SIMULATOR
 # ==========================================
 with tab_patient:
-    st.title("💬 WhatsApp Interactive Concierge")
     
     if st.session_state.active_tier == SaaSPlanTier.TIER_2_5_BETA:
         st.markdown(
             """
             <div class="beta-card">
-                <b>🧪 Tier 2.5 Beta Testing Active</b><br/>
-                <b>Sandbox Active</b>: Primary Local NLM Model + Branch-and-Bound Decision Tree Fallback.
+                <b>🧪 Tier 2.5 Beta Mode Active</b> | Sandbox Local NLM Engine & Branch-and-Bound Fallback.
             </div>
             """,
             unsafe_allow_html=True
@@ -199,63 +321,103 @@ with tab_patient:
         st.markdown(
             """
             <div class="production-card">
-                <b>🚀 Enterprise Mode Active (In Production)</b><br/>
-                Full Resilient Gated AI Sandwich Architecture (Enterprise LLM → Local NLM Failover → Branch-and-Bound).
+                <b>🚀 Enterprise Mode Active (In Production)</b> | Full Gated AI Sandwich Architecture.
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    st.caption(f"Connected to **Kasthuri Dental Clinic** | Mode: **{st.session_state.active_tier.value}** | Clock: **{format_ist_time(get_current_ist())}**")
+    # --- WHATSAPP HEADER BAR ---
+    st.markdown(
+        f"""
+        <div class="wa-header">
+            <div style="display: flex; align-items: center;">
+                <div class="wa-avatar">🦷</div>
+                <div class="wa-title-box">
+                    <div class="wa-clinic-name">Kasthuri Dental Clinic <span class="wa-verified-badge">☑️</span></div>
+                    <div class="wa-status">online • Official Business Account</div>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: #b5e4d4;">{st.session_state.active_tier.value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # Render Chat Log
-    for message in st.session_state.chat_history:
-        with st.chat_message(message["sender"], avatar="🤖" if message["sender"] == "assistant" else "👤"):
-            st.markdown(message["text"])
+    # Render WhatsApp Chat Messages
+    for msg in st.session_state.chat_history:
+        msg_time = msg.get("time", "Just now")
+        msg_html = msg["text"].replace("\n", "<br/>")
+        
+        if msg["sender"] == "user":
+            st.markdown(
+                f"""
+                <div class="wa-msg-user">
+                    {msg_html}
+                    <div class="wa-timestamp">{msg_time} <span class="wa-ticks">✓✓</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f"""
+                <div class="wa-msg-bot">
+                    {msg_html}
+                    <div class="wa-timestamp">{msg_time}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     st.divider()
 
-    # Get Filtered Menu
+    # WhatsApp Interactive Menu Buttons
     available_menu = st.session_state.session_manager.get_available_menu(st.session_state.session_state_obj)
 
     if not available_menu:
-        st.info("ℹ️ All informational choices viewed. Scroll up in WhatsApp to re-read past details.")
+        st.info("ℹ️ All options viewed. Scroll up in WhatsApp chat to re-read details.")
     else:
-        st.subheader("📱 Select an option below:")
-        
-        # Meta API Sanitizer
+        st.markdown("##### 📱 Select an Option (Meta Interactive Quick Replies):")
         formatted_payload = WhatsAppFormatter.format_menu(available_menu)
         
         cols = st.columns(min(len(formatted_payload.options), 3))
         selected_btn = None
         for idx, option_text in enumerate(formatted_payload.options):
             col = cols[idx % min(len(formatted_payload.options), 3)]
-            if col.button(option_text, key=f"btn_{idx}_{option_text}"):
+            if col.button(f"👉 {option_text}", key=f"wa_btn_{idx}_{option_text}"):
                 selected_btn = option_text
 
-        text_input = st.chat_input("Type menu number, question, or response...")
+        text_input = st.chat_input("Type a message or menu number...")
         user_choice = selected_btn or text_input
 
         if user_choice:
-            # Rate Limiter check
             if not st.session_state.rate_limiter.is_allowed(st.session_state.user_phone):
-                st.error("⚠️ Rate limit exceeded (Max 15 req/min). Please wait 60 seconds.")
+                st.error("⚠️ Rate limit reached (Max 15 req/min). Please wait a moment.")
             else:
-                st.session_state.chat_history.append({"sender": "user", "text": user_choice})
+                now_str = get_current_ist().strftime("%I:%M %p")
+                st.session_state.chat_history.append({
+                    "sender": "user",
+                    "text": user_choice,
+                    "time": now_str
+                })
                 
-                # OTP Verification step in Tier 2/2.5/3
+                # OTP Verification check
                 if st.session_state.session_state_obj.otp_code and not st.session_state.session_state_obj.is_authenticated:
                     if user_choice.strip() == st.session_state.session_state_obj.otp_code:
                         st.session_state.session_state_obj.is_authenticated = True
-                        reply_text = "✅ *MOBILE NUMBER VERIFIED SUCCESSFULLY!* Instant pay-at-clinic slots unlocked. Click '📅 Book Appointment (Instant Lock)' to reserve."
+                        reply_text = "✅ *MOBILE VERIFIED!*\nInstant pay-at-clinic slots unlocked. Tap '📅 Book Appointment (Instant Lock)' to reserve."
                     else:
-                        reply_text = f"❌ Invalid OTP. Enter the 4-digit code **{st.session_state.session_state_obj.otp_code}** to authenticate."
+                        reply_text = f"❌ Invalid OTP code. Please enter **{st.session_state.session_state_obj.otp_code}** to authenticate."
                 else:
-                    # Multi-Resilient Dispatch
                     command_res = sandwich_engine.process_patient_input(user_choice)
                     reply_text = command_res.message
                 
-                st.session_state.chat_history.append({"sender": "assistant", "text": reply_text})
+                st.session_state.chat_history.append({
+                    "sender": "assistant",
+                    "text": reply_text,
+                    "time": now_str
+                })
                 st.rerun()
 
 # ==========================================
@@ -269,14 +431,14 @@ with tab_doctor:
             """
             <div class="lock-card">
                 <h3>🔒 Tier 2 Pro Upgrade Required</h3>
-                <p>The Doctor Command Center, OT Emergency Override Tool, and Schedule Analytics require Tier 2 (Pro), Tier 2.5 (Beta), or Tier 3 (Enterprise).</p>
+                <p>Doctor Command Center and Emergency OT Reschedule tools require Tier 2 (Pro), Tier 2.5 (Beta), or Tier 3 (Enterprise).</p>
             </div>
             """,
             unsafe_allow_html=True
         )
     else:
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Today's Roster", "12 Patients")
+        col1.metric("Today's Appointments", "12 Patients")
         col2.metric("Confirmed Check-Ins", "8 Verified")
         col3.metric("Emergency Priority", "1 Acute")
         col4.metric("Revenue Protected", "₹48,500")
@@ -285,7 +447,7 @@ with tab_doctor:
         st.subheader("🚨 Proactive OT Emergency Schedule Override")
         with st.form("ot_override_form"):
             affected_slot = st.selectbox("Select OT Slot to Clear", ["11:30 AM – 01:00 PM IST (Surgical)", "03:00 PM – 04:30 PM IST (Implants)"])
-            custom_reason = st.text_input("Reason for Override", "Dr. Chinmay called into urgent OT surgery")
+            custom_reason = st.text_input("Reason for Override", "Dr. Chinmay called into urgent emergency OT surgery")
             submit = st.form_submit_button("⚡ Issue Proactive Reschedule Alerts")
 
             if submit:
@@ -295,7 +457,7 @@ with tab_doctor:
 # TAB 3: RECEPTIONIST DASHBOARD
 # ==========================================
 with tab_reception:
-    st.title("👩‍💼 Receptionist Operations & Waiting-Room Desk")
+    st.title("👩‍💼 Receptionist Operations Desk")
 
     if st.session_state.active_tier == SaaSPlanTier.TIER_1:
         st.markdown(
