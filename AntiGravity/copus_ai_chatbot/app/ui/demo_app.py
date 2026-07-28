@@ -1,4 +1,4 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI / Copus AI — Clean & Reliable WhatsApp Concierge Demo
+# APEX AI Clinic Concierge ("Copus") — Pixel-Perfect WhatsApp Web Simulator & Pitch Demo Hub
 
 from app.ui.demo_app import *
