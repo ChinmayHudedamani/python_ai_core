@@ -1,288 +1,165 @@
 # Copyright (c) 2026 Chinmay Hudedamani. All Rights Reserved.
-# APEX AI Clinic Concierge ("Copus") — Pixel-Perfect WhatsApp Web Simulator & Pitch Demo Hub
+# APEX AI Clinic Concierge ("Copus") — Hardened Zero-Crash Pitch Demo Hub
+
+import os
+import sys
+import secrets
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+# 1. FIX PYTHON PATH (Prevents White-Screen Import Errors)
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 import streamlit as st
-import sys
-from pathlib import Path
 
-# Ensure workspace root is in sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-
-try:
-    from app.services.session.session_context import SessionContextManager
-    from app.services.session.models import SaaSPlanTier, ActionType, PatientSession
-    from app.services.whatsapp_formatter import WhatsAppFormatter
-    from app.services.ai_sandwich import AISandwichEngine
-    from app.services.security import RateLimiter
-    from app.ui.reception_cache import ReceptionistDailyCache, OfflineAppointmentRecord
-    from app.utils.time_utils import get_current_ist, format_ist_time
-except Exception as err:
-    # Graceful fallback imports for zero-crash guarantee
-    from app.services.tier_config import SaaSPlanTier
-    from app.utils.time_utils import get_current_ist, format_ist_time
-
-# Page Configuration
+# 2. MUST BE THE ABSOLUTE FIRST STREAMLIT COMMAND
 st.set_page_config(
-    page_title="Kasthuri Dental Clinic — WhatsApp AI Concierge",
+    page_title="APEX AI — Copus WhatsApp Concierge",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- PIXEL-PERFECT WHATSAPP WEB CSS STYLING ---
-WHATSAPP_PITCH_CSS = """
+# Strict Indian Standard Time Utility
+IST = ZoneInfo("Asia/Kolkata")
+
+def get_ist_time_str() -> str:
+    return datetime.now(IST).strftime("%I:%M %p IST")
+
+def get_ist_date_str() -> str:
+    return datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
+
+# 3. WHATSAPP GLASSMORPHISM & STYLING
+CUSTOM_CSS = """
 <style>
-    /* Main Streamlit App Overrides */
+    /* Global App Background */
     .stApp {
-        background-color: #efeae2 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        background-color: #0b141a;
+        color: #e9edef;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
     /* WhatsApp Header Bar */
-    .wa-pitch-header {
-        background-color: #075e54;
-        color: #ffffff;
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .wa-header {
+        background-color: #202c33;
+        padding: 12px 20px;
         border-radius: 10px 10px 0 0;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-        margin-bottom: 12px;
-    }
-    .wa-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background-color: #ffffff;
+        border-bottom: 1px solid #222d34;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        margin-right: 12px;
+        margin-bottom: 10px;
     }
-    .wa-clinic-title {
-        font-size: 17px;
-        font-weight: 700;
-        color: #ffffff;
+    .wa-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #e9edef;
         margin: 0;
     }
-    .wa-status-online {
+    .wa-subtitle {
         font-size: 12px;
-        color: #25d366;
-        font-weight: 600;
+        color: #8696a0;
+        margin: 0;
     }
-    .wa-verified {
-        color: #34b7f1;
-        font-size: 14px;
-    }
-
-    /* WhatsApp Custom Message Bubbles */
-    .wa-bubble-user {
-        background-color: #d9fdd3;
-        color: #111b21;
-        padding: 10px 14px;
-        border-radius: 8px 8px 0px 8px;
-        max-width: 75%;
-        margin-left: auto;
-        margin-top: 6px;
-        margin-bottom: 6px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-        font-size: 14.5px;
-        line-height: 1.45;
-        position: relative;
-    }
-    .wa-bubble-bot {
-        background-color: #ffffff;
-        color: #111b21;
-        padding: 10px 14px;
-        border-radius: 8px 8px 8px 0px;
-        max-width: 80%;
-        margin-right: auto;
-        margin-top: 6px;
-        margin-bottom: 6px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-        font-size: 14.5px;
-        line-height: 1.45;
-        position: relative;
-    }
-    .wa-time {
-        font-size: 10.5px;
-        color: #667781;
-        float: right;
-        margin-top: 4px;
-        margin-left: 8px;
-    }
-    .wa-blue-ticks {
-        color: #53bdeb;
+    .online-badge {
+        color: #00a884;
+        font-size: 12px;
         font-weight: bold;
-        font-size: 12px;
     }
 
-    /* Meta Interactive Action Buttons */
-    .stButton > button {
-        background-color: #ffffff !important;
-        color: #00a884 !important;
-        border: 1px solid #c0c7d1 !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        padding: 10px 16px !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-        transition: all 0.2s ease !important;
-        width: 100% !important;
-    }
-    .stButton > button:hover {
-        background-color: #e7f7f3 !important;
-        border-color: #00a884 !important;
-        color: #075e54 !important;
-    }
-
-    /* Admin Cards */
-    .lock-banner {
-        background-color: #ffffff;
-        border-left: 6px solid #ff9800;
+    /* Cards & Lock Overlays */
+    .lock-card {
+        background: #111b21;
+        border-left: 5px solid #ff9800;
         border-radius: 8px;
-        padding: 18px;
+        padding: 20px;
         margin: 15px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        color: #e65100;
+        color: #e9edef;
     }
-    .beta-banner {
-        background-color: #fff8e1;
-        border-left: 6px solid #f57c00;
+    .beta-card {
+        background: #111b21;
+        border-left: 5px solid #f57c00;
         border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 16px;
-        color: #e65100;
+        padding: 14px 18px;
+        margin-bottom: 15px;
+        color: #e9edef;
     }
-    .prod-banner {
-        background-color: #eef4ff;
-        border-left: 6px solid #0F52BA;
+    .production-card {
+        background: #111b21;
+        border-left: 5px solid #00a884;
         border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 16px;
-        color: #0d47a1;
+        padding: 14px 18px;
+        margin-bottom: 15px;
+        color: #e9edef;
     }
-    .badge-tag {
-        background-color: #e8f5e9;
-        border: 1px solid #66bb6a;
-        color: #1b5e20;
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-block;
-        margin-right: 6px;
-        margin-bottom: 6px;
+
+    /* Metric Box Customization */
+    div[data-testid="stMetricValue"] {
+        font-size: 26px;
+        font-weight: 700;
+        color: #00a884;
     }
 </style>
 """
-st.markdown(WHATSAPP_PITCH_CSS, unsafe_allow_html=True)
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-# --- ZERO-CRASH STATE INITIALIZATION ---
-try:
-    if "user_phone" not in st.session_state:
-        st.session_state.user_phone = "+919876543210"
+# 4. SAFE SESSION STATE INITIALIZATION
+if "active_tier" not in st.session_state:
+    st.session_state.active_tier = "🟢 Tier 1: Essential"
 
-    if "active_tier" not in st.session_state:
-        st.session_state.active_tier = SaaSPlanTier.TIER_1
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        {
+            "sender": "assistant",
+            "text": "Hello! I am **Copus**, the Kasthuri Dental Clinic AI assistant.\n\nHow can I assist you with your dental care today?",
+            "time": get_ist_time_str()
+        }
+    ]
 
-    if "session_manager" not in st.session_state:
-        st.session_state.session_manager = SessionContextManager()
+if "hidden_options" not in st.session_state:
+    st.session_state.hidden_options = set()
 
-    if "session_state_obj" not in st.session_state:
-        st.session_state.session_state_obj = PatientSession(
-            session_id="SESS_WA_PITCH",
-            phone_number=st.session_state.user_phone,
-            active_tier=st.session_state.active_tier
-        )
-        st.session_state.session_manager.session_state_obj = st.session_state.session_state_obj
+if "roster_db" not in st.session_state:
+    st.session_state.roster_db = {
+        "APX-4928": {"name": "Rahul Kumar", "phone": "+919876543210", "procedure": "Surgical Extraction", "time": "10:30 AM IST", "status": "PENDING_AT_DESK"},
+        "APX-8237": {"name": "Priya Sharma", "phone": "+919876543211", "procedure": "Root Canal (RCT)", "time": "11:30 AM IST", "status": "PENDING_AT_DESK"}
+    }
 
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = [
-            {
-                "sender": "assistant",
-                "text": "👋 Welcome to *Kasthuri Dental Clinic*!\nI am Copus, your 24/7 AI Dental Assistant.\n\nHow may we assist you today?",
-                "time": get_current_ist().strftime("%I:%M %p IST")
-            }
-        ]
-
-    if "reception_cache" not in st.session_state:
-        cache = ReceptionistDailyCache()
-        cache.seed_daily_roster({
-            "APX-4928": OfflineAppointmentRecord("APX-4928", "Rahul Kumar", "+919876543210", "Surgical Extraction", "10:30 AM IST", amount_due_inr=1200),
-            "APX-8237": OfflineAppointmentRecord("APX-8237", "Priya Sharma", "+919876543211", "Root Canal (RCT)", "11:30 AM IST", amount_due_inr=4500),
-        })
-        st.session_state.reception_cache = cache
-
-    if "rate_limiter" not in st.session_state:
-        st.session_state.rate_limiter = RateLimiter(max_requests=20, window_seconds=60)
-
-    sandwich_engine = AISandwichEngine(st.session_state.session_manager)
-
-except Exception as init_err:
-    st.sidebar.error(f"State Init Fallback: {str(init_err)}")
-
-# --- SIDEBAR ADMIN CONTROLLER ---
-st.sidebar.title("⚙️ SaaS Admin Controls")
-selected_tier_str = st.sidebar.selectbox(
-    "Active SaaS Subscription Plan",
-    options=[t.value for t in SaaSPlanTier],
-    format_func=lambda x: {
-        SaaSPlanTier.TIER_1.value: "🟢 Tier 1: Essential (Menu Bot)",
-        SaaSPlanTier.TIER_2.value: "🟡 Tier 2: Pro (Instant Slot Lock + Dual Admin Portals)",
-        SaaSPlanTier.TIER_2_5_BETA.value: "🧪 Tier 2.5: Beta Testing (Local NLM + Care Cards Sandbox)",
-        SaaSPlanTier.TIER_3.value: "🔴 Tier 3: Enterprise (🚀 In Production - Full AI Sandwich)"
-    }[x],
-    index=[t.value for t in SaaSPlanTier].index(st.session_state.active_tier.value)
+# 5. SIDEBAR PITCH CONTROLLER
+st.sidebar.title("⚙️ Pitch Admin Control")
+selected_tier = st.sidebar.selectbox(
+    "Select SaaS Tier Mode:",
+    options=[
+        "🟢 Tier 1: Essential",
+        "🟡 Tier 2: Pro",
+        "🧪 Tier 2.5: Beta Testing",
+        "🔴 Tier 3: Enterprise (🚀 In Production)"
+    ],
+    index=0
 )
 
-# Handle Dynamic Tier Switching
-new_tier = SaaSPlanTier(selected_tier_str)
-if new_tier != st.session_state.active_tier:
-    st.session_state.active_tier = new_tier
-    st.session_state.session_state_obj.active_tier = new_tier
-    st.session_state.session_manager.set_tier(st.session_state.session_state_obj, new_tier)
+if selected_tier != st.session_state.active_tier:
+    st.session_state.active_tier = selected_tier
     st.rerun()
 
-if st.sidebar.button("🔄 Reset Session History", use_container_width=True):
-    try:
-        st.session_state.session_state_obj.reset_hidden_options()
-        st.session_state.session_state_obj.is_active = True
-        st.session_state.session_state_obj.is_authenticated = False
-        st.session_state.session_state_obj.check_in_code = None
-        st.session_state.chat_history = [
-            {
-                "sender": "assistant",
-                "text": "👋 Welcome to *Kasthuri Dental Clinic*!\nI am Copus, your 24/7 AI Dental Assistant.\n\nHow may we assist you today?",
-                "time": get_current_ist().strftime("%I:%M %p IST")
-            }
-        ]
-        st.rerun()
-    except Exception as reset_err:
-        st.sidebar.error(f"Reset Error: {str(reset_err)}")
-
-st.sidebar.divider()
-st.sidebar.subheader("🛡️ Enterprise Defense Status")
-st.sidebar.markdown(
-    """
-    <div>
-        <span class="badge-tag">🔒 Distributed Mutex Active</span><br/>
-        <span class="badge-tag">🛡️ HMAC SHA-256 Verified</span><br/>
-        <span class="badge-tag">⚡ Max Token Bound: 128 chars</span><br/>
-        <span class="badge-tag">⏱️ Timezone: Asia/Kolkata (IST)</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+if st.sidebar.button("🔄 Reset Chat Session", use_container_width=True):
+    st.session_state.chat_history = [
+        {
+            "sender": "assistant",
+            "text": "Hello! I am **Copus**, the Kasthuri Dental Clinic AI assistant.\n\nHow can I assist you with your dental care today?",
+            "time": get_ist_time_str()
+        }
+    ]
+    st.session_state.hidden_options = set()
+    st.rerun()
 
 with st.sidebar.expander("🔍 Session State Inspector"):
-    st.write(f"**Phone**: {st.session_state.user_phone}")
-    st.write(f"**Active Tier**: {st.session_state.active_tier.value}")
-    st.write(f"**Hidden Items**: {list(st.session_state.session_state_obj.hidden_options)}")
+    st.write(f"**Active Tier**: {st.session_state.active_tier}")
+    st.write(f"**Timezone**: `Asia/Kolkata` (IST)")
+    st.write(f"**Hidden Options**: {list(st.session_state.hidden_options)}")
 
-# --- MAIN LAYOUT TABS ---
+# 6. MAIN APPLICATION TABS
 tab_patient, tab_doctor, tab_reception = st.tabs([
     "💬 WhatsApp Patient View",
     "👨‍⚕️ Doctor Command Center",
@@ -293,121 +170,125 @@ tab_patient, tab_doctor, tab_reception = st.tabs([
 # TAB 1: WHATSAPP PATIENT VIEW
 # ==========================================
 with tab_patient:
-    
-    # Tier Callout Banners
-    if st.session_state.active_tier == SaaSPlanTier.TIER_2_5_BETA:
-        st.markdown(
-            """
-            <div class="beta-banner">
-                <b>🧪 Tier 2.5 Beta Active</b> | Local NLM Engine & Branch-and-Bound Fallback Enabled.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-    elif st.session_state.active_tier == SaaSPlanTier.TIER_3:
-        st.markdown(
-            """
-            <div class="prod-banner">
-                <b>🚀 Enterprise Mode Active (In Production)</b> | Full Gated AI Sandwich Architecture.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # WhatsApp Header Bar
+    # Header Banner
     st.markdown(
-        f"""
-        <div class="wa-pitch-header">
-            <div style="display: flex; align-items: center;">
-                <div class="wa-avatar">🦷</div>
-                <div>
-                    <div class="wa-clinic-title">Kasthuri Dental Clinic <span class="wa-verified">☑️</span></div>
-                    <div class="wa-status-online">online • Official Business Account</div>
-                </div>
+        """
+        <div class="wa-header">
+            <div>
+                <div class="wa-title">Kasthuri Dental Clinic <span class="online-badge">✔ Verified</span></div>
+                <div class="wa-subtitle">Copus AI Concierge • <span style="color:#00a884;">Online</span></div>
             </div>
-            <div style="font-size: 13px; font-weight: 600;">{st.session_state.active_tier.value}</div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # Render WhatsApp Chat Messages
+    # Tier Callout Banners
+    if "Tier 2.5" in st.session_state.active_tier:
+        st.markdown(
+            """
+            <div class="beta-card">
+                <b>🧪 Tier 2.5 Sandbox Active</b> — Testing Local NLM Machine Learning & Branch-and-Bound Fallback.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    elif "Tier 3" in st.session_state.active_tier:
+        st.markdown(
+            """
+            <div class="production-card">
+                <b>🚀 Enterprise Mode Active (In Production)</b> — Multi-Branch Auto-Router, TPA Insurance Desk & Gated AI Sandwich.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Render Chat Log
     for msg in st.session_state.chat_history:
-        msg_time = msg.get("time", format_ist_time(get_current_ist()))
-        formatted_text = msg["text"].replace("\n", "<br/>")
-        
-        if msg["sender"] == "user":
-            st.markdown(
-                f"""
-                <div class="wa-bubble-user">
-                    {formatted_text}
-                    <div class="wa-time">{msg_time} <span class="wa-blue-ticks">✓✓</span></div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                f"""
-                <div class="wa-bubble-bot">
-                    {formatted_text}
-                    <div class="wa-time">{msg_time}</div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        with st.chat_message(msg["sender"]):
+            st.markdown(msg["text"])
+            st.caption(f"<sub>{msg['time']}</sub>", unsafe_allow_html=True)
 
     st.divider()
 
-    # Meta Quick Reply Options
-    try:
-        available_menu = st.session_state.session_manager.get_available_menu(st.session_state.session_state_obj)
-    except Exception:
-        available_menu = []
+    # Dynamic Menu Options Based on Active Tier
+    master_options = [
+        "1. Doctor Details & Clinic Timings",
+        "2. Cost Ranges & Pricing Sheet",
+        "3. 📅 Book Appointment (Instant Lock)",
+        "4. ⭐ Patient Reviews",
+        "5. 🚨 Emergency Triage"
+    ]
 
-    if not available_menu:
-        st.info("ℹ️ All informational choices viewed. Scroll up in WhatsApp to review details.")
+    if "Tier 2.5" in st.session_state.active_tier:
+        master_options.insert(3, "🩺 🧪 Guided Pre-Triage Tree (Beta)")
+        master_options.insert(4, "📋 🧪 Digital Care Cards (Beta)")
+    elif "Tier 3" in st.session_state.active_tier:
+        master_options.insert(3, "📍 Select Clinic Branch (Multi-Node)")
+        master_options.insert(4, "🏥 Cashless TPA Insurance Desk")
+
+    # Filter out read-once options
+    available_options = [opt for opt in master_options if opt not in st.session_state.hidden_options]
+
+    # Freeform Input for Tiers 2.5 and 3
+    if "Tier 2.5" in st.session_state.active_tier or "Tier 3" in st.session_state.active_tier:
+        user_input = st.chat_input("Type your message to Copus AI Concierge...")
+        if user_input:
+            st.session_state.chat_history.append({"sender": "user", "text": user_input, "time": get_ist_time_str()})
+            
+            # Simulated Response Logic
+            if any(k in user_input.lower() for k in ["pain", "symptom", "triage", "toothache"]):
+                reply = "🩺 *Clinical Pre-Triage Assessment*: Your symptoms suggest moderate inflammation. We recommend booking a priority slot today."
+            elif any(k in user_input.lower() for k in ["insurance", "tpa", "claim", "star health"]):
+                reply = "🏥 *Cashless TPA Desk*: We support Star Health, HDFC ERGO, and ICICI Lombard. Please bring your policy card to the desk."
+            else:
+                reply = f"I've received your request: *\"{user_input}\"*. How else can I assist you?"
+
+            st.session_state.chat_history.append({"sender": "assistant", "text": reply, "time": get_ist_time_str()})
+            st.rerun()
+
+    # Quick Reply Buttons
+    if not available_options:
+        st.info("ℹ️ All informational choices viewed. Scroll up in WhatsApp to re-read past details.")
     else:
-        st.subheader("📱 Select an Option (Meta Interactive Quick Replies):")
-        formatted_payload = WhatsAppFormatter.format_menu(available_menu)
+        st.subheader("📱 Tap an option below:")
+        cols = st.columns(min(len(available_options), 3))
         
-        cols = st.columns(min(len(formatted_payload.options), 3))
-        selected_btn = None
-        for idx, option_text in enumerate(formatted_payload.options):
-            col = cols[idx % min(len(formatted_payload.options), 3)]
-            if col.button(f"👉 {option_text}", key=f"wa_pitch_btn_{idx}_{option_text}"):
-                selected_btn = option_text
+        for idx, option_text in enumerate(available_options):
+            col = cols[idx % min(len(available_options), 3)]
+            if col.button(option_text, key=f"btn_{idx}_{option_text}"):
+                # Add user click
+                st.session_state.chat_history.append({"sender": "user", "text": option_text, "time": get_ist_time_str()})
 
-        # Freeform Chat Input for Tier 2.5 Beta and Tier 3 Enterprise
-        user_input = None
-        if st.session_state.active_tier in (SaaSPlanTier.TIER_2_5_BETA, SaaSPlanTier.TIER_3):
-            user_input = st.chat_input("Type your question or response to Copus AI Concierge...")
-        else:
-            user_input = st.chat_input("Type menu number or response...")
+                # Handle Response
+                if "Doctor Details" in option_text:
+                    st.session_state.hidden_options.add(option_text)
+                    reply = "👨‍⚕️ **Lead Surgeon**: Dr. Chinmay Hudedamani (MDS)\n📍 **Location**: Yelahanka Node, Double Road\n🕒 **Hours**: Mon–Sat: 09:00 AM – 08:30 PM IST"
+                elif "Cost Ranges" in option_text:
+                    st.session_state.hidden_options.add(option_text)
+                    reply = "💳 **Pricing Sheet**:\n• Consultation: ₹700\n• Root Canal (RCT): ₹4,500 – ₹7,500\n• Extraction: ₹1,200 – ₹3,500"
+                elif "Book Appointment" in option_text:
+                    code = f"APX-{secrets.token_hex(2).upper()}"
+                    reply = (
+                        f"✅ **APPOINTMENT CONFIRMED!**\n\n"
+                        f"🎫 **Check-In Code**: `{code}`\n"
+                        f"📅 **Booked On**: {get_ist_date_str()}\n"
+                        f"💳 **Payment**: **Pay at Clinic Desk** upon arrival (Cash / UPI / Card)\n\n"
+                        f"Please show code `{code}` to the receptionist when you arrive."
+                    )
+                    st.session_state.roster_db[code] = {
+                        "name": "Walk-in Patient", "phone": "+919876543210", "procedure": "General Consultation", "time": get_ist_time_str(), "status": "PENDING_AT_DESK"
+                    }
+                elif "Reviews" in option_text:
+                    st.session_state.hidden_options.add(option_text)
+                    reply = "⭐ **Patient Reviews**: Rated 4.9/5 stars across 500+ verified visits."
+                elif "Emergency" in option_text:
+                    reply = "🚨 **Dental Emergency**: Please call our direct duty surgeon immediately:\n📞 tel:+919876543210"
+                else:
+                    reply = f"Selected: **{option_text}**"
 
-        user_choice = selected_btn or user_input
-
-        if user_choice:
-            try:
-                now_ist = format_ist_time(get_current_ist())
-                st.session_state.chat_history.append({
-                    "sender": "user",
-                    "text": user_choice,
-                    "time": now_ist
-                })
-                
-                # Multi-Resilient Execution Wrapper
-                command_res = sandwich_engine.process_patient_input(user_choice)
-                reply_text = command_res.message
-                
-                st.session_state.chat_history.append({
-                    "sender": "assistant",
-                    "text": reply_text,
-                    "time": now_ist
-                })
+                st.session_state.chat_history.append({"sender": "assistant", "text": reply, "time": get_ist_time_str()})
                 st.rerun()
-            except Exception as dispatch_err:
-                st.error(f"Execution Error: {str(dispatch_err)}")
 
 # ==========================================
 # TAB 2: DOCTOR COMMAND CENTER
@@ -415,10 +296,10 @@ with tab_patient:
 with tab_doctor:
     st.title("👨‍⚕️ Doctor Command Center (Dr. Chinmay Hudedamani, MDS)")
 
-    if st.session_state.active_tier == SaaSPlanTier.TIER_1:
+    if "Tier 1" in st.session_state.active_tier:
         st.markdown(
             """
-            <div class="lock-banner">
+            <div class="lock-card">
                 <h3>🔒 Tier 2 Pro Upgrade Required</h3>
                 <p>The Doctor Command Center, OT Emergency Override Tool, and Schedule Analytics require Tier 2 (Pro), Tier 2.5 (Beta), or Tier 3 (Enterprise).</p>
             </div>
@@ -427,31 +308,31 @@ with tab_doctor:
         )
     else:
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Today's Appointments", "12 Patients")
-        col2.metric("Confirmed Check-Ins", "8 Verified")
+        col1.metric("Today's Roster", f"{len(st.session_state.roster_db)} Patients")
+        col2.metric("Confirmed Check-Ins", "2 Verified")
         col3.metric("Emergency Priority", "1 Acute")
         col4.metric("Revenue Protected", "₹48,500")
 
         st.divider()
         st.subheader("🚨 Proactive OT Emergency Schedule Override")
-        with st.form("ot_override_form_pitch"):
+        with st.form("ot_override_form"):
             affected_slot = st.selectbox("Select OT Slot to Clear", ["11:30 AM – 01:00 PM IST (Surgical)", "03:00 PM – 04:30 PM IST (Implants)"])
-            custom_reason = st.text_input("Reason for Override", "Dr. Chinmay called into urgent emergency OT surgery")
-            submit = st.form_submit_button("⚡ Issue Reschedule Alerts")
+            custom_reason = st.text_input("Reason for Override", "Dr. Chinmay called into urgent OT surgery")
+            submit = st.form_submit_button("⚡ Issue Proactive Reschedule Alerts")
 
             if submit:
-                st.success(f"✅ Proactive alerts dispatched to patients for slot '{affected_slot}'. Reason logged: '{custom_reason}'. Time logged: {format_ist_time(get_current_ist())}.")
+                st.success(f"✅ Proactive alerts dispatched to patients for slot '{affected_slot}'. Reason logged: '{custom_reason}'.")
 
 # ==========================================
 # TAB 3: RECEPTIONIST DASHBOARD
 # ==========================================
 with tab_reception:
-    st.title("👩‍💼 Receptionist Operations Desk")
+    st.title("👩‍💼 Receptionist Operations & Waiting-Room Desk")
 
-    if st.session_state.active_tier == SaaSPlanTier.TIER_1:
+    if "Tier 1" in st.session_state.active_tier:
         st.markdown(
             """
-            <div class="lock-banner">
+            <div class="lock-card">
                 <h3>🔒 Tier 2 Pro Upgrade Required</h3>
                 <p>Check-In Code verification (<code>APX-XXXX</code>) and waiting-room roster management require Tier 2, Tier 2.5, or Tier 3.</p>
             </div>
@@ -459,25 +340,30 @@ with tab_reception:
             unsafe_allow_html=True
         )
     else:
-        st.subheader("⚡ Offline-First Check-In & On-the-Spot Desk Payment Collector")
+        st.subheader("⚡ Offline-First Check-In Code & On-the-Spot Payment Collector")
         
-        col_code, col_method = st.columns([2, 1])
-        with col_code:
-            code_input = st.text_input("Enter Patient Check-In Code (`APX-XXXX`):", placeholder="APX-4928").upper()
-        with col_method:
-            pay_method = st.selectbox("Payment Method", ["UPI (GPay / PhonePe / Paytm)", "Cash", "Credit / Debit Card"])
+        col_in1, col_in2 = st.columns([2, 1])
+        with col_in1:
+            code_input = st.text_input("Enter Patient Check-In Code (`APX-XXXX`):", placeholder="APX-4928").strip().upper()
+        with col_in2:
+            pay_method = st.selectbox("Payment Method Collected:", ["UPI (GPay/PhonePe)", "Cash", "Credit/Debit Card"])
 
-        if st.button("Verify Patient & Collect Payment", key="pitch_reception_verify"):
-            if code_input:
-                try:
-                    verification = st.session_state.reception_cache.verify_and_collect_payment(code_input, payment_method=pay_method)
-                    if verification["status"] == "SUCCESS":
-                        st.success(verification["message"])
-                    elif verification["status"] == "ALREADY_VERIFIED":
-                        st.warning(verification["message"])
-                    else:
-                        st.error(verification["message"])
-                except Exception as rec_err:
-                    st.error(f"Verification Error: {str(rec_err)}")
+        if st.button("Verify Arriving Patient & Collect Payment"):
+            if code_input in st.session_state.roster_db:
+                record = st.session_state.roster_db[code_input]
+                record["status"] = f"PAID_AT_DESK ({pay_method})"
+                st.success(
+                    f"✅ **CHECK-IN & PAYMENT VERIFIED!**\n\n"
+                    f"👤 **Patient**: {record['name']}\n"
+                    f"🦷 **Procedure**: {record['procedure']}\n"
+                    f"🕒 **Slot**: {record['time']}\n"
+                    f"💰 **Status**: Marked as **PAID_AT_DESK** via {pay_method}"
+                )
             else:
-                st.warning("Please enter a valid 6-character check-in code.")
+                st.error(f"❌ Check-in code '{code_input}' not found in today's local roster cache.")
+
+        st.divider()
+        st.subheader("📋 Today's Waiting Room Roster")
+        for c_code, data in st.session_state.roster_db.items():
+            status_color = "🟢" if "PAID" in data["status"] else "🟡"
+            st.write(f"{status_color} **`{c_code}`** | {data['name']} | {data['procedure']} | {data['time']} | Status: `{data['status']}`")
